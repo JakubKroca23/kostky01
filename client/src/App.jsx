@@ -44,24 +44,17 @@ function App() {
       setIsConnected(false);
     }
 
-    function onNicknameSet(data) {
-      if (data.success) {
-        setNickname(data.nickname);
-        localStorage.setItem('kostky-nickname', data.nickname);
-        setScreen('lobby');
-        setError('');
-      }
-    }
-
-    function onRejoinSuccess(data) {
-      setNickname(data.nickname);
-      localStorage.setItem('kostky-nickname', data.nickname);
-      setScreen(data.roomId ? 'room' : 'lobby');
+    function onNicknameSet(name) {
+      setNickname(name);
+      localStorage.setItem('kostky-nickname', name);
+      setScreen('lobby');
+      setError('');
     }
 
     function onNicknameError(msg) {
       setError(msg);
-      setScreen('nickname');
+      // If we were trying to auto-login, go to login screen
+      if (screen === 'loading') setScreen('nickname');
     }
 
     function onRoomListUpdate(list) {
@@ -78,7 +71,10 @@ function App() {
     }
 
     function onRoomUpdate(data) {
-      setCurrentRoom(data.room || (prev => ({ ...prev, players: data.players })));
+      setCurrentRoom(prev => {
+        if (!prev) return null;
+        return { ...prev, players: data.players };
+      });
     }
 
     function onGameStarted(data) {
@@ -109,12 +105,13 @@ function App() {
           turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
           rollCount: prev.turnInfo.rollCount + 1,
           diceCount: data.diceCount || prev.turnInfo.diceCount,
-          allowedIndexes: data.usedIndexes
+          allowedIndexes: data.allowedIndexes || []
         }
       }));
+      
       if (data.isBust) {
         audio.playBust();
-        setError(data.reason === '350 limit' ? 'Limit 350b nesplněn do 3. hodu!' : 'ZELENÁČ! Žádné body.');
+        setError('ZELENÁČ! Žádné body.');
         setTimeout(() => setError(''), 3000);
       } else {
         audio.playRoll();
