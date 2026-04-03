@@ -52,3 +52,16 @@
 
 ### Constraints
 - Hráč nemůže zapsat skóre (Stop), pokud nesplnil podmínku 350b v daném tahu (při prvním otevření).
+## Phase 4 Decisions
+
+**Date:** 2026-04-03
+
+### Scope
+- **Dostupnost**: Kostky budou **2D** s neonovým designem (SVG/CSS), nikoliv 3D.
+- **Interakce**: Hráč si ručně klikáním vybírá ("odkládá"), které kostky z právě hozených chce započítat jako body.
+- **Animace**: Hod trvá 1 sekundu. Kostky v "aréně" mají efekt odrážení od okrajů a od sebe navzájem, než se zastaví na náhodných pozicích.
+- **UI**: Plynulé přechody (fade-in/out) mezi jednotlivými obrazovkami aplikace.
+
+### Approach
+- **Selection Logic**: Zaveden dočasný stav "vybraných kostek" na klientovi, který je odeslán na server k validaci až při potvrzení (další hod nebo Stop).
+- **Physics**: Animace "odrážení" v aréně bude simulována pomocí CSS s mírně náhodným posunem koncových poloh pro realističtější dojem.

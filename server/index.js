@@ -76,40 +76,75 @@ io.on('connection', (socket) => {
     const diceCount = room.turnInfo.diceCount || 6;
     const roll = Array.from({ length: diceCount }, () => Math.floor(Math.random() * 6) + 1);
     
-    const { score, usedIndexes } = calculateScore(roll);
-    
     room.turnInfo.lastRoll = roll;
     
-    if (score === 0) {
-      // BUST
-      console.log(`Player ${player.nickname} BUSTED`);
-      socket.emit('dice-rolled', { roll, score: 0, isBust: true });
+    // Check if the overall roll is a BUST (no scoring possible)
+    const { score: potentialScore } = calculateScore(roll);
+    if (potentialScore === 0) {
+      socket.emit('dice-rolled', { roll, isBust: true });
       setTimeout(() => nextTurn(room), 2000);
+      return;
+    }
+
+    socket.emit('dice-rolled', { roll, diceCount });
+    io.to(room.id).except(socket.id).emit('opponent-rolled', { nickname: player.nickname, roll });
+  });
+
+  socket.on('roll-again', (selectedIndexes) => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+
+    const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
+    const { score, usedIndexes } = calculateScore(selectedDice);
+
+    if (score === 0 || usedIndexes.length !== selectedDice.length) {
+      socket.emit('nickname-error', 'Musíš vybrat platné bodovací kostky!');
       return;
     }
 
     room.turnInfo.turnPoints += score;
-    
-    // Zbytek kostek
-    const remainingDice = diceCount - usedIndexes.length;
-    room.turnInfo.diceCount = remainingDice === 0 ? 6 : remainingDice; // Hot Dice
+    const remainingDice = (room.turnInfo.diceCount || 6) - selectedIndexes.length;
+    room.turnInfo.diceCount = remainingDice === 0 ? 6 : remainingDice;
 
-    // Rule: Must have 350 by 3rd roll
+    // Rule: 350 by 3rd roll
     if (room.turnInfo.rollCount >= 3 && room.turnInfo.turnPoints < 350) {
-      console.log(`Player ${player.nickname} failed 3rd roll limit (Points: ${room.turnInfo.turnPoints})`);
-      socket.emit('dice-rolled', { roll, score, turnPoints: 0, isBust: true, reason: '350 limit' });
-      setTimeout(() => nextTurn(room), 2000);
-      return;
+       socket.emit('dice-rolled', { isBust: true, reason: '350 limit' });
+       setTimeout(() => nextTurn(room), 2000);
+       return;
     }
 
-    socket.emit('dice-rolled', { roll, score, turnPoints: room.turnInfo.turnPoints, diceCount: room.turnInfo.diceCount });
-    io.to(room.id).except(socket.id).emit('opponent-rolled', { nickname: player.nickname, roll, turnPoints: room.turnInfo.turnPoints });
+    // Now actually roll for next
+    const nextRoll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
+    room.turnInfo.rollCount++;
+    room.turnInfo.lastRoll = nextRoll;
+    
+    const { score: nextPotential } = calculateScore(nextRoll);
+    if (nextPotential === 0) {
+      socket.emit('dice-rolled', { roll: nextRoll, isBust: true });
+      setTimeout(() => nextTurn(room), 2000);
+    } else {
+      socket.emit('dice-rolled', { roll: nextRoll, turnPoints: room.turnInfo.turnPoints });
+      io.to(room.id).except(socket.id).emit('opponent-rolled', { nickname: player.nickname, roll: nextRoll, turnPoints: room.turnInfo.turnPoints });
+    }
   });
 
-  socket.on('stop-turn', () => {
+  socket.on('stop-turn', (selectedIndexes) => {
     const player = players.get(socket.id);
     const room = rooms.get(player.roomId);
     if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+
+    // Pokud nebyly dříve žádné body a teď nic nevybral -> chyba
+    if (selectedIndexes && selectedIndexes.length > 0) {
+      const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
+      const { score, usedIndexes } = calculateScore(selectedDice);
+      
+      if (score === 0 || usedIndexes.length !== selectedDice.length) {
+        socket.emit('nickname-error', 'Musíš vybrat platné bodovací kostky!');
+        return;
+      }
+      room.turnInfo.turnPoints += score;
+    }
 
     if (room.turnInfo.turnPoints < 350) {
       socket.emit('nickname-error', 'Musíš mít alespoň 350 bodů pro zapsání.');
@@ -117,8 +152,6 @@ io.on('connection', (socket) => {
     }
 
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
-    console.log(`Player ${player.nickname} stopped with ${room.turnInfo.turnPoints}b. Total: ${room.turnInfo.scores[socket.id]}b`);
-    
     io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
     nextTurn(room);
   });

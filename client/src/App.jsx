@@ -174,12 +174,16 @@ function App() {
     socket.emit('roll-dice');
   };
 
-  const handleStopTurn = () => {
-    socket.emit('stop-turn');
+  const handleRollAgain = (selectedIndexes) => {
+    socket.emit('roll-again', selectedIndexes);
+  };
+
+  const handleStopTurn = (selectedIndexes) => {
+    socket.emit('stop-turn', selectedIndexes);
   };
 
   return (
-    <div className="app-container">
+    <div className="app-container fade-in">
       <header className="neon-header">
         <h1 className="neon-text-cyan">KOSTKY 10 000</h1>
         <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
@@ -208,6 +212,7 @@ function App() {
           room={currentRoom} 
           nickname={nickname}
           onRoll={handleRollDice}
+          onRollAgain={handleRollAgain}
           onStop={handleStopTurn}
           onStart={handleStartGame}
           isConnected={isConnected}

@@ -16,28 +16,28 @@ Nahrazení textových čísel v herní místnosti vizuálně atraktivními 3D (n
 ## Tasks
 
 <task type="auto">
-  <name>Neon Dice Component Creation</name>
+  <name>Neon 2D Dice Component</name>
   <files>client/src/components/Die.jsx</files>
   <action>
-    Vytvořit komponentu `Die.jsx`.
-    - Kostka bude mít 6 stěn realizovaných pomocí CSS Grid/Flex pro tečky (dots).
-    - Design: `glassmorphism` (průhledné stěny), neonové tečky (glow), jemné zaoblení hran.
-    - Props: `value` (1-6), `rolling` (boolean pro trigger animace).
+    Vytvořit komponentu `Die.jsx` (2D).
+    - Design: Čtverec s neonovým okrajem, tečky (dots) rozmístěné dle hodnoty.
+    - Interakce: Přidat `onClick` pro výběr kostky. Vybraná kostka má jiný glow (např. pink).
+    - Props: `value`, `isRolling`, `isSelected`, `onToggle`.
   </action>
-  <verify>Ruční náhled komponenty v GameRoom s fixními hodnotami.</verify>
-  <done>Kostka vypadá jako prémiový herní prvek, nikoliv jen číslo v krabici.</done>
+  <verify>Náhled v GameRoom: Kostky lze kliknutím vybírat a měnit jejich barvu.</verify>
+  <done>Kostka je interaktivní a vizuálně odpovídá neonovému stylu.</done>
 </task>
 
 <task type="auto">
-  <name>3D Cube Styling</name>
+  <name>Arena Bounce Animation</name>
   <files>client/src/index.css</files>
   <action>
-    Implementovat CSS pro 3D efekt kostky.
-    - Využít `perspective` na kontejneru a `transform-style: preserve-3d` na kostce.
-    - Definovat rotace pro každou stěnu tak, aby se kostka "otáčela" na správnou hodnotu.
+    Implementovat 1s animaci "haze" v aréně.
+    - Kostky se při hodu náhodně pohybují (translate/rotate) a simulují odrazy od hran kontejneru a od sebe.
+    - Po 1s se zastaví na náhodném místě v aréně (absolutní pozice).
   </action>
-  <verify>Kontrola v prohlížeči: rotace kostky při změně hodnoty by měla být plynulá (transition).</verify>
-  <done>Kostka se plynule otáčí na požadovanou hodnotu pomocí CSS transformací.</done>
+  <verify>Vizuální plynulost: Kostky se během hodu "perou" v aréně.</verify>
+  <done>Hod kostkami vypadá jako fyzikální interakce v neonovém poli.</done>
 </task>
 
 ## Success Criteria
