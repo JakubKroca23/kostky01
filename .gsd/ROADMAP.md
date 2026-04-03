@@ -12,7 +12,7 @@
 ## Phases
 
 ### Phase 1: Založení projektu (Foundation)
-**Status**: ⬜ Not Started
+**Status**: 🔵 In Progress
 **Objective**: Nastavení infrastruktury pro frontend i backend.
 **Requirements**: REQ-13, REQ-14, REQ-15
 **Deliverables**: 

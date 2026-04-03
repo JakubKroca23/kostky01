@@ -1,0 +1,107 @@
+:root {
+  /* Neon Colors */
+  --neon-pink: #ff00de;
+  --neon-cyan: #0ff;
+  --neon-green: #39ff14;
+  --neon-blue: #001eff;
+  --dark-bg: #0d0d0d;
+  --card-bg: rgba(255, 255, 255, 0.05);
+
+  /* Glow Effects */
+  --glow-pink: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+  --glow-cyan: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+  --glow-green: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--dark-bg);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+}
+
+.app-container {
+  max-width: 450px; /* Mobile width */
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: space-between;
+}
+
+.neon-header {
+  border-bottom: 2px solid var(--neon-cyan);
+  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
+  padding-bottom: 10px;
+  text-align: center;
+}
+
+.neon-header h1 {
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+  letter-spacing: 2px;
+}
+
+.status-badge {
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+.status-badge.online {
+  color: var(--neon-green);
+  text-shadow: var(--glow-green);
+}
+
+.status-badge.offline {
+  color: #ff3e3e;
+}
+
+.neon-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--neon-pink);
+  box-shadow: 0 0 15px rgba(255, 0, 222, 0.3);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+.neon-card h2 {
+  color: var(--neon-pink);
+  text-shadow: var(--glow-pink);
+  margin-bottom: 15px;
+}
+
+.neon-button {
+  background: transparent;
+  color: var(--neon-cyan);
+  border: 1px solid var(--neon-cyan);
+  padding: 12px 25px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: var(--glow-cyan);
+  text-shadow: var(--glow-cyan);
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.neon-button:hover {
+  background: var(--neon-cyan);
+  color: black;
+  box-shadow: 0 0 30px var(--neon-cyan);
+}
