@@ -7,9 +7,9 @@ import VictoryModal from './components/VictoryModal';
 import { audio } from './utils/audio';
 
 const isProd = import.meta.env.PROD;
-const socket = io(isProd ? window.location.origin : 'http://localhost:3001', {
-  transports: ['websocket'],
-  reconnectionAttempts: 7
+const socket = io(isProd ? undefined : 'http://localhost:3001', {
+  reconnectionAttempts: 10,
+  transports: ['polling', 'websocket']
 });
 
 socket.on('connect_error', (err) => {
