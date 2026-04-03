@@ -1,5 +1,5 @@
 # Stage 1: Build frontend
-FROM node:20-alpine as build-stage
+FROM node:20-alpine AS build-stage
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
@@ -14,8 +14,6 @@ RUN cd server && npm install
 COPY server/ ./server/
 COPY --from=build-stage /app/client/dist ./client/dist
 
-# Set production context
 ENV NODE_ENV=production
 EXPOSE 3001
-
 CMD ["node", "server/index.js"]
