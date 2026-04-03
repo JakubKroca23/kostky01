@@ -167,3 +167,86 @@ body {
   flex-direction: column;
   justify-content: center;
 }
+
+.neon-text-cyan {
+  color: var(--neon-cyan) !important;
+  text-shadow: var(--glow-cyan) !important;
+}
+
+.neon-text-pink {
+  color: var(--neon-pink) !important;
+  text-shadow: var(--glow-pink) !important;
+}
+
+.lobby-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  max-height: 60vh;
+  padding: 5px;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px !important;
+  border-color: rgba(0, 255, 222, 0.2) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+.room-item h3 {
+  font-size: 1.1rem;
+  color: var(--neon-cyan);
+}
+
+.room-id {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.room-actions {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.player-count {
+  font-size: 0.8rem;
+  color: var(--neon-green);
+}
+
+.neon-button.sm {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  margin-top: 0;
+}
+
+.neon-button.compact {
+  padding: 8px 15px;
+  margin-top: 0;
+}
+
+.creation-pane {
+  padding: 20px !important;
+  border-style: dashed !important;
+}
+
+.empty-state {
+  padding: 40px !important;
+  opacity: 0.5;
+}
