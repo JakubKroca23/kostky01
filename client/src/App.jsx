@@ -22,6 +22,7 @@ function App() {
   const [nickname, setNickname] = useState(localStorage.getItem('kostky-nickname') || '');
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
+  const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -29,9 +30,13 @@ function App() {
   });
 
   useEffect(() => {
+    // If stuck loading for too long, fallback to nickname
+    const loadTimeout = setTimeout(() => {
+      if (screen === 'loading' && !nickname) setScreen('nickname');
+    }, 2000);
+
     function onConnect() {
       setIsConnected(true);
-      // Try to rejoin if we have a nickname
       const stashedNick = localStorage.getItem('kostky-nickname');
       if (stashedNick) {
         socket.emit('set-nickname', stashedNick);
@@ -146,6 +151,7 @@ function App() {
     socket.on('nickname-set', onNicknameSet);
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
+    socket.on('global-stats-update', onGlobalStatsUpdate);
     socket.on('room-joined', onRoomJoined);
     socket.on('player-joined', onRoomUpdate);
     socket.on('player-left', onRoomUpdate);
@@ -161,9 +167,9 @@ function App() {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('nickname-set', onNicknameSet);
-      socket.off('rejoin-success', onRejoinSuccess);
       socket.off('nickname-error', onNicknameError);
       socket.off('room-list-update', onRoomListUpdate);
+      socket.off('global-stats-update', onGlobalStatsUpdate);
       socket.off('room-joined', onRoomJoined);
       socket.off('player-joined', onRoomUpdate);
       socket.off('player-left', onRoomUpdate);
