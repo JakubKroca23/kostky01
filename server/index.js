@@ -373,37 +373,26 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const player = players.get(socket.id);
     if (player) {
-      console.log(`Player disconnected (pending): ${player.nickname}`);
-      
-      // Delay removal for rejoin
-      const timeoutId = setTimeout(() => {
-        if (player.roomId) {
-          const room = rooms.get(player.roomId);
-          if (room) {
-            room.players = room.players.filter(p => p.nickname !== player.nickname);
-            if (room.players.length === 0) {
-              rooms.delete(player.roomId);
-            } else {
-              io.to(player.roomId).emit('player-left', { players: room.players });
-            }
+      if (player.roomId) {
+        const room = rooms.get(player.roomId);
+        if (room) {
+          room.players = room.players.filter(p => p.id !== socket.id);
+          if (room.players.length === 0) {
+            rooms.delete(player.roomId);
+          } else {
+            // Update other players in room
+            io.to(player.roomId).emit('player-left', { players: room.players });
           }
+          broadcastRooms();
         }
-        nicknames.delete(player.nickname);
-        disconnectedPlayers.delete(player.nickname);
-        broadcastRooms();
-        console.log(`Player session expired: ${player.nickname}`);
-      }, 30000); // 30 seconds for rejoin
-
-      disconnectedPlayers.set(player.nickname, { roomId: player.roomId, timeoutId });
+      }
       players.delete(socket.id);
+      broadcastGlobalStats();
     }
   });
 });
 
-
-
-
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
