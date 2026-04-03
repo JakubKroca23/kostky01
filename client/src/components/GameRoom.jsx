@@ -22,7 +22,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
     setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
        setIsRolling(true);
-       const timer = setTimeout(() => setIsRolling(false), 600);
+       const timer = setTimeout(() => setIsRolling(false), 2200); // 2.2s pro plynulé zastavení
        return () => clearTimeout(timer);
     }
   }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll]);
@@ -56,25 +56,27 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
     audio.playClick();
   };
 
+  const dicePhysics = React.useMemo(() => {
+    // Generate static landing spots for EACH ROLL
+    return room.turnInfo.lastRoll.map((_, i) => ({
+      tx: Math.random() * 320 - 160, // Max 160px od středu X
+      ty: Math.random() * 210 - 105, // Max 105px od středu Y
+      tr: Math.random() * 1440 - 720,
+      delay: i * 0.05
+    }));
+  }, [room.turnInfo.lastRoll, room.turnInfo.currentTurnId]);
+
   const renderDice = () => {
     return room.turnInfo.lastRoll.map((value, index) => {
       const isSelected = selectedDice.includes(index);
       const canSelect = isMyTurn && room.turnInfo.allowedIndexes.includes(index);
+      const physics = dicePhysics[index];
 
-      // HEAVY PHYSICS for independent CHAOTIC motion
-      const physicsStyle = {
-        '--dx1': `${Math.random() * 300 - 150}px`,
-        '--dy1': `${Math.random() * 410 - 205}px`,
-        '--dr1': `${Math.random() * 1440 - 720}deg`,
-        '--dx2': `${Math.random() * 260 - 130}px`,
-        '--dy2': `${Math.random() * 380 - 190}px`,
-        '--dr2': `${Math.random() * 1440 - 720}deg`,
-        '--dx3': `${Math.random() * 320 - 160}px`,
-        '--dy3': `${Math.random() * 420 - 210}px`,
-        '--dr3': `${Math.random() * 1440 - 720}deg`,
-        '--dx4': `${Math.random() * 280 - 140}px`,
-        '--dy4': `${Math.random() * 390 - 195}px`,
-        '--dr4': `${Math.random() * 1440 - 720}deg`,
+      const style = {
+        '--tx': `${physics.tx}px`,
+        '--ty': `${physics.ty}px`,
+        '--tr': `${physics.tr}deg`,
+        '--delay': `${physics.delay}s`
       };
 
       return (
@@ -84,7 +86,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
           isSelected={isSelected}
           isRolling={isRolling}
           canSelect={canSelect}
-          style={physicsStyle}
+          style={style}
           onClick={() => handleDieClick(index)}
         />
       );

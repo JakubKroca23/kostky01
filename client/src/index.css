@@ -147,12 +147,9 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  padding: 40px;
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 20px;
 }
 
 .dice-body {
@@ -164,25 +161,49 @@ body {
   display: flex;
   padding: 10px;
   cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-  position: relative;
+  transition: all 0.4s ease-out;
+  position: absolute; /* Umožňuje kostkám létat přes sebe */
   user-select: none;
+  top: 50%;
+  left: 50%;
+  margin-top: -35px;
+  margin-left: -35px;
 }
 
-/* Base rolling state with smooth movement */
+/* One-shot physics shot from cup (start) to scattered position (end) */
 .dice-body.rolling {
-  animation: smooth-roll 1.0s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  /* Fast start, heavy deceleration (friction) */
+  animation: physics-shot 2.2s forwards cubic-bezier(0.075, 0.82, 0.165, 1);
+  animation-delay: var(--delay, 0s);
   pointer-events: none;
   border-color: var(--neon-gold);
-  transition: none !important; /* Důležité: vypnout vyhlazování během hodu */
+  transition: none !important;
+  z-index: 100;
 }
 
-@keyframes smooth-roll {
-  0% { transform: translate(var(--dx1, 60px), var(--dy1, -100px)) rotate(var(--dr1, 45deg)) scale(1.1); }
-  25% { transform: translate(var(--dx2, -120px), var(--dy2, 120px)) rotate(var(--dr2, 360deg)) scale(0.9); }
-  50% { transform: translate(var(--dx3, 140px), var(--dy3, -80px)) rotate(var(--dr3, 720deg)) scale(1.1); }
-  75% { transform: translate(var(--dx4, -70px), var(--dy4, 150px)) rotate(var(--dr4, 540deg)) scale(0.9); }
-  100% { transform: translate(0, 0) rotate(1080deg) scale(1); }
+@keyframes physics-shot {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1.5); 
+    opacity: 0.8;
+  }
+  15% { 
+    transform: translate(calc(var(--tx) * 0.4), calc(var(--ty) * 0.4)) rotate(calc(var(--tr) * 0.2)) scale(1.2);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg)) scale(1); 
+  }
+}
+
+/* Maintain position after rolling */
+.dice-body {
+  transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg));
+}
+
+.dice-body.selected {
+  transform: scale(1.05);
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 20px var(--neon-pink);
 }
 
 .dice-body.can-select {
