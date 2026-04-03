@@ -144,7 +144,6 @@ function App() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('nickname-set', onNicknameSet);
-    socket.on('rejoin-success', onRejoinSuccess);
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
     socket.on('room-joined', onRoomJoined);
