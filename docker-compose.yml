@@ -6,13 +6,12 @@ services:
     expose:
       - "3001"
     networks:
-      - appwrite # Změň na reálný název (např. appwrite_appwrite)
+      - appwrite
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kostky.rule=Host(`kostky.tvadomena.cz`)" # <--- SEM DEJ SVOU DOMÉNU
+      - "traefik.http.routers.kostky.rule=Host(`kostky.propoj.app`)"
       - "traefik.http.routers.kostky.entrypoints=websecure"
       - "traefik.http.routers.kostky.tls=true"
-      - "traefik.http.routers.kostky.tls.certresolver=letsencrypt"
       - "traefik.http.services.kostky.loadbalancer.server.port=3001"
 
 networks:
