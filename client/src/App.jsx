@@ -7,7 +7,14 @@ import VictoryModal from './components/VictoryModal';
 import { audio } from './utils/audio';
 
 const isProd = import.meta.env.PROD;
-const socket = io(isProd ? '/' : 'http://localhost:3001');
+const socket = io(isProd ? window.location.origin : 'http://localhost:3001', {
+  transports: ['websocket'],
+  reconnectionAttempts: 7
+});
+
+socket.on('connect_error', (err) => {
+  console.error('Socket Connection Error:', err.message);
+});
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
@@ -59,6 +66,10 @@ function App() {
 
     function onRoomListUpdate(list) {
       setRooms(list);
+    }
+
+    function onGlobalStatsUpdate(stats) {
+      setOnlineStats(stats);
     }
 
     function onRoomJoined(data) {
@@ -255,6 +266,7 @@ function App() {
       {screen === 'lobby' && (
         <Lobby 
           rooms={rooms} 
+          onlineStats={onlineStats}
           onCreateRoom={handleCreateRoom}
           onJoinRoom={handleJoinRoom}
         />

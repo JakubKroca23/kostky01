@@ -272,11 +272,28 @@ body {
   padding: 18px !important;
 }
 
-.room-info h3 { color: var(--neon-cyan); margin-bottom: 4px; }
-.room-id { font-size: 0.65rem; opacity: 0.4; letter-spacing: 1px; }
+.room-info h3 { color: var(--neon-cyan); margin-bottom: 2px; font-size: 1.1rem; }
+.room-player-names { font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px; color: var(--neon-pink); }
+.room-id { font-size: 0.6rem; opacity: 0.3; letter-spacing: 1px; }
 
-.room-actions { text-align: right; display: flex; flex-direction: column; gap: 8px; }
-.player-count { font-size: 0.75rem; color: var(--neon-green); font-weight: bold; }
+/* Global Stats Panel */
+.online-players-card { padding: 16px !important; margin-bottom: 15px; }
+.online-list-horizontal {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  -webkit-overflow-scrolling: touch;
+}
+.online-user-pill {
+  background: rgba(0, 255, 255, 0.1);
+  color: var(--neon-cyan);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+}
 
 .creation-pane { padding: 18px !important; animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }

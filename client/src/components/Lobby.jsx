@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Lobby({ rooms, onCreateRoom, onJoinRoom }) {
+function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom }) {
   const [newRoomName, setNewRoomName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -12,30 +12,40 @@ function Lobby({ rooms, onCreateRoom, onJoinRoom }) {
   };
 
   return (
-    <main className="hero-section lobby-layout">
+    <main className="hero-section lobby-layout fade-in">
+      {/* Global Status Bar */}
+      <div className="online-players-card neon-card glass">
+        <h3 className="section-title">ONLINE LEGENDY ({onlineStats.onlineCount})</h3>
+        <div className="online-list-horizontal">
+           {onlineStats.players.map((p, i) => (
+             <span key={i} className="online-user-pill">{p}</span>
+           ))}
+        </div>
+      </div>
+
       <div className="lobby-header">
-        <h2 className="neon-text-pink">Aktivní Hry</h2>
+        <h2 className="neon-text-pink">Aktivní Místnosti</h2>
         <button 
-          className="neon-button compact" 
+          className="neon-button primary compact" 
           onClick={() => setIsCreating(!isCreating)}
         >
-          {isCreating ? 'ZRUŠIT' : 'ZALOŽIT HRU'}
+          {isCreating ? 'ZRUŠIT' : 'NOVÁ HRA'}
         </button>
       </div>
 
       {isCreating && (
-        <div className="neon-card glass creation-pane">
+        <div className="neon-card creation-pane">
           <form onSubmit={handleCreate} className="nickname-form">
             <input
               type="text"
               value={newRoomName}
               onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="Název místnosti..."
+              placeholder="Název hry..."
               maxLength={20}
               required
               className="neon-input"
             />
-            <button type="submit" className="neon-button full-width">VYTVOŘIT</button>
+            <button type="submit" className="neon-button full-width primary">ZALOŽIT A VSTOUPIT</button>
           </form>
         </div>
       )}
@@ -50,6 +60,9 @@ function Lobby({ rooms, onCreateRoom, onJoinRoom }) {
             <div key={room.id} className="room-item neon-card glass">
               <div className="room-info">
                 <h3>{room.name}</h3>
+                <div className="room-player-names">
+                   {room.playerNames?.join(', ') || 'Čeká se na hráče...'}
+                </div>
                 <span className="room-id">ID: {room.id}</span>
               </div>
               <div className="room-actions">
@@ -57,11 +70,11 @@ function Lobby({ rooms, onCreateRoom, onJoinRoom }) {
                   {room.playerCount} / {room.maxPlayers}
                 </span>
                 <button 
-                  className="neon-button sm"
+                  className="neon-button sm primary"
                   disabled={room.playerCount >= room.maxPlayers}
                   onClick={() => onJoinRoom(room.id)}
                 >
-                  PŘIPOJIT
+                  JOIN
                 </button>
               </div>
             </div>

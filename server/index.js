@@ -32,8 +32,7 @@ const io = new Server(server, {
 });
 
 const players = new Map(); // socket.id -> { nickname, roomId }
-const rooms = new Map(); // roomId -> { id, name, players: [{id, name}], maxPlayers: 6, turnInfo: {} }
-const disconnectedPlayers = new Map(); // nickname -> { roomId, timeoutId }
+const rooms = new Map(); // roomId -> { id, name, players: [{id, name, nickname}], maxPlayers: 6, turnInfo: {} }
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -48,25 +47,88 @@ function nextTurn(room) {
   room.turnInfo.rollCount = 0;
   room.turnInfo.lastRoll = [];
   room.turnInfo.diceCount = 6;
+  room.turnInfo.allowedIndexes = [];
   
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
 }
 
 function broadcastRooms() {
-  const roomList = Array.from(rooms.values()).map(r => ({
+  io.emit('room-list-update', getRoomList());
+}
+
+function getRoomList() {
+  return Array.from(rooms.values()).map(r => ({
     id: r.id,
     name: r.name,
     playerCount: r.players.length,
     maxPlayers: r.maxPlayers,
-    gameStarted: r.gameStarted
+    playerNames: r.players.map(p => p.nickname) // Include nicknames for lobby visibility
   }));
-  io.emit('room-list-update', roomList);
+}
+
+function broadcastGlobalStats() {
+  const allPlayers = Array.from(players.values()).map(p => p.nickname);
+  io.emit('global-stats-update', {
+    onlineCount: players.size,
+    players: allPlayers
+  });
 }
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('New connection:', socket.id);
 
-  // ... (set-nickname as before)
+  socket.on('set-nickname', (nickname) => {
+    if (!nickname || nickname.length < 3) {
+      return socket.emit('nickname-error', 'Jméno je příliš krátké.');
+    }
+    
+    players.set(socket.id, { nickname, roomId: null });
+    socket.emit('nickname-set', nickname);
+    
+    // Send initial data
+    socket.emit('room-list-update', getRoomList());
+    broadcastGlobalStats();
+  });
+
+  socket.on('change-nickname', (newNickname) => {
+    if (!newNickname || newNickname.length < 3) return;
+    const player = players.get(socket.id);
+    if (player) {
+      player.nickname = newNickname;
+      socket.emit('nickname-set', newNickname);
+      if (player.roomId) {
+        const room = rooms.get(player.roomId);
+        if (room) {
+          const p = room.players.find(p => p.id === socket.id);
+          if (p) p.nickname = newNickname;
+          io.to(player.roomId).emit('player-joined', { players: room.players });
+          io.emit('room-list-update', getRoomList());
+        }
+      }
+      broadcastGlobalStats();
+    }
+  });
+
+  socket.on('disconnect', () => {
+    const player = players.get(socket.id);
+    if (player) {
+      if (player.roomId) {
+        const room = rooms.get(player.roomId);
+        if (room) {
+          room.players = room.players.filter(p => p.id !== socket.id);
+          if (room.players.length === 0) {
+            rooms.delete(player.roomId);
+          } else {
+            io.to(player.roomId).emit('player-left', { players: room.players });
+          }
+          io.emit('room-list-update', getRoomList());
+        }
+      }
+      players.delete(socket.id);
+      broadcastGlobalStats();
+    }
+    console.log('Disconnected:', socket.id);
+  });
 
   socket.on('start-game', () => {
     const player = players.get(socket.id);
