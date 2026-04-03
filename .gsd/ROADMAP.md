@@ -29,19 +29,30 @@
 - Funkční "Join" a "Leave" přes Socket.io.
 
 ### Phase 3: Herní mechaniky (Game Logic)
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Kompletní implementace pravidel 10 000 na serveru.
 **Requirements**: REQ-03, REQ-04, REQ-05
 **Deliverables**: 
-- Funkce pro náhodný hod kostkami na serveru.
-- Detekce kombinací (postupky, dvojice, 1, 5).
-- Počítání bodů, tahy hráčů, minimální vstup (350b).
+- Scoring Engine (utils/scoring.js).
+- Turn & State Management (Turn logic, 350 min, Hot Dice).
+- Multiplayer Sync (Socket events, Scoreboard).
 
-### Phase 4: UI & Animace (Visual Polish)
-**Status**: ⬜ Not Started
+### Phase 4: Visuals & UX (Animations)
+**Status**: ⬜ Ready
+**Objective**: Nahrazení čísel vizuálními kostkami, animace.
 **Objective**: Neonový vzhled a "smooth" animace.
 **Requirements**: REQ-08, REQ-09, REQ-11, REQ-12
 **Deliverables**: 
-- Animovaný hod kostkou v Reactu.
+- Die.jsx (Neon 3D-like dice).
+- Roll/Throw animations.
+- Combo highlights/glow.
 - Neonový herní stůl s "glow" efekty.
 - Závěrečné doladění pro mobilní displeje (Portrait).
+
+### Phase 5: SFX & Music (Polish)
+**Status**: ⬜ Not Started
+**Objective**: Zvukové efekty hodu a pozadí.
+**Requirements**: REQ-02
+**Deliverables**: 
+- Audio assets (dice roll, score, win).
+- Sound toggle menu.
