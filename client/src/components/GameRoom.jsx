@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Die from './Die';
+import { calculateScore } from '../utils/scoring';
+import { audio } from '../utils/audio';
 
 function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
+  const [errorLocal, setErrorLocal] = useState('');
 
   if (!room) return null;
 
@@ -11,9 +14,12 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const isMyTurn = room.turnInfo.currentTurnId === myId;
   const canStart = !room.gameStarted && room.players[0].nickname === nickname;
 
+  const allowed = room.turnInfo.allowedIndexes || [];
+
   // Reset selection when turn or roll changes
   useEffect(() => {
     setSelectedDice([]);
+    setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
        setIsRolling(true);
        const timer = setTimeout(() => setIsRolling(false), 1000);
@@ -23,15 +29,44 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
 
   const toggleDie = (index) => {
     if (!isMyTurn || isRolling) return;
+    if (!allowed.includes(index)) {
+      setErrorLocal('Tato kostka netvoří body.');
+      setTimeout(() => setErrorLocal(''), 2000);
+      return;
+    }
+
+    audio.playClick();
     setSelectedDice(prev => 
       prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
     );
+  };
+
+  const validateAndDo = (action, isStop) => {
+    if (selectedDice.length === 0 && !isStop) {
+      setErrorLocal('Musíš vybrat alespoň jednu kostku.');
+      setTimeout(() => setErrorLocal(''), 2000);
+      return;
+    }
+
+    if (selectedDice.length > 0) {
+      const vals = selectedDice.map(i => room.turnInfo.lastRoll[i]);
+      const { score, usedIndexes } = calculateScore(vals);
+      
+      if (score === 0 || usedIndexes.length !== selectedDice.length) {
+        setErrorLocal('Vybrané kostky netvoří celou bodovou kombinaci!');
+        setTimeout(() => setErrorLocal(''), 3000);
+        return;
+      }
+    }
+    
+    action(selectedDice);
   };
 
   const currentTurnPoints = room.turnInfo.turnPoints || 0;
 
   return (
     <main className="hero-section game-room-layout">
+      {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
       <div className="room-header-neon">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name}</h2>
@@ -58,7 +93,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
           </div>
         </div>
       ) : (
-        <div className="game-area">
+        <div className="game-area fade-in">
           <div className="scoreboard glass">
             {room.players.map(p => (
               <div key={p.id} className={`score-row ${room.turnInfo.currentTurnId === p.id ? 'active-turn' : ''}`}>
@@ -108,15 +143,15 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
                   <>
                     <button 
                       className="neon-button full-width" 
-                      onClick={() => onRollAgain(selectedDice)}
-                      disabled={selectedDice.length === 0}
+                      onClick={() => validateAndDo(onRollAgain, false)}
+                      disabled={isRolling}
                     >
                       HODIT ZBYTKEM ({room.turnInfo.diceCount - selectedDice.length})
                     </button>
                     <button 
                       className="neon-button pink-border full-width" 
-                      onClick={() => onStop(selectedDice)}
-                      disabled={selectedDice.length === 0 && currentTurnPoints < 350}
+                      onClick={() => validateAndDo(onStop, true)}
+                      disabled={isRolling || (selectedDice.length === 0 && currentTurnPoints < 350)}
                     >
                       ZAPSAT BODY
                     </button>
@@ -136,5 +171,3 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
 }
 
 export default GameRoom;
-
-

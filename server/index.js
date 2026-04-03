@@ -2,10 +2,26 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { calculateScore } from './utils/scoring.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
+
+// Production: serve built frontend
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(distPath));
+  
+  // Single-page app support
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -79,14 +95,14 @@ io.on('connection', (socket) => {
     room.turnInfo.lastRoll = roll;
     
     // Check if the overall roll is a BUST (no scoring possible)
-    const { score: potentialScore } = calculateScore(roll);
+    const { score: potentialScore, usedIndexes } = calculateScore(roll);
     if (potentialScore === 0) {
       socket.emit('dice-rolled', { roll, isBust: true });
       setTimeout(() => nextTurn(room), 2000);
       return;
     }
 
-    socket.emit('dice-rolled', { roll, diceCount });
+    socket.emit('dice-rolled', { roll, diceCount, usedIndexes });
     io.to(room.id).except(socket.id).emit('opponent-rolled', { nickname: player.nickname, roll });
   });
 
@@ -119,12 +135,12 @@ io.on('connection', (socket) => {
     room.turnInfo.rollCount++;
     room.turnInfo.lastRoll = nextRoll;
     
-    const { score: nextPotential } = calculateScore(nextRoll);
+    const { score: nextPotential, usedIndexes: nextUsed } = calculateScore(nextRoll);
     if (nextPotential === 0) {
       socket.emit('dice-rolled', { roll: nextRoll, isBust: true });
       setTimeout(() => nextTurn(room), 2000);
     } else {
-      socket.emit('dice-rolled', { roll: nextRoll, turnPoints: room.turnInfo.turnPoints });
+      socket.emit('dice-rolled', { roll: nextRoll, turnPoints: room.turnInfo.turnPoints, usedIndexes: nextUsed });
       io.to(room.id).except(socket.id).emit('opponent-rolled', { nickname: player.nickname, roll: nextRoll, turnPoints: room.turnInfo.turnPoints });
     }
   });
@@ -152,8 +168,18 @@ io.on('connection', (socket) => {
     }
 
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
-    io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
-    nextTurn(room);
+    
+    if (room.turnInfo.scores[socket.id] >= 10000) {
+      console.log(`POZOR! Hráč ${player.nickname} VYHRÁL s ${room.turnInfo.scores[socket.id]}b!`);
+      io.to(room.id).emit('game-over', { 
+        winner: player.nickname, 
+        scores: room.turnInfo.scores 
+      });
+      room.gameStarted = false; // Reset for next game
+    } else {
+      io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
+      nextTurn(room);
+    }
   });
 
   socket.on('set-nickname', (name) => {

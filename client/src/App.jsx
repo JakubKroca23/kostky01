@@ -3,8 +3,11 @@ import { io } from 'socket.io-client';
 import NicknameScreen from './components/NicknameScreen';
 import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
+import VictoryModal from './components/VictoryModal';
+import { audio } from './utils/audio';
 
-const socket = io();
+const isProd = import.meta.env.PROD;
+const socket = io(isProd ? '/' : 'http://localhost:3001');
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
@@ -13,6 +16,10 @@ function App() {
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [error, setError] = useState('');
+  const [winnerData, setWinnerData] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    return localStorage.getItem('kostky-sound') !== 'false';
+  });
 
   useEffect(() => {
     function onConnect() {
@@ -68,6 +75,7 @@ function App() {
     }
 
     function onScoreUpdated(data) {
+      audio.playScore();
       setCurrentRoom(prev => ({
         ...prev,
         turnInfo: { ...prev.turnInfo, scores: data.scores }
@@ -89,16 +97,21 @@ function App() {
           lastRoll: data.roll, 
           turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
           rollCount: prev.turnInfo.rollCount + 1,
-          diceCount: data.diceCount || prev.turnInfo.diceCount
+          diceCount: data.diceCount || prev.turnInfo.diceCount,
+          allowedIndexes: data.usedIndexes
         }
       }));
       if (data.isBust) {
+        audio.playBust();
         setError(data.reason === '350 limit' ? 'Limit 350b nesplněn do 3. hodu!' : 'ZELENÁČ! Žádné body.');
         setTimeout(() => setError(''), 3000);
+      } else {
+        audio.playRoll();
       }
     }
 
     function onOpponentRolled(data) {
+      audio.playRoll();
        setCurrentRoom(prev => ({
         ...prev,
         turnInfo: { 
@@ -113,6 +126,11 @@ function App() {
     function onLeftRoom() {
       setCurrentRoom(null);
       setScreen('lobby');
+    }
+
+    function onGameOver(data) {
+      audio.playScore();
+      setWinnerData(data);
     }
 
     socket.on('connect', onConnect);
@@ -130,6 +148,7 @@ function App() {
     socket.on('turn-updated', onTurnUpdated);
     socket.on('dice-rolled', onDiceRolled);
     socket.on('opponent-rolled', onOpponentRolled);
+    socket.on('game-over', onGameOver);
 
     return () => {
       socket.off('connect', onConnect);
@@ -147,8 +166,14 @@ function App() {
       socket.off('turn-updated', onTurnUpdated);
       socket.off('dice-rolled', onDiceRolled);
       socket.off('opponent-rolled', onOpponentRolled);
+      socket.off('game-over', onGameOver);
     };
   }, []);
+
+  const handleBackToLobby = () => {
+    setWinnerData(null);
+    setScreen('lobby');
+  };
 
   const handleJoinNickname = (name) => {
     socket.emit('set-nickname', name);
@@ -184,10 +209,25 @@ function App() {
 
   return (
     <div className="app-container fade-in">
+      {winnerData && (
+        <VictoryModal 
+          winner={winnerData.winner} 
+          scores={winnerData.scores} 
+          onBack={handleBackToLobby}
+        />
+      )}
       <header className="neon-header">
         <h1 className="neon-text-cyan">KOSTKY 10 000</h1>
-        <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
-          {isConnected ? 'ONLINE' : 'CONNECTING...'}
+        <div className="header-controls">
+          <button 
+            className={`sound-toggle ${soundEnabled ? 'active' : ''}`}
+            onClick={() => setSoundEnabled(!soundEnabled)}
+          >
+            {soundEnabled ? '🔊' : '🔇'}
+          </button>
+          <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
+            {isConnected ? 'ONLINE' : 'CONNECTING...'}
+          </div>
         </div>
       </header>
       
@@ -220,10 +260,6 @@ function App() {
       )}
     </div>
   );
-
 }
 
 export default App;
-
-
-
