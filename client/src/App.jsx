@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import NicknameScreen from './components/NicknameScreen';
 import Lobby from './components/Lobby';
+import GameRoom from './components/GameRoom';
 
 const socket = io();
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [screen, setScreen] = useState('nickname'); // 'nickname', 'lobby', 'room'
-  const [nickname, setNickname] = useState('');
+  const [screen, setScreen] = useState('loading'); // 'loading', 'nickname', 'lobby', 'room'
+  const [nickname, setNickname] = useState(localStorage.getItem('kostky-nickname') || '');
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [error, setError] = useState('');
@@ -16,6 +17,13 @@ function App() {
   useEffect(() => {
     function onConnect() {
       setIsConnected(true);
+      // Try to rejoin if we have a nickname
+      const stashedNick = localStorage.getItem('kostky-nickname');
+      if (stashedNick) {
+        socket.emit('set-nickname', stashedNick);
+      } else {
+        setScreen('nickname');
+      }
     }
 
     function onDisconnect() {
@@ -25,13 +33,21 @@ function App() {
     function onNicknameSet(data) {
       if (data.success) {
         setNickname(data.nickname);
+        localStorage.setItem('kostky-nickname', data.nickname);
         setScreen('lobby');
         setError('');
       }
     }
 
+    function onRejoinSuccess(data) {
+      setNickname(data.nickname);
+      localStorage.setItem('kostky-nickname', data.nickname);
+      setScreen(data.roomId ? 'room' : 'lobby');
+    }
+
     function onNicknameError(msg) {
       setError(msg);
+      setScreen('nickname');
     }
 
     function onRoomListUpdate(list) {
@@ -43,20 +59,37 @@ function App() {
       setScreen('room');
     }
 
+    function onRoomUpdate(data) {
+      setCurrentRoom(data.room || (prev => ({ ...prev, players: data.players })));
+    }
+
+    function onLeftRoom() {
+      setCurrentRoom(null);
+      setScreen('lobby');
+    }
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('nickname-set', onNicknameSet);
+    socket.on('rejoin-success', onRejoinSuccess);
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
     socket.on('room-joined', onRoomJoined);
+    socket.on('player-joined', onRoomUpdate);
+    socket.on('player-left', onRoomUpdate);
+    socket.on('left-room', onLeftRoom);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('nickname-set', onNicknameSet);
+      socket.off('rejoin-success', onRejoinSuccess);
       socket.off('nickname-error', onNicknameError);
       socket.off('room-list-update', onRoomListUpdate);
       socket.off('room-joined', onRoomJoined);
+      socket.off('player-joined', onRoomUpdate);
+      socket.off('player-left', onRoomUpdate);
+      socket.off('left-room', onLeftRoom);
     };
   }, []);
 
@@ -72,6 +105,10 @@ function App() {
     socket.emit('join-room', roomId);
   };
 
+  const handleLeaveRoom = () => {
+    socket.emit('leave-room');
+  };
+
   return (
     <div className="app-container">
       <header className="neon-header">
@@ -81,6 +118,8 @@ function App() {
         </div>
       </header>
       
+      {screen === 'loading' && <div className="loading">Pripojovani...</div>}
+
       {screen === 'nickname' && (
         <NicknameScreen onJoin={handleJoinNickname} error={error} />
       )}
@@ -94,18 +133,13 @@ function App() {
       )}
 
       {screen === 'room' && (
-        <main className="hero-section">
-          <div className="neon-card">
-            <h2>Místnost: {currentRoom?.name}</h2>
-            <p>Hráči: {currentRoom?.players?.length}</p>
-            <button className="neon-button" onClick={() => setScreen('lobby')}>ZPĚT DO LOBBY</button>
-          </div>
-        </main>
+        <GameRoom room={currentRoom} onLeave={handleLeaveRoom} />
       )}
     </div>
   );
 }
 
 export default App;
+
 
 

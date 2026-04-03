@@ -17,6 +17,7 @@ const io = new Server(server, {
 const players = new Map(); // socket.id -> { nickname, roomId }
 const nicknames = new Set(); // Globally taken nicknames
 const rooms = new Map(); // roomId -> { id, name, players: [{id, name}], maxPlayers: 6 }
+const disconnectedPlayers = new Map(); // nickname -> { roomId, timeoutId }
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -36,29 +37,50 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('set-nickname', (name) => {
-    // ... existující logika (zůstává stejná)
     const trimmedName = name.trim();
+    
+    // REJOIN LOGIC
+    if (disconnectedPlayers.has(trimmedName)) {
+      const { roomId, timeoutId } = disconnectedPlayers.get(trimmedName);
+      clearTimeout(timeoutId);
+      disconnectedPlayers.delete(trimmedName);
+
+      socket.data.nickname = trimmedName;
+      players.set(socket.id, { nickname: trimmedName, roomId });
+      
+      console.log(`Player rejoined: ${trimmedName} (${socket.id})`);
+      socket.emit('rejoin-success', { nickname: trimmedName, roomId });
+
+      if (roomId && rooms.has(roomId)) {
+        const room = rooms.get(roomId);
+        // Aktualizovat socket id v seznamu hráčů místnosti
+        const pIndex = room.players.findIndex(p => p.nickname === trimmedName);
+        if (pIndex !== -1) room.players[pIndex].id = socket.id;
+        
+        socket.join(roomId);
+        socket.emit('room-joined', { roomId, room });
+      } else {
+        socket.emit('nickname-set', { success: true, nickname: trimmedName });
+      }
+      return;
+    }
+
     if (nicknames.has(trimmedName)) {
       socket.emit('nickname-error', 'Toto jméno je již obsazené.');
       return;
     }
+    // ... rest of validation ...
     if (trimmedName.length < 3) {
       socket.emit('nickname-error', 'Jméno musí mít alespoň 3 znaky.');
       return;
     }
+
     nicknames.add(trimmedName);
     socket.data.nickname = trimmedName;
     players.set(socket.id, { nickname: trimmedName, roomId: null });
     console.log(`Player registered: ${trimmedName} (${socket.id})`);
     socket.emit('nickname-set', { success: true, nickname: trimmedName });
-    
-    // Po přihlášení mu pošleme aktuální seznam místností
-    socket.emit('room-list-update', Array.from(rooms.values()).map(r => ({
-      id: r.id,
-      name: r.name,
-      playerCount: r.players.length,
-      maxPlayers: r.maxPlayers
-    })));
+    broadcastRooms();
   });
 
   socket.on('create-room', (roomName) => {
@@ -82,27 +104,85 @@ io.on('connection', (socket) => {
     broadcastRooms();
   });
 
-  socket.on('disconnect', () => {
+  socket.on('join-room', (roomId) => {
     const player = players.get(socket.id);
-    if (player) {
-      // Pokud byl v místnosti, odstraňme ho
-      if (player.roomId) {
-        const room = rooms.get(player.roomId);
-        if (room) {
-          room.players = room.players.filter(p => p.id !== socket.id);
-          if (room.players.length === 0) {
-            rooms.delete(player.roomId);
-            console.log(`Room ${player.roomId} closed (empty)`);
-          }
-        }
+    const room = rooms.get(roomId);
+
+    if (!player || !room) {
+      socket.emit('error', 'Místnost neexistuje.');
+      return;
+    }
+
+    if (room.players.length >= room.maxPlayers) {
+      socket.emit('error', 'Místnost je již plná.');
+      return;
+    }
+
+    room.players.push({ id: socket.id, nickname: player.nickname });
+    player.roomId = roomId;
+    socket.join(roomId);
+
+    console.log(`Player ${player.nickname} joined room ${roomId}`);
+    socket.emit('room-joined', { roomId, room });
+    
+    io.to(roomId).emit('player-joined', { players: room.players });
+    broadcastRooms();
+  });
+
+  socket.on('leave-room', () => {
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+
+    const roomId = player.roomId;
+    const room = rooms.get(roomId);
+
+    if (room) {
+      room.players = room.players.filter(p => p.id !== socket.id);
+      socket.leave(roomId);
+      player.roomId = null;
+
+      if (room.players.length === 0) {
+        rooms.delete(roomId);
+        console.log(`Room ${roomId} closed (empty)`);
+      } else {
+        io.to(roomId).emit('player-left', { players: room.players });
       }
-      nicknames.delete(player.nickname);
-      players.delete(socket.id);
-      console.log(`Player disconnected: ${player.nickname}`);
+      
+      socket.emit('left-room');
       broadcastRooms();
     }
   });
+
+  socket.on('disconnect', () => {
+    const player = players.get(socket.id);
+    if (player) {
+      console.log(`Player disconnected (pending): ${player.nickname}`);
+      
+      // Delay removal for rejoin
+      const timeoutId = setTimeout(() => {
+        if (player.roomId) {
+          const room = rooms.get(player.roomId);
+          if (room) {
+            room.players = room.players.filter(p => p.nickname !== player.nickname);
+            if (room.players.length === 0) {
+              rooms.delete(player.roomId);
+            } else {
+              io.to(player.roomId).emit('player-left', { players: room.players });
+            }
+          }
+        }
+        nicknames.delete(player.nickname);
+        disconnectedPlayers.delete(player.nickname);
+        broadcastRooms();
+        console.log(`Player session expired: ${player.nickname}`);
+      }, 30000); // 30 seconds for rejoin
+
+      disconnectedPlayers.set(player.nickname, { roomId: player.roomId, timeoutId });
+      players.delete(socket.id);
+    }
+  });
 });
+
 
 
 

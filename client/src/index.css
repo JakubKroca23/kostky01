@@ -168,6 +168,7 @@ body {
   justify-content: center;
 }
 
+
 .neon-text-cyan {
   color: var(--neon-cyan) !important;
   text-shadow: var(--glow-cyan) !important;
@@ -250,3 +251,122 @@ body {
   padding: 40px !important;
   opacity: 0.5;
 }
+
+/* Game Room Layout */
+.room-header-neon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+}
+
+.room-tag {
+  font-size: 0.65rem;
+  color: var(--neon-cyan);
+  opacity: 0.6;
+  letter-spacing: 1px;
+}
+
+.players-grid {
+  flex: 1;
+}
+
+.section-title {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+}
+
+.player-list-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.player-badge {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 20px !important;
+  border-radius: 12px;
+  position: relative;
+}
+
+.player-badge.empty {
+  border: 1px dashed rgba(255, 255, 255, 0.1) !important;
+  opacity: 0.3;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green);
+}
+
+.player-name {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.host-tag {
+  margin-left: auto;
+  font-size: 10px;
+  background: var(--neon-pink);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.placeholder {
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.room-footer {
+  margin-top: auto;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.hint-text {
+  color: var(--neon-cyan);
+  font-size: 0.8rem;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+.pink-border {
+  border-color: var(--neon-pink) !important;
+  color: var(--neon-pink) !important;
+  text-shadow: var(--glow-pink) !important;
+}
+
+.pink-border:hover {
+  background: var(--neon-pink) !important;
+  color: black !important;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-family: monospace;
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
