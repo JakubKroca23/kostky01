@@ -171,17 +171,18 @@ body {
 
 /* Base rolling state with smooth movement */
 .dice-body.rolling {
-  animation: smooth-roll 1.5s infinite alternate ease-in-out;
+  animation: smooth-roll 1.0s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
   pointer-events: none;
   border-color: var(--neon-gold);
+  transition: none !important; /* Důležité: vypnout vyhlazování během hodu */
 }
 
 @keyframes smooth-roll {
-  0% { transform: translate(var(--dx1, 10px), var(--dy1, -20px)) rotate(var(--dr1, 45deg)); }
-  25% { transform: translate(var(--dx2, -30px), var(--dy2, 40px)) rotate(var(--dr2, 180deg)); }
-  50% { transform: translate(var(--dx3, 40px), var(--dy3, -10px)) rotate(var(--dr3, 270deg)); }
-  75% { transform: translate(var(--dx4, -15px), var(--dy4, 30px)) rotate(var(--dr4, 90deg)); }
-  100% { transform: translate(0, 0) rotate(360deg); }
+  0% { transform: translate(var(--dx1, 60px), var(--dy1, -100px)) rotate(var(--dr1, 45deg)) scale(1.1); }
+  25% { transform: translate(var(--dx2, -120px), var(--dy2, 120px)) rotate(var(--dr2, 360deg)) scale(0.9); }
+  50% { transform: translate(var(--dx3, 140px), var(--dy3, -80px)) rotate(var(--dr3, 720deg)) scale(1.1); }
+  75% { transform: translate(var(--dx4, -70px), var(--dy4, 150px)) rotate(var(--dr4, 540deg)) scale(0.9); }
+  100% { transform: translate(0, 0) rotate(1080deg) scale(1); }
 }
 
 .dice-body.can-select {
