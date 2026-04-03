@@ -9,12 +9,12 @@ const DOTS_MAP = {
   6: [0, 3, 6, 2, 5, 8]
 };
 
-function Die({ value, isSelected, onClick, isRolling, style }) {
+function Die({ value, isSelected, onClick, isRolling, canSelect, style }) {
   const dots = DOTS_MAP[value] || [];
 
   return (
     <div 
-      className={`dice-body neon-card glass ${isSelected ? 'selected' : ''} ${isRolling ? 'rolling' : ''}`}
+      className={`dice-body neon-card glass ${isSelected ? 'selected' : ''} ${isRolling ? 'rolling' : ''} ${canSelect ? 'can-select' : ''}`}
       onClick={onClick}
       style={style}
     >

@@ -22,23 +22,56 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
     setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
        setIsRolling(true);
-       const timer = setTimeout(() => setIsRolling(false), 1000);
+       const timer = setTimeout(() => setIsRolling(false), 600);
        return () => clearTimeout(timer);
     }
   }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll]);
 
-  const toggleDie = (index) => {
-    if (!isMyTurn || isRolling) return;
-    if (!allowed.includes(index)) {
-      setErrorLocal('Tato kostka netvoří body.');
-      setTimeout(() => setErrorLocal(''), 2000);
+  const handleDieClick = (index) => {
+    if (isRolling || !isMyTurn) return;
+    
+    const isAllowed = room.turnInfo.allowedIndexes.includes(index);
+    if (!isAllowed) return;
+
+    if (selectedDice.includes(index)) {
+      // If already selected, remove it
+      setSelectedDice(prev => prev.filter(i => i !== index));
+      audio.playClick();
       return;
     }
 
+    // GROUP SELECTION LOGIC:
+    // If this die is part of a multiple (3+ of same value) in allowedIndexes, select all of them
+    const dieValue = room.turnInfo.lastRoll[index];
+    const allowedDiceInCombo = room.turnInfo.allowedIndexes.filter(i => room.turnInfo.lastRoll[i] === dieValue);
+    
+    if (allowedDiceInCombo.length >= 3) {
+      // Select the whole group
+      setSelectedDice(prev => [...new Set([...prev, ...allowedDiceInCombo])]);
+    } else {
+      // Singular selection (1s or 5s)
+      setSelectedDice(prev => [...prev, index]);
+    }
+    
     audio.playClick();
-    setSelectedDice(prev => 
-      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
-    );
+  };
+
+  const renderDice = () => {
+    return room.turnInfo.lastRoll.map((value, index) => {
+      const isSelected = selectedDice.includes(index);
+      const canSelect = isMyTurn && room.turnInfo.allowedIndexes.includes(index);
+
+      return (
+        <Die
+          key={index}
+          value={value}
+          isSelected={isSelected}
+          isRolling={isRolling}
+          canSelect={canSelect}
+          onClick={() => handleDieClick(index)}
+        />
+      );
+    });
   };
 
   const validateAndDo = (action, isStop) => {
@@ -103,33 +136,25 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
             ))}
           </div>
 
-          <div className="dice-arena glass">
+          <div className="dice-arena">
             <div className="dice-container">
               {room.turnInfo.lastRoll.length > 0 ? (
-                room.turnInfo.lastRoll.map((val, i) => (
-                  <Die 
-                    key={i} 
-                    value={val} 
-                    isSelected={selectedDice.includes(i)}
-                    isRolling={isRolling}
-                    onClick={() => toggleDie(i)}
-                  />
-                ))
+                renderDice()
               ) : (
-                <div className="empty-dice">Aréna připravena...</div>
+                <div className="empty-dice neon-text-cyan">Aréna připravena...</div>
               )}
             </div>
           </div>
 
-          <div className="turn-summary neon-card glass">
+          <div className="turn-summary neon-card">
             <div className="turn-stats">
               <div className="stat-item">
                 <span className="stat-label">BODY V TAHU</span>
-                <span className="stat-value neon-text-pink">{currentTurnPoints}</span>
+                <div className="stat-value neon-text-pink">{currentTurnPoints}</div>
               </div>
               <div className="stat-item">
-                <span className="stat-label">HODŮ</span>
-                <span className="stat-value">{room.turnInfo.rollCount || 0} / 3</span>
+                <span className="stat-label">POČET HODŮ</span>
+                <div className="stat-value">{room.turnInfo.rollCount || 0}</div>
               </div>
             </div>
           </div>
