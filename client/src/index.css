@@ -8,7 +8,13 @@
   --glass-border: rgba(255, 255, 255, 0.1);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100dvh;
+  margin: 0;
+  overflow: hidden; /* Zakázat scroll */
+  touch-action: manipulation; /* Rychlé kliky bez zoomu */
+  user-select: none; /* Neoznačovat text prstem */
+}
 
 body {
   background-color: var(--dark-bg);
@@ -17,17 +23,21 @@ body {
     radial-gradient(circle at 10% 90%, rgba(0, 255, 255, 0.04) 0%, transparent 40%);
   color: white;
   font-family: 'Inter', system-ui, sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
 }
 
+/* Skrýt scrollbary všude */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; -ms-overflow-style: none; box-sizing: border-box; margin: 0; padding: 0; }
+
 .app-container {
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+  position: fixed; /* Fixace obsahu proti "plavání" */
+  inset: 0;
 }
 
 /* Header */
@@ -35,14 +45,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--glass-border);
-  margin-bottom: 25px;
 }
 
+.user-info { display: flex; align-items: center; gap: 8px; }
+.nickname-display { font-size: 0.75rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace; }
+.btn-mini { padding: 4px 6px; font-size: 0.55rem; opacity: 0.6; height: 26px; }
+.btn-mini:hover { opacity: 1; }
+
 .neon-header h1 {
-  font-size: 1.2rem;
-  letter-spacing: 5px;
+  font-size: 1rem;
+  letter-spacing: 3px;
   text-transform: uppercase;
   background: linear-gradient(to right, var(--neon-cyan), var(--neon-pink));
   background-clip: text;
@@ -118,37 +132,56 @@ body {
 
 /* Arena & Dice */
 .dice-arena {
-  height: 300px;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+  height: 320px; /* Optimal pro mobil bez scrollu */
+  background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
   border: 1px solid var(--glass-border);
-  border-radius: 32px;
-  margin: 20px 0;
+  border-radius: 30px;
+  margin: 10px 0;
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
 }
 
+/* Independent Dice Physics-like Simulation */
 .dice-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  height: 100%;
-  gap: 15px;
-  padding: 20px;
+  gap: 20px;
 }
 
 .dice-body {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   background: rgba(0,0,0,0.6);
   border: 1px solid var(--neon-cyan);
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
-  padding: 8px;
+  padding: 10px;
   cursor: pointer;
-  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   position: relative;
+  user-select: none;
+}
+
+/* Base rolling state with smooth movement */
+.dice-body.rolling {
+  animation: smooth-roll 1.5s infinite alternate ease-in-out;
+  pointer-events: none;
+  border-color: var(--neon-gold);
+}
+
+@keyframes smooth-roll {
+  0% { transform: translate(var(--dx1, 10px), var(--dy1, -20px)) rotate(var(--dr1, 45deg)); }
+  25% { transform: translate(var(--dx2, -30px), var(--dy2, 40px)) rotate(var(--dr2, 180deg)); }
+  50% { transform: translate(var(--dx3, 40px), var(--dy3, -10px)) rotate(var(--dr3, 270deg)); }
+  75% { transform: translate(var(--dx4, -15px), var(--dy4, 30px)) rotate(var(--dr4, 90deg)); }
+  100% { transform: translate(0, 0) rotate(360deg); }
 }
 
 .dice-body.can-select {

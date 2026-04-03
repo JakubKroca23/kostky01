@@ -207,6 +207,13 @@ function App() {
     socket.emit('stop-turn', selectedIndexes);
   };
 
+  const handleChangeNickname = () => {
+    const newName = prompt('Zadej nové jméno:', nickname);
+    if (newName && newName.trim().length >= 3) {
+      socket.emit('change-nickname', newName.trim());
+    }
+  };
+
   return (
     <div className="app-container fade-in">
       {winnerData && (
@@ -217,8 +224,14 @@ function App() {
         />
       )}
       <header className="neon-header">
-        <h1 className="neon-text-cyan">KOSTKY 10 000</h1>
+        <h1 className="neon-text-cyan">KOSTKY</h1>
         <div className="header-controls">
+          {nickname && (
+            <div className="user-info">
+              <span className="nickname-display">{nickname}</span>
+              <button className="neon-button btn-mini" onClick={handleChangeNickname}>Změnit</button>
+            </div>
+          )}
           <button 
             className={`sound-toggle ${soundEnabled ? 'active' : ''}`}
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -226,7 +239,7 @@ function App() {
             {soundEnabled ? '🔊' : '🔇'}
           </button>
           <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
-            {isConnected ? 'ONLINE' : 'CONNECTING...'}
+            {isConnected ? 'ONLINE' : '...'}
           </div>
         </div>
       </header>

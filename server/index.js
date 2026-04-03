@@ -32,7 +32,6 @@ const io = new Server(server, {
 });
 
 const players = new Map(); // socket.id -> { nickname, roomId }
-const nicknames = new Set(); // Globally taken nicknames
 const rooms = new Map(); // roomId -> { id, name, players: [{id, name}], maxPlayers: 6, turnInfo: {} }
 const disconnectedPlayers = new Map(); // nickname -> { roomId, timeoutId }
 
