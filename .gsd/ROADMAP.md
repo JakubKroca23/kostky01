@@ -38,21 +38,21 @@
 - Multiplayer Sync (Socket events, Scoreboard).
 
 ### Phase 4: Visuals & UX (Animations)
-**Status**: ⬜ Ready
+**Status**: ✅ Complete
 **Objective**: Nahrazení čísel vizuálními kostkami, animace.
-**Objective**: Neonový vzhled a "smooth" animace.
 **Requirements**: REQ-08, REQ-09, REQ-11, REQ-12
 **Deliverables**: 
-- Die.jsx (Neon 3D-like dice).
-- Roll/Throw animations.
-- Combo highlights/glow.
-- Neonový herní stůl s "glow" efekty.
-- Závěrečné doladění pro mobilní displeje (Portrait).
+- Die.jsx (Neon 2D dice).
+- Arena Bounce physics.
+- Manual selection interaction.
+- Fade-in app transitions.
 
 ### Phase 5: SFX & Music (Polish)
-**Status**: ⬜ Not Started
+**Status**: ⬜ Ready
 **Objective**: Zvukové efekty hodu a pozadí.
 **Requirements**: REQ-02
 **Deliverables**: 
-- Audio assets (dice roll, score, win).
-- Sound toggle menu.
+- Audio synthesis engine (Web Audio API).
+- Interactive SFX (roll, click, score, bust).
+- Sound toggle menu (localStorage).
+- Victory Modal (10,000 points celebrate).
