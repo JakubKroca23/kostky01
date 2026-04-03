@@ -20,7 +20,7 @@
 - Inicializace CSS design systému (neon tokens).
 
 ### Phase 2: Lobby & Real-time (Networking)
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Implementace lobby, vytváření místností a synchronizace uživatelů.
 **Requirements**: REQ-01, REQ-07, REQ-10
 **Deliverables**: 
