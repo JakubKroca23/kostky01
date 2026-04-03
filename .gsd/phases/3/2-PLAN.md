@@ -20,10 +20,10 @@ Implementace server-side stavu tahu, přepínání hráčů a pravidla minimáln
   <files>server/index.js</files>
   <action>
     Rozšířit objekt `room` o herní data.
-    - `turnInfo`: { currentPlayerIndex, turnPoints, totalPointsMap, hasEntered (boolean per player) }.
-    - Funkce `startTurn()`: resetuje stav tahu.
-    - Funkce `endTurn()`: přičte `turnPoints` do `totalPointsMap` (pokud splňuje 350b vstup) a posune index na dalšího hráče.
-    - Implementovat "Hot Dice": pokud hráč bodoval všemi 6 kostkami, získá opět 6 kostek k hodu.
+    - `turnInfo`: { currentPlayerIndex, turnPoints, currentRollCount, totalPointsMap }.
+    - Funkce `startTurn()`: resetuje stav tahu a počet hodů.
+    - Pravidlo vstupu: Hráč musí dosáhnout 350b nejpozději při 3. hodu v rámci tahu.
+    - Implementovat "Hot Dice": pokud hráč bodoval všemi 6 kostkami (i postupně), získá opět 6 kostek k hodu.
   </action>
   <verify>Logování v konzoli serveru pro `next-turn` a průběžné body (turnPoints) po každém hodu.</verify>
   <done>Server ví, čí je řada, kolik má hráč bodů a kdo už "otevřel" hru 350-bodovým hitem.</done>

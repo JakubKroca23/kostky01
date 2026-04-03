@@ -23,9 +23,9 @@ Vytvoření robustního algoritmu pro detekci kombinací v kostkách (10 000) na
     - Exportovat funkci `calculateScore(dice)`, která vrátí `{ points, usedIndexes, isBust }`.
     - Implementovat pravidla: 
       - Jedničky (100b), Pětky (50b).
-      - Trojice až šestice (100-800x hodnota, u jedniček 1000-8000b).
-      - Velká postupka (1-6) = 1500b.
-      - Tři dvojice (např. 2,2, 4,4, 6,6) = 1000b.
+      - Trojice až šestice (násobení x2 pro další kostku např. 3x 2 = 200, 4x 2 = 400). Jedničky začínají na 1000b.
+      - Velká postupka (1-6) = 2000b.
+      - Tři dvojice (např. 2,2, 4,4, 6,6) = 700b.
     - Zajistit, aby algoritmus prioritizoval nejvyšší kombinace.
   </action>
   <verify>Ruční ověření pomocí testovacího skriptu (např. v konzoli volání calculateScore([1,1,1,2,3,5])).</verify>

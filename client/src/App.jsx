@@ -63,6 +63,53 @@ function App() {
       setCurrentRoom(data.room || (prev => ({ ...prev, players: data.players })));
     }
 
+    function onGameStarted(data) {
+      setCurrentRoom(data.room);
+    }
+
+    function onScoreUpdated(data) {
+      setCurrentRoom(prev => ({
+        ...prev,
+        turnInfo: { ...prev.turnInfo, scores: data.scores }
+      }));
+    }
+
+    function onTurnUpdated(data) {
+      setCurrentRoom(prev => ({
+        ...prev,
+        turnInfo: { ...prev.turnInfo, ...data.turnInfo }
+      }));
+    }
+
+    function onDiceRolled(data) {
+      setCurrentRoom(prev => ({
+        ...prev,
+        turnInfo: { 
+          ...prev.turnInfo, 
+          lastRoll: data.roll, 
+          turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
+          rollCount: prev.turnInfo.rollCount + 1,
+          diceCount: data.diceCount || prev.turnInfo.diceCount
+        }
+      }));
+      if (data.isBust) {
+        setError(data.reason === '350 limit' ? 'Limit 350b nesplněn do 3. hodu!' : 'ZELENÁČ! Žádné body.');
+        setTimeout(() => setError(''), 3000);
+      }
+    }
+
+    function onOpponentRolled(data) {
+       setCurrentRoom(prev => ({
+        ...prev,
+        turnInfo: { 
+          ...prev.turnInfo, 
+          lastRoll: data.roll, 
+          turnPoints: data.turnPoints,
+          rollCount: prev.turnInfo.rollCount + 1
+        }
+      }));
+    }
+
     function onLeftRoom() {
       setCurrentRoom(null);
       setScreen('lobby');
@@ -78,6 +125,11 @@ function App() {
     socket.on('player-joined', onRoomUpdate);
     socket.on('player-left', onRoomUpdate);
     socket.on('left-room', onLeftRoom);
+    socket.on('game-started', onGameStarted);
+    socket.on('score-updated', onScoreUpdated);
+    socket.on('turn-updated', onTurnUpdated);
+    socket.on('dice-rolled', onDiceRolled);
+    socket.on('opponent-rolled', onOpponentRolled);
 
     return () => {
       socket.off('connect', onConnect);
@@ -90,6 +142,11 @@ function App() {
       socket.off('player-joined', onRoomUpdate);
       socket.off('player-left', onRoomUpdate);
       socket.off('left-room', onLeftRoom);
+      socket.off('game-started', onGameStarted);
+      socket.off('score-updated', onScoreUpdated);
+      socket.off('turn-updated', onTurnUpdated);
+      socket.off('dice-rolled', onDiceRolled);
+      socket.off('opponent-rolled', onOpponentRolled);
     };
   }, []);
 
@@ -109,6 +166,18 @@ function App() {
     socket.emit('leave-room');
   };
 
+  const handleStartGame = () => {
+    socket.emit('start-game');
+  };
+
+  const handleRollDice = () => {
+    socket.emit('roll-dice');
+  };
+
+  const handleStopTurn = () => {
+    socket.emit('stop-turn');
+  };
+
   return (
     <div className="app-container">
       <header className="neon-header">
@@ -119,6 +188,8 @@ function App() {
       </header>
       
       {screen === 'loading' && <div className="loading">Pripojovani...</div>}
+
+      {error && <div className="global-error-toast glass neon-card">{error}</div>}
 
       {screen === 'nickname' && (
         <NicknameScreen onJoin={handleJoinNickname} error={error} />
@@ -133,10 +204,18 @@ function App() {
       )}
 
       {screen === 'room' && (
-        <GameRoom room={currentRoom} onLeave={handleLeaveRoom} />
+        <GameRoom 
+          room={currentRoom} 
+          nickname={nickname}
+          onRoll={handleRollDice}
+          onStop={handleStopTurn}
+          onStart={handleStartGame}
+          isConnected={isConnected}
+        />
       )}
     </div>
   );
+
 }
 
 export default App;

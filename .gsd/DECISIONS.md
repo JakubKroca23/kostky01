@@ -33,3 +33,22 @@
 ### Constraints
 - Ověření unikátnosti jména probíhá asynchronně při odesílání "set-nickname".
 - Rejoin je omezen na životnost session (dokud je hráč v paměti serveru nebo dokud neuplyne timeout).
+## Phase 3 Decisions
+
+**Date:** 2026-04-03
+
+### Scope
+- **Scoring Engine**: 
+  - Tři dvojice = 700 bodů.
+  - Velká postupka (1-6) = 2000 bodů.
+  - Násobky (4, 5, 6 stejných): Standardní násobení x2 (např. 4x 2 = 400).
+- **Vstupní limit 350b**: Minimální hranice 350 bodů musí být splněna nejpozději při 3. hodu v rámci aktuálního tahu, jinak tah končí nulou.
+- **Herní tah**: Možnost odkládání kostek a vícenásobných hodů (dokud zbývají kostky a hráč neriskuje "Zelenáče").
+- **Hot Dice**: Pokud hráč boduje všemi 6 kostkami (i postupně napříč hody), získává nárok na nový hod se všemi 6 kostkami ("znovuhod").
+
+### Approach
+- **Logic Location**: Veškerý výpočet skóre probíhá výhradně na serveru (`scoring.js`) pro zamezení podvádění.
+- **Turn State**: Server udržuje dočasný stav aktuálního hodu (zbývající kostky, turn points, aktuální počet hodů v tahu).
+
+### Constraints
+- Hráč nemůže zapsat skóre (Stop), pokud nesplnil podmínku 350b v daném tahu (při prvním otevření).

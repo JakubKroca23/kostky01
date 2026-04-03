@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { calculateScore } from './utils/scoring.js';
 
 const app = express();
 app.use(cors());
@@ -16,11 +17,24 @@ const io = new Server(server, {
 
 const players = new Map(); // socket.id -> { nickname, roomId }
 const nicknames = new Set(); // Globally taken nicknames
-const rooms = new Map(); // roomId -> { id, name, players: [{id, name}], maxPlayers: 6 }
+const rooms = new Map(); // roomId -> { id, name, players: [{id, name}], maxPlayers: 6, turnInfo: {} }
 const disconnectedPlayers = new Map(); // nickname -> { roomId, timeoutId }
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+function nextTurn(room) {
+  const currentIndex = room.players.findIndex(p => p.id === room.turnInfo.currentTurnId);
+  const nextIndex = (currentIndex + 1) % room.players.length;
+  
+  room.turnInfo.currentTurnId = room.players[nextIndex].id;
+  room.turnInfo.turnPoints = 0;
+  room.turnInfo.rollCount = 0;
+  room.turnInfo.lastRoll = [];
+  room.turnInfo.diceCount = 6;
+  
+  io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
 }
 
 function broadcastRooms() {
@@ -28,13 +42,86 @@ function broadcastRooms() {
     id: r.id,
     name: r.name,
     playerCount: r.players.length,
-    maxPlayers: r.maxPlayers
+    maxPlayers: r.maxPlayers,
+    gameStarted: r.gameStarted
   }));
   io.emit('room-list-update', roomList);
 }
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+
+  // ... (set-nickname as before)
+
+  socket.on('start-game', () => {
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+    const room = rooms.get(player.roomId);
+    if (!room) return;
+
+    room.gameStarted = true;
+    room.turnInfo.currentTurnId = room.players[0].id;
+    room.turnInfo.diceCount = 6;
+    
+    io.to(room.id).emit('game-started', { room });
+    broadcastRooms();
+  });
+
+  socket.on('roll-dice', () => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+
+    room.turnInfo.rollCount++;
+    const diceCount = room.turnInfo.diceCount || 6;
+    const roll = Array.from({ length: diceCount }, () => Math.floor(Math.random() * 6) + 1);
+    
+    const { score, usedIndexes } = calculateScore(roll);
+    
+    room.turnInfo.lastRoll = roll;
+    
+    if (score === 0) {
+      // BUST
+      console.log(`Player ${player.nickname} BUSTED`);
+      socket.emit('dice-rolled', { roll, score: 0, isBust: true });
+      setTimeout(() => nextTurn(room), 2000);
+      return;
+    }
+
+    room.turnInfo.turnPoints += score;
+    
+    // Zbytek kostek
+    const remainingDice = diceCount - usedIndexes.length;
+    room.turnInfo.diceCount = remainingDice === 0 ? 6 : remainingDice; // Hot Dice
+
+    // Rule: Must have 350 by 3rd roll
+    if (room.turnInfo.rollCount >= 3 && room.turnInfo.turnPoints < 350) {
+      console.log(`Player ${player.nickname} failed 3rd roll limit (Points: ${room.turnInfo.turnPoints})`);
+      socket.emit('dice-rolled', { roll, score, turnPoints: 0, isBust: true, reason: '350 limit' });
+      setTimeout(() => nextTurn(room), 2000);
+      return;
+    }
+
+    socket.emit('dice-rolled', { roll, score, turnPoints: room.turnInfo.turnPoints, diceCount: room.turnInfo.diceCount });
+    io.to(room.id).except(socket.id).emit('opponent-rolled', { nickname: player.nickname, roll, turnPoints: room.turnInfo.turnPoints });
+  });
+
+  socket.on('stop-turn', () => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+
+    if (room.turnInfo.turnPoints < 350) {
+      socket.emit('nickname-error', 'Musíš mít alespoň 350 bodů pro zapsání.');
+      return;
+    }
+
+    room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
+    console.log(`Player ${player.nickname} stopped with ${room.turnInfo.turnPoints}b. Total: ${room.turnInfo.scores[socket.id]}b`);
+    
+    io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
+    nextTurn(room);
+  });
 
   socket.on('set-nickname', (name) => {
     const trimmedName = name.trim();
@@ -92,7 +179,15 @@ io.on('connection', (socket) => {
       id: roomId,
       name: roomName || `Hra ${player.nickname}`,
       players: [{ id: socket.id, nickname: player.nickname }],
-      maxPlayers: 6
+      maxPlayers: 6,
+      gameStarted: false,
+      turnInfo: {
+        currentTurnId: socket.id,
+        turnPoints: 0,
+        rollCount: 0,
+        scores: { [socket.id]: 0 },
+        lastRoll: []
+      }
     };
 
     rooms.set(roomId, newRoom);
@@ -109,25 +204,27 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
 
     if (!player || !room) {
-      socket.emit('error', 'Místnost neexistuje.');
+      socket.emit('nickname-error', 'Místnost neexistuje.'); // Reuse error handler
       return;
     }
 
     if (room.players.length >= room.maxPlayers) {
-      socket.emit('error', 'Místnost je již plná.');
+      socket.emit('nickname-error', 'Místnost je již plná.');
       return;
     }
 
     room.players.push({ id: socket.id, nickname: player.nickname });
+    room.turnInfo.scores[socket.id] = 0; // Initialize score
     player.roomId = roomId;
     socket.join(roomId);
 
     console.log(`Player ${player.nickname} joined room ${roomId}`);
     socket.emit('room-joined', { roomId, room });
     
-    io.to(roomId).emit('player-joined', { players: room.players });
+    io.to(roomId).emit('player-joined', { players: room.players, room });
     broadcastRooms();
   });
+
 
   socket.on('leave-room', () => {
     const player = players.get(socket.id);

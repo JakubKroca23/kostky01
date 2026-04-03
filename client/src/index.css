@@ -370,3 +370,134 @@ body {
   text-shadow: var(--glow-cyan);
 }
 
+/* Game Area & Scoreboard */
+.game-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.scoreboard {
+  padding: 10px 0;
+  border-radius: 12px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 20px;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.score-row.active-turn {
+  opacity: 1;
+  background: rgba(0, 255, 255, 0.1);
+  border-left: 4px solid var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.score-name {
+  font-weight: 500;
+}
+
+.score-value {
+  font-family: monospace;
+  font-weight: bold;
+}
+
+/* Dice Display */
+.dice-display-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+
+.dice-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  min-height: 100px;
+}
+
+.die {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 0 !important;
+  border-radius: 8px;
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan) !important;
+}
+
+.empty-dice {
+  opacity: 0.3;
+  font-style: italic;
+}
+
+.turn-stats {
+  display: flex;
+  gap: 30px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.game-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 20px;
+}
+
+.wait-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--neon-cyan);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.global-error-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 10px 20px !important;
+  border-color: #ff3e3e !important;
+  color: #ff3e3e;
+  font-weight: bold;
+  box-shadow: 0 0 20px rgba(255, 62, 62, 0.4) !important;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { top: 50px; opacity: 0; }
+  to { top: 80px; opacity: 1; }
+}
+
+
