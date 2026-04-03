@@ -22,13 +22,13 @@ Implementace logiky pro vytváření a správu herních místností na serveru a
   <files>server/index.js</files>
   <action>
     Implementovat správu místností na serveru.
-    - Udržovat seznam aktivních místností (id, název, počet hráčů).
+    - Udržovat seznam aktivních místností (id, název, počet hráčů, maxPlayers: 6).
     - Event `create-room`: vytvoření místnosti a automatické připojení zakladatele.
-    - Event `get-rooms`: odeslání seznamu místností všem v lobby.
+    - Limitovat místnost na **min: 2, max: 6** hráčů (validace na serveru).
     - Pravidelné vysílání (`broadcast`) aktualizovaného seznamu místností při změně stavu.
   </action>
-  <verify>Logování v konzoli serveru pro `create-room` a `room-list-update` události.</verify>
-  <done>Server spravuje kolekci místností a vysílá ji klientům.</done>
+  <verify>Logování v konzoli serveru pro `create-room` s limitem 6 hráčů.</verify>
+  <done>Server spravuje kolekci místností s limity a vysílá ji klientům.</done>
 </task>
 
 <task type="auto">

@@ -16,3 +16,20 @@
 ### Constraints
 - Cílová orientace: Mobile Portrait.
 - Vizuální styl: Neon Dark Mode.
+## Phase 2 Decisions
+
+**Date:** 2026-04-03
+
+### Scope
+- **Struktura**: Varianta A (Single Page s podmíněným vykreslováním). Zajišťuje plynulý "app-like" pocit a plynulé neonové přechody bez nutnosti URL routingu.
+- **Identifikace**: Session-based, ale se server-side validací kolizí přezdívek (zákaz duplicitních jmen pro online hráče).
+- **Místnosti**: Limit 2-6 hráčů na jednu herní místnost.
+- **Odpojení/Rejoin**: Implementace mechanismu pro návrat hráče do probíhající hry při krátkodobém odpojení (rejoin na základě session/přezdívky).
+
+### Approach
+- **Frontend State**: Použití React `useState` v `App.jsx` pro globální řízení obrazovek (`nickname`, `lobby`, `room`).
+- **Server State**: Kolekce `players` a `rooms` v paměti serveru (`Map`).
+
+### Constraints
+- Ověření unikátnosti jména probíhá asynchronně při odesílání "set-nickname".
+- Rejoin je omezen na životnost session (dokud je hráč v paměti serveru nebo dokud neuplyne timeout).

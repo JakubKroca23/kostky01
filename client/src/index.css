@@ -105,3 +105,65 @@ body {
   color: black;
   box-shadow: 0 0 30px var(--neon-cyan);
 }
+.glass {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 25px;
+}
+
+.nickname-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.neon-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--neon-cyan);
+  padding: 15px;
+  border-radius: 8px;
+  color: white;
+  width: 100%;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  outline: none;
+  text-align: center;
+}
+
+.neon-input:focus {
+  box-shadow: var(--glow-cyan);
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.error-text {
+  color: #ff3e3e;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  text-shadow: 0 0 5px rgba(255, 62, 62, 0.5);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.neon-button:disabled {
+  border-color: #555;
+  color: #555;
+  box-shadow: none;
+  text-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Transitions */
+.hero-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

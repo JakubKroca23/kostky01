@@ -32,17 +32,17 @@ Implementace rozhraní pro zadání přezdívky a její synchronizaci se servere
 </task>
 
 <task type="auto">
-  <name>Server-side Player Identity</name>
+  <name>Server-side Player Identity & Collision Handling</name>
   <files>server/index.js, client/src/App.jsx</files>
   <action>
-    Implementovat synchronizaci přezdívky se serverem.
-    - Přidat socket event `set-nickname` na serveru.
-    - Server uloží přezdívku do `socket.data.nickname` a vrátí potvrzení.
-    - Client odešle přezdívku po potvrzení ve frontendu.
-    - Logovat připojení hráče s jeho přezdívkou v konzoli serveru pro debug.
+    Implementovat synchronizaci přezdívky se serverem a kontrolu unikátnosti.
+    - Udržovat na serveru globální `Map` aktivních hráčů (přezdívka -> socketId).
+    - Event `set-nickname`: pokud už jméno existuje, emitovat chybu `nickname-taken`.
+    - Pokud je jméno volné, server uloží `socket.data.nickname` a pošle potvrzení `nickname-set`.
+    - Frontend zobrazí chybovou hlášku, pokud je jméno obsazené.
   </action>
-  <verify>npm run dev (frontend + backend) -> Zadat jméno -> Zkontrolovat log v konzoli serveru: "Player [Jméno] registered".</verify>
-  <done>Socket na serveru má přiřazenou přezdívku a client se úspěšně ohlásí.</done>
+  <verify>Dva prohlížeče -> Oba zkusí zadat stejné jméno -> Druhý dostane chybovou hlášku "Jméno je již obsazeno".</verify>
+  <done>Server garantuje unikátnost přezdívek pro online hráče a frontend adekvátně reaguje.</done>
 </task>
 
 ## Success Criteria

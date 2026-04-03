@@ -32,17 +32,16 @@ Implementace připojení k místnosti a základního herního náhledu s příto
 </task>
 
 <task type="auto">
-  <name>Room Header & Player List</name>
-  <files>client/src/components/GameRoom.jsx, client/src/index.css</files>
+  <name>Room Navigation & Rejoin Logic</name>
+  <files>client/src/components/GameRoom.jsx, server/index.js</files>
   <action>
-    Vytvořit komponentu pro zobrazení uvnitř místnosti.
-    - Záhlaví s názvem místnosti a unikátním ID.
-    - Seznam všech hráčů v místnosti s jejich přezdívkami.
+    Vytvořit komponentu místnosti a pořešit odpojení.
+    - Záhlaví s názvem místnosti a seznamem hráčů.
+    - Implementovat `rejoin`: Pokud se klient odpojí a znovu připojí se stejným jménem do stejné místnosti (během timeoutu), server jej znovu propojí s jeho herním stavem.
     - Tlačítko "OPUSTIT HRU" (leave-room event back to lobby).
-    - Styling hráčských čipů (neon badges).
   </action>
-  <verify>Ruční ověření po vstupu do hry -> Vidím sebe a ostatní připojené hráče s jejich jmény.</verify>
-  <done>Uživatel vidí, kdo je s ním v místnosti a má možnost se vrátit do lobby.</done>
+  <verify>Refresh prohlížeče v místnosti -> Aplikace si pamatuje nick a automaticky se vrátí do stejné místnosti (pokud existuje).</verify>
+  <done>Uživatel se může vrátit do hry i po krátkém výpadku spojení.</done>
 </task>
 
 ## Success Criteria
