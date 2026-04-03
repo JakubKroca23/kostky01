@@ -170,38 +170,22 @@ body {
   margin-left: -35px;
 }
 
-/* One-shot physics shot from cup (start) to scattered position (end) */
+/* JavaScript/Matter.js driven physics */
 .dice-body.rolling {
-  /* Fast start, heavy deceleration (friction) */
-  animation: physics-shot 2.2s forwards cubic-bezier(0.075, 0.82, 0.165, 1);
-  animation-delay: var(--delay, 0s);
   pointer-events: none;
   border-color: var(--neon-gold);
-  transition: none !important;
+  transition: transform 0.016s linear !important; /* Extremely short transition for smooth JS updates if needed, or none */
   z-index: 100;
 }
 
-@keyframes physics-shot {
-  0% { 
-    transform: translate(0, 0) rotate(0deg) scale(1.5); 
-    opacity: 0.8;
-  }
-  15% { 
-    transform: translate(calc(var(--tx) * 0.4), calc(var(--ty) * 0.4)) rotate(calc(var(--tr) * 0.2)) scale(1.2);
-    opacity: 1;
-  }
-  100% { 
-    transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg)) scale(1); 
-  }
-}
-
-/* Maintain position after rolling */
+/* Base position and rotation from JS physics */
 .dice-body {
   transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg));
+  transition: transform 0.3s ease-out; /* Smooth settle after physics engine stops if tiny drift exists */
 }
 
 .dice-body.selected {
-  transform: scale(1.05);
+  transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg)) scale(1.1);
   border-color: var(--neon-pink);
   box-shadow: 0 0 20px var(--neon-pink);
 }

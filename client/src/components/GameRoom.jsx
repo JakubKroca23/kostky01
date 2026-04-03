@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import Die from './Die';
 import { calculateScore } from '../utils/scoring';
 import { audio } from '../utils/audio';
+import { useDicePhysics } from '../hooks/useDicePhysics';
 
 function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
+
+  const physicsPositions = useDicePhysics(
+    room?.turnInfo?.lastRoll?.length || 0,
+    isRolling,
+    460, 
+    340
+  );
 
   if (!room) return null;
 
@@ -14,15 +22,12 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const isMyTurn = room.turnInfo.currentTurnId === myId;
   const canStart = !room.gameStarted && room.players[0].nickname === nickname;
 
-  const allowed = room.turnInfo.allowedIndexes || [];
-
-  // Reset selection when turn or roll changes
   useEffect(() => {
     setSelectedDice([]);
     setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
        setIsRolling(true);
-       const timer = setTimeout(() => setIsRolling(false), 2200); // 2.2s pro plynulé zastavení
+       const timer = setTimeout(() => setIsRolling(false), 2200); 
        return () => clearTimeout(timer);
     }
   }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll]);
@@ -34,49 +39,33 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
     if (!isAllowed) return;
 
     if (selectedDice.includes(index)) {
-      // If already selected, remove it
       setSelectedDice(prev => prev.filter(i => i !== index));
       audio.playClick();
       return;
     }
 
-    // GROUP SELECTION LOGIC:
-    // If this die is part of a multiple (3+ of same value) in allowedIndexes, select all of them
     const dieValue = room.turnInfo.lastRoll[index];
     const allowedDiceInCombo = room.turnInfo.allowedIndexes.filter(i => room.turnInfo.lastRoll[i] === dieValue);
     
     if (allowedDiceInCombo.length >= 3) {
-      // Select the whole group
       setSelectedDice(prev => [...new Set([...prev, ...allowedDiceInCombo])]);
     } else {
-      // Singular selection (1s or 5s)
       setSelectedDice(prev => [...prev, index]);
     }
     
     audio.playClick();
   };
 
-  const dicePhysics = React.useMemo(() => {
-    // Generate static landing spots for EACH ROLL
-    return room.turnInfo.lastRoll.map((_, i) => ({
-      tx: Math.random() * 320 - 160, // Max 160px od středu X
-      ty: Math.random() * 210 - 105, // Max 105px od středu Y
-      tr: Math.random() * 1440 - 720,
-      delay: i * 0.05
-    }));
-  }, [room.turnInfo.lastRoll, room.turnInfo.currentTurnId]);
-
   const renderDice = () => {
     return room.turnInfo.lastRoll.map((value, index) => {
       const isSelected = selectedDice.includes(index);
       const canSelect = isMyTurn && room.turnInfo.allowedIndexes.includes(index);
-      const physics = dicePhysics[index];
+      const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
 
       const style = {
-        '--tx': `${physics.tx}px`,
-        '--ty': `${physics.ty}px`,
-        '--tr': `${physics.tr}deg`,
-        '--delay': `${physics.delay}s`
+        '--tx': `${pos.x}px`,
+        '--ty': `${pos.y}px`,
+        '--tr': `${pos.angle}rad`
       };
 
       return (
