@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
+import { calculateScore } from '../utils/scoring';
 
-function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
+function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
@@ -11,7 +12,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
     isRolling,
-    460,
+    420,
     340
   );
 
@@ -21,6 +22,12 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const isMyTurn = room.turnInfo.currentTurnId === myId;
   const canStart = !room.gameStarted && room.players[0].nickname === nickname;
   const currentTurnPoints = room.turnInfo.turnPoints || 0;
+  
+  const selectedPoints = selectedDice.length > 0 
+    ? calculateScore(selectedDice.map(i => room.turnInfo.lastRoll[i]), room.turnInfo.rollCount === 1).score 
+    : 0;
+
+  const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
 
   // Spustí animaci hodu – délka musí být KRATŠÍ než server timeout (1500ms)
   // aby se controls odemkly dřív než přijde nový turn od serveru
@@ -166,23 +173,44 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
             })}
           </div>
 
-          <div className="dice-arena">
-            <div className="dice-container">
-              {room.turnInfo.lastRoll.length > 0
-                ? renderDice()
-                : <div className="empty-dice neon-text-cyan">Aréna připravena...</div>
-              }
+          <div className="dice-arena-wrapper">
+            <div className="dice-arena">
+              <div className="dice-container">
+                {room.turnInfo.lastRoll.length > 0
+                  ? renderDice()
+                  : <div className="empty-dice neon-text-cyan">Aréna připravena...</div>
+                }
+              </div>
             </div>
+
+            <aside className="aside-storage glass">
+               <span className="storage-label">ODLOŽENO</span>
+               {(room.turnInfo.storedDice || []).map((val, i) => (
+                 <div key={i} className="die-stored">{val}</div>
+               ))}
+            </aside>
+          </div>
+
+          <div className="reaction-buttons-row">
+            {emojis.map(e => (
+              <button key={e} className="reaction-btn" onClick={() => onReaction(e)}>
+                {e}
+              </button>
+            ))}
           </div>
 
           <div className="turn-summary neon-card">
             <div className="turn-stats">
               <div className="stat-item">
-                <span className="stat-label">BODY V TAHU</span>
-                <div className="stat-value neon-text-pink">{currentTurnPoints}</div>
+                <span className="stat-label">BANKOVÁNO</span>
+                <div className="stat-value neon-text-cyan">{currentTurnPoints}</div>
               </div>
               <div className="stat-item">
-                <span className="stat-label">POČET HODŮ</span>
+                <span className="stat-label">VÝBĚR</span>
+                <div className="stat-value neon-text-pink">+{selectedPoints}</div>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">HOD</span>
                 <div className="stat-value">{room.turnInfo.rollCount || 0}</div>
               </div>
             </div>
@@ -227,9 +255,9 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
-                      disabled={isRolling || (room.turnInfo.turnPoints + (selectedDice.length > 0 ? 1 : 0) < 350 && !room.turnInfo.enteredBoard[myId])}
+                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350 && !room.turnInfo.enteredBoard[myId])}
                     >
-                      ZAPSAT BODY ({currentTurnPoints})
+                      ZAPSAT BODY ({currentTurnPoints + selectedPoints})
                     </button>
                   </>
                 )}

@@ -150,6 +150,10 @@ function App() {
       setWinnerData(data);
     }
 
+    function onReactionReceived(data) {
+      burstEmojis(data.emoji);
+    }
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('nickname-set', onNicknameSet);
@@ -166,6 +170,7 @@ function App() {
     socket.on('dice-rolled', onDiceRolled);
     socket.on('opponent-rolled', onOpponentRolled);
     socket.on('game-over', onGameOver);
+    socket.on('reaction-received', onReactionReceived);
 
     return () => {
       socket.off('connect', onConnect);
@@ -184,8 +189,42 @@ function App() {
       socket.off('dice-rolled', onDiceRolled);
       socket.off('opponent-rolled', onOpponentRolled);
       socket.off('game-over', onGameOver);
+      socket.off('reaction-received', onReactionReceived);
     };
   }, []);
+
+  const burstEmojis = (emoji) => {
+    const count = 15 + Math.floor(Math.random() * 10);
+    const x = window.innerWidth / 2;
+    const y = window.innerHeight / 2;
+
+    for (let i = 0; i < count; i++) {
+        const span = document.createElement('span');
+        span.className = 'floating-emoji';
+        span.innerText = emoji;
+        
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 100 + Math.random() * 300;
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist;
+        const tr = Math.random() * 360;
+        
+        span.style.left = `${x}px`;
+        span.style.top = `${y}px`;
+        span.style.setProperty('--tx', `${tx}px`);
+        span.style.setProperty('--ty', `${ty}px`);
+        span.style.setProperty('--tr', `${tr}deg`);
+        
+        span.style.animation = `explode ${0.6 + Math.random() * 0.4}s forwards cubic-bezier(0.1, 0.8, 0.3, 1)`;
+        
+        document.body.appendChild(span);
+        setTimeout(() => span.remove(), 1000);
+    }
+  };
+
+  const handleSendReaction = (emoji) => {
+    socket.emit('send-reaction', emoji);
+  };
 
   const handleBackToLobby = () => {
     setWinnerData(null);
@@ -286,6 +325,7 @@ function App() {
           onlineStats={onlineStats}
           onCreateRoom={handleCreateRoom}
           onJoinRoom={handleJoinRoom}
+          onReaction={handleSendReaction}
         />
       )}
 
@@ -298,6 +338,7 @@ function App() {
           onStop={handleStopTurn}
           onStart={handleStartGame}
           onDohodit={handleDohodit}
+          onReaction={handleSendReaction}
           isConnected={isConnected}
         />
       )}

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 
-function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom }) {
+function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom, onReaction }) {
   const [newRoomName, setNewRoomName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
 
   const handleCreate = (e) => {
     e.preventDefault();
@@ -20,6 +22,14 @@ function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom }) {
            {onlineStats.players.map((p, i) => (
              <span key={i} className="online-user-pill">{p}</span>
            ))}
+        </div>
+        
+        <div className="reaction-buttons-row">
+          {emojis.map(e => (
+            <button key={e} className="reaction-btn" onClick={() => onReaction(e)}>
+              {e}
+            </button>
+          ))}
         </div>
       </div>
 

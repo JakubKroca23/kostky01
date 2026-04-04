@@ -74,6 +74,7 @@ function nextTurn(room, bust = false) {
   room.turnInfo.turnPoints = 0;
   room.turnInfo.rollCount = 0;
   room.turnInfo.lastRoll = [];
+  room.turnInfo.storedDice = []; // RESET
   room.turnInfo.diceCount = 6;
   room.turnInfo.allowedIndexes = [];
   
@@ -129,8 +130,10 @@ io.on('connection', (socket) => {
         strikes: { [socket.id]: 0 },
         enteredBoard: { [socket.id]: false },
         lastRoll: [],
+        storedDice: [], // NEW: Rule 2/11
         diceCount: 6,
-        allowedIndexes: []
+        allowedIndexes: [],
+        canDohodit: false
       }
     };
     rooms.set(roomId, room);
@@ -256,8 +259,12 @@ io.on('connection', (socket) => {
     }
 
     room.turnInfo.turnPoints += score;
+    const selectedDiceValues = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
+    room.turnInfo.storedDice = [...(room.turnInfo.storedDice || []), ...selectedDiceValues];
+    
     const rem = room.turnInfo.diceCount - selectedIndexes.length;
     room.turnInfo.diceCount = rem === 0 ? 6 : rem;
+    if (rem === 0) room.turnInfo.storedDice = []; // Do plných (reset visuals)
 
     room.turnInfo.rollCount++;
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
@@ -302,6 +309,13 @@ io.on('connection', (socket) => {
     } else {
       io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
       nextTurn(room);
+    }
+  });
+
+  socket.on('send-reaction', (emoji) => {
+    const player = players.get(socket.id);
+    if (player && player.roomId) {
+      io.to(player.roomId).emit('reaction-received', { emoji, playerId: socket.id });
     }
   });
 
