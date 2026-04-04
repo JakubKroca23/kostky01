@@ -118,7 +118,8 @@ function App() {
           lastRoll: data.roll,
           rollCount: data.rollCount !== undefined ? data.rollCount : prev.turnInfo.rollCount,
           diceCount: data.diceCount !== undefined ? data.diceCount : data.roll.length,
-          storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice
+          storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
+          lockedCount: data.lockedCount // Track locked dice
         }
       }));
       

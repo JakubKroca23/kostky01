@@ -32,7 +32,8 @@ function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop
     isRolling,
     physicsSeed,
     arenaSize.w,
-    arenaSize.h
+    arenaSize.h,
+    room.turnInfo.lockedCount || 0
   );
 
   if (!room) return null;
