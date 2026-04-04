@@ -1,101 +1,126 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 
-export function useDicePhysics(diceCount, isRolling, arenaWidth = 400, arenaHeight = 300) {
-  const engine = useRef(Matter.Engine.create({ gravity: { x: 0, y: 0 } }));
+const DIE_SIZE = 70;
+
+export function useDicePhysics(diceCount, isRolling, arenaWidth = 460, arenaHeight = 340) {
+  const engineRef = useRef(null);
+  const bodiesRef = useRef([]);
+  const wallsRef = useRef([]);
+  const rafRef = useRef(null);
   const [positions, setPositions] = useState([]);
-  const bodies = useRef([]);
-  const requestRef = useRef();
 
-  // Initialize engine and walls
+  // Vytvoření enginu jednou
   useEffect(() => {
-    const world = engine.current.world;
-    
-    // Walls (bit thicker to prevent tunneling)
-    const wallThickness = 100;
-    const walls = [
-      Matter.Bodies.rectangle(arenaWidth / 2, -wallThickness / 2, arenaWidth, wallThickness, { isStatic: true }), // top
-      Matter.Bodies.rectangle(arenaWidth / 2, arenaHeight + wallThickness / 2, arenaWidth, wallThickness, { isStatic: true }), // bottom
-      Matter.Bodies.rectangle(-wallThickness / 2, arenaHeight / 2, wallThickness, arenaHeight, { isStatic: true }), // left
-      Matter.Bodies.rectangle(arenaWidth + wallThickness / 2, arenaHeight / 2, wallThickness, arenaHeight, { isStatic: true }), // right
-    ];
-    
-    Matter.Composite.add(world, walls);
-
-    const update = () => {
-      Matter.Engine.update(engine.current, 16.666);
-      
-      const newPositions = bodies.current.map(body => ({
-        x: body.position.x - arenaWidth / 2,
-        y: body.position.y - arenaHeight / 2,
-        angle: body.angle
-      }));
-      
-      setPositions(newPositions);
-      requestRef.current = requestAnimationFrame(update);
-    };
-
-    requestRef.current = requestAnimationFrame(update);
-
+    engineRef.current = Matter.Engine.create({ gravity: { x: 0, y: 0 } });
     return () => {
-      cancelAnimationFrame(requestRef.current);
-      Matter.World.clear(world);
-      Matter.Engine.clear(engine.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      Matter.Engine.clear(engineRef.current);
     };
+  }, []);
+
+  // Vytvoření stěn při změně rozměrů arény
+  useEffect(() => {
+    if (!engineRef.current) return;
+    const world = engineRef.current.world;
+
+    // Odstraň staré stěny
+    wallsRef.current.forEach(w => Matter.Composite.remove(world, w));
+
+    const t = 50; // tloušťka stěny
+    const walls = [
+      Matter.Bodies.rectangle(arenaWidth / 2, -t / 2, arenaWidth + t * 2, t, { isStatic: true, label: 'wall' }),
+      Matter.Bodies.rectangle(arenaWidth / 2, arenaHeight + t / 2, arenaWidth + t * 2, t, { isStatic: true, label: 'wall' }),
+      Matter.Bodies.rectangle(-t / 2, arenaHeight / 2, t, arenaHeight + t * 2, { isStatic: true, label: 'wall' }),
+      Matter.Bodies.rectangle(arenaWidth + t / 2, arenaHeight / 2, t, arenaHeight + t * 2, { isStatic: true, label: 'wall' }),
+    ];
+
+    Matter.Composite.add(world, walls);
+    wallsRef.current = walls;
   }, [arenaWidth, arenaHeight]);
 
-  // Sync bodies with diceCount
+  // Vytvoření těles kostek
   useEffect(() => {
-    const world = engine.current.world;
-    
-    // Remove old bodies
-    if (bodies.current.length > 0) {
-      Matter.Composite.remove(world, bodies.current);
+    if (!engineRef.current) return;
+    const world = engineRef.current.world;
+
+    // Odstraň staré kostky
+    bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
+
+    if (diceCount === 0) {
+      bodiesRef.current = [];
+      setPositions([]);
+      return;
     }
 
-    // Create new square bodies for dice (approx 70x70)
+    // Rozmistitit kostky uprostřed arény v mřížce
     const newBodies = Array.from({ length: diceCount }, (_, i) => {
-      return Matter.Bodies.rectangle(
-        arenaWidth / 2 + (Math.random() - 0.5) * 20, 
-        arenaHeight / 2 + (Math.random() - 0.5) * 20, 
-        70, 70, 
-        { 
-          restitution: 0.7, // Bounciness
-          friction: 0.05,
-          frictionAir: 0.04, // Air resistance for gradual stopping
-          chamfer: { radius: 10 } // Rounded corners
-        }
-      );
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const startX = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 5);
+      const startY = arenaHeight / 2 - DIE_SIZE / 2 + row * (DIE_SIZE + 5);
+
+      return Matter.Bodies.rectangle(startX, startY, DIE_SIZE, DIE_SIZE, {
+        restitution: 0.6,      // Odrazivost od stěn a od sebe
+        friction: 0.1,
+        frictionAir: 0.05,     // Vzdušný odpor - plynulé zpomalení
+        label: 'die',
+      });
     });
 
-    bodies.current = newBodies;
     Matter.Composite.add(world, newBodies);
+    bodiesRef.current = newBodies;
   }, [diceCount, arenaWidth, arenaHeight]);
 
-  // Handle Roll "Explosion"
+  // Výstřel kostek při hodu
   useEffect(() => {
-    if (isRolling) {
-      bodies.current.forEach(body => {
-        // Move to center "cup"
-        Matter.Body.setPosition(body, { 
-          x: arenaWidth / 2 + (Math.random() - 0.5) * 10, 
-          y: arenaHeight / 2 + (Math.random() - 0.5) * 10 
-        });
-        
-        // Random massive force
-        const forceMagnitude = 0.5 + Math.random() * 0.5;
-        const angle = Math.random() * Math.PI * 2;
-        
-        Matter.Body.applyForce(body, body.position, {
-          x: Math.cos(angle) * forceMagnitude,
-          y: Math.sin(angle) * forceMagnitude
-        });
-        
-        // Random spin
-        Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 1);
+    if (!isRolling || !engineRef.current || bodiesRef.current.length === 0) return;
+
+    bodiesRef.current.forEach(body => {
+      // Reset pozice do středu
+      const cx = arenaWidth / 2 + (Math.random() - 0.5) * 20;
+      const cy = arenaHeight / 2 + (Math.random() - 0.5) * 20;
+      Matter.Body.setPosition(body, { x: cx, y: cy });
+      Matter.Body.setVelocity(body, { x: 0, y: 0 });
+      Matter.Body.setAngularVelocity(body, 0);
+
+      // Náhodný prudký výstřel
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 18 + Math.random() * 12; // dost velká rychlost, aby prošla celou arénou
+      Matter.Body.setVelocity(body, {
+        x: Math.cos(angle) * speed,
+        y: Math.sin(angle) * speed,
       });
-    }
+      Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.4);
+    });
   }, [isRolling, arenaWidth, arenaHeight]);
+
+  // Animační smyčka
+  useEffect(() => {
+    if (!engineRef.current) return;
+
+    let lastTime = null;
+
+    const loop = (time) => {
+      if (lastTime !== null) {
+        const delta = time - lastTime;
+        Matter.Engine.update(engineRef.current, delta);
+      }
+      lastTime = time;
+
+      const pos = bodiesRef.current.map(body => ({
+        x: body.position.x - arenaWidth / 2,
+        y: body.position.y - arenaHeight / 2,
+        angle: body.angle,
+      }));
+
+      setPositions([...pos]);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [arenaWidth, arenaHeight]);
 
   return positions;
 }

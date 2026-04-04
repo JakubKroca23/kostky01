@@ -142,79 +142,59 @@ body {
   box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
 }
 
-/* Independent Dice Physics-like Simulation */
+/* ============================================
+   DICE PHYSICS - 100% JS/Matter.js řízeno
+   CSS pouze definuje vzhled, ne pohyb!
+   ============================================ */
+
 .dice-container {
   position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
+/* Základní styl kostky - pohyb řídí JS přes inline style */
 .dice-body {
   width: 70px;
   height: 70px;
-  background: rgba(0,0,0,0.6);
-  border: 1px solid var(--neon-cyan);
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid var(--neon-cyan);
   border-radius: 14px;
   display: flex;
   padding: 10px;
   cursor: pointer;
-  transition: all 0.4s ease-out;
-  position: absolute; /* Umožňuje kostkám létat přes sebe */
   user-select: none;
+  position: absolute;
   top: 50%;
   left: 50%;
   margin-top: -35px;
   margin-left: -35px;
+  /* Pohyb se aplikuje z JS jako inline style transform */
+  transition: border-color 0.2s, box-shadow 0.2s;
+  will-change: transform;
 }
 
-/* JavaScript/Matter.js driven physics */
+/* Během hodu - žádná animace, jen vzhled */
 .dice-body.rolling {
   pointer-events: none;
   border-color: var(--neon-gold);
-  transition: transform 0.016s linear !important; /* Extremely short transition for smooth JS updates if needed, or none */
-  z-index: 100;
+  box-shadow: 0 0 12px rgba(255, 200, 0, 0.5);
 }
 
-/* Base position and rotation from JS physics */
-.dice-body {
-  transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg));
-  transition: transform 0.3s ease-out; /* Smooth settle after physics engine stops if tiny drift exists */
-}
-
+/* Vybraná kostka */
 .dice-body.selected {
-  transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--tr, 0deg)) scale(1.1);
-  border-color: var(--neon-pink);
+  border-color: var(--neon-pink) !important;
   box-shadow: 0 0 20px var(--neon-pink);
 }
 
+/* Kostka, která se dá vybrat - pulzující lem */
 .dice-body.can-select {
-  animation: pickPulse 2s infinite;
+  animation: pickPulse 1.5s infinite;
 }
 
 @keyframes pickPulse {
   0%, 100% { border-color: var(--neon-cyan); box-shadow: 0 0 5px var(--neon-cyan); }
-  50% { border-color: white; box-shadow: 0 0 15px var(--neon-cyan); }
-}
-
-.dice-body.selected {
-  border-color: var(--neon-pink);
-  box-shadow: 0 0 20px var(--neon-pink);
-  transform: translateY(-10px) rotate(-5deg);
-  z-index: 10;
-}
-
-.dice-body.rolling {
-  animation: arenaBounce 0.8s infinite alternate ease-in-out;
-  pointer-events: none;
-}
-
-@keyframes arenaBounce {
-  0% { transform: translate(0,0) rotate(0); }
-  50% { transform: translate(20px, -40px) rotate(180deg); }
-  100% { transform: translate(-30px, 20px) rotate(360deg); }
+  50% { border-color: white; box-shadow: 0 0 18px var(--neon-cyan); }
 }
 
 .dot { border-radius: 50%; opacity: 0.1; background: white; transition: 0.3s; }

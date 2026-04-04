@@ -12,11 +12,21 @@ const DOTS_MAP = {
 function Die({ value, isSelected, onClick, isRolling, canSelect, style }) {
   const dots = DOTS_MAP[value] || [];
 
+  // style obsahuje --tx, --ty, --tr z Matter.js
+  // Aplikujeme transform přímo kvůli 60fps real-time updatu
+  const tx = style?.['--tx'] ?? '0px';
+  const ty = style?.['--ty'] ?? '0px';
+  const tr = style?.['--tr'] ?? '0rad';
+
+  const divStyle = {
+    transform: `translate(${tx}, ${ty}) rotate(${tr})`,
+  };
+
   return (
     <div 
-      className={`dice-body neon-card glass ${isSelected ? 'selected' : ''} ${isRolling ? 'rolling' : ''} ${canSelect ? 'can-select' : ''}`}
+      className={`dice-body ${isSelected ? 'selected' : ''} ${isRolling ? 'rolling' : ''} ${canSelect ? 'can-select' : ''}`}
       onClick={onClick}
-      style={style}
+      style={divStyle}
     >
       <div className="dots-grid">
         {[...Array(9)].map((_, i) => (
