@@ -300,6 +300,12 @@ io.on('connection', (socket) => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room || room.turnInfo.currentTurnId !== socket.id) return;
 
+    const rem = room.turnInfo.diceCount - (selectedIndexes?.length || 0);
+    if (rem === 0) {
+      socket.emit('nickname-error', 'Máš odložené všechny kostky! Musíš hodit další hod (přesně podle pravidla 7).');
+      return;
+    }
+
     if (selectedIndexes.length > 0) {
       const { score } = calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]));
       room.turnInfo.turnPoints += score;

@@ -41,8 +41,8 @@ export function calculateScore(dice, isFirstRoll = false) {
     });
   };
 
-  // 1. COMBINATIONS (STRAIGHT, PAIRS) - ONLY ON FIRST ROLL (or "Dohodit" logic)
-  if (isFirstRoll && dice.length === 6) {
+  // 1. COMBINATIONS (STRAIGHT, PAIRS) - AVAILABLE WHENEVER 6 DICE ARE ROLLED
+  if (dice.length === 6) {
     // 1A. Straight 1-2-3-4-5-6 = 2000b
     if (Object.keys(counts).length === 6) {
        return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false };
@@ -75,6 +75,17 @@ export function calculateScore(dice, isFirstRoll = false) {
   if (counts[5] > 0) {
     totalScore += counts[5] * 50;
     markUsed(5, counts[5]);
+  }
+
+  // 1C. Check for "Dohodit" (5/6 pieces) - ONLY ON FIRST ROLL
+  if (isFirstRoll && dice.length === 6) {
+    if (Object.keys(counts).length === 5 && Object.values(counts).every(v => v <= 2)) {
+      canDohodit = true; 
+    }
+    const pairsCount = Object.values(counts).filter(c => c === 2).length;
+    if (pairsCount === 2 && Object.values(counts).filter(c => c === 1).length === 2) {
+      canDohodit = true; 
+    }
   }
 
   return {

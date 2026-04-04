@@ -258,7 +258,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
-                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350)}
+                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350) || (room.turnInfo.diceCount - selectedDice.length === 0)}
                     >
                       ZAPSAT BODY ({currentTurnPoints + selectedPoints})
                     </button>
