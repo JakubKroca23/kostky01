@@ -48,11 +48,11 @@
 - Fade-in app transitions.
 
 ### Phase 5: SFX & Music (Polish)
-**Status**: ⬜ Ready
+**Status**: ✅ Complete
 **Objective**: Zvukové efekty hodu a pozadí.
 **Requirements**: REQ-02
 **Deliverables**: 
 - Audio synthesis engine (Web Audio API).
-- Interactive SFX (roll, click, score, bust).
+- Interactive SFX (roll, click, score, bust, victory fanfare).
 - Sound toggle menu (localStorage).
-- Victory Modal (10,000 points celebrate).
+- Victory Modal (10,000 points celebrate — confetti + neon).
