@@ -1,10 +1,12 @@
 :root {
-  --neon-pink: #ff00de;
-  --neon-cyan: #0ff;
+  --neon-pink: #ff007f;
+  --neon-purple: #d336ff;
+  --neon-blue: #00d4ff;
   --neon-green: #39ff14;
   --neon-gold: #ffcc00;
   --dark-bg: #08080c;
-  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-bg: #0f0f1b;
+  --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
 }
 
@@ -109,8 +111,13 @@ body {
   transform: translateY(-2px);
 }
 
-.neon-button.primary { border-color: var(--neon-cyan); color: var(--neon-cyan); }
-.neon-button.primary:hover:not(:disabled) { background: var(--neon-cyan); color: black; box-shadow: 0 0 20px var(--neon-cyan); }
+.neon-text-purple {
+  color: var(--neon-purple);
+  text-shadow: 0 0 10px var(--neon-purple);
+}
+
+.neon-button.primary { border-color: var(--neon-purple); color: var(--neon-purple); }
+.neon-button.primary:hover:not(:disabled) { background: var(--neon-purple); color: black; box-shadow: 0 0 20px var(--neon-purple); }
 
 .neon-button.secondary { border-color: var(--neon-pink); color: var(--neon-pink); }
 .neon-button.secondary:hover:not(:disabled) { background: var(--neon-pink); color: black; box-shadow: 0 0 20px var(--neon-pink); }
@@ -367,7 +374,7 @@ body {
   inset: -40px;
   background:
     radial-gradient(ellipse at 30% 40%, rgba(255, 0, 222, 0.25) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 60%, rgba(0, 255, 255, 0.20) 0%, transparent 60%);
+    radial-gradient(ellipse at 70% 60%, rgba(211, 54, 255, 0.20) 0%, transparent 60%);
   z-index: -1;
   animation: glowPulse 2.5s ease-in-out infinite alternate;
   pointer-events: none;
@@ -396,7 +403,7 @@ body {
   font-size: 2rem;
   font-weight: 900;
   letter-spacing: 4px;
-  background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+  background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -553,20 +560,39 @@ body {
 .stat-label { font-size: 0.65rem; opacity: 0.5; letter-spacing: 1px; margin-bottom: 5px; display: block; }
 .stat-value { font-size: 1.4rem; font-weight: 900; }
 
-.game-controls { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-
-.global-error-toast {
-  position: fixed;
-  top: 90px; left: 50%; transform: translateX(-50%);
-  z-index: 9999;
-  padding: 14px 20px !important;
-  color: #ff3e3e;
-  border-color: #ff3e3e !important;
+.game-room-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 40px);
+  padding: 10px 20px;
 }
 
-.wait-message { text-align: center; padding: 20px !important; font-size: 0.9rem; border-color: var(--neon-cyan) !important; }
-.neon-text-pink { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
-.neon-text-cyan { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
+.game-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.dice-arena-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 400px;
+  margin: 10px 0;
+  gap: 10px;
+}
+
+.game-controls {
+  margin-top: auto;
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.neon-text-purple {
+  color: var(--neon-purple);
+  text-shadow: 0 0 10px var(--neon-purple);
+}
 
 /* Status */
 .status-badge { font-size: 0.6rem; padding: 4px 8px; border-radius: 4px; letter-spacing: 1px; }
@@ -697,8 +723,8 @@ body {
   transition: 0.3s;
 }
 .reaction-trigger:hover, .reaction-trigger.active {
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 10px var(--neon-cyan);
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 10px var(--neon-purple);
 }
 
 .reactions-flyout {
@@ -733,7 +759,7 @@ body {
 
 .die-stored.active {
   cursor: pointer;
-  border: 1px solid var(--neon-cyan);
+  border: 1px solid var(--neon-purple);
 }
 
 .die-stored.active.pulse {
@@ -741,8 +767,8 @@ body {
 }
 
 @keyframes storagePulse {
-  0%, 100% { border-color: var(--neon-cyan); box-shadow: 0 0 5px var(--neon-cyan); }
-  50% { border-color: white; box-shadow: 0 0 15px var(--neon-cyan); }
+  0%, 100% { border-color: var(--neon-purple); box-shadow: 0 0 5px var(--neon-purple); }
+  50% { border-color: white; box-shadow: 0 0 15px var(--neon-purple); }
 }
 
 .reaction-buttons-row {

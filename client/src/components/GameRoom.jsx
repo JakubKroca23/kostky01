@@ -116,7 +116,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
 
       <div className="room-header-neon compact">
         <div className="header-top">
-          <h2 className="neon-text-cyan">{room.name}</h2>
+          <h2 className="neon-text-purple">{room.name}</h2>
           <span className="room-tag">ID: {room.id}</span>
         </div>
         {!room.gameStarted && canStart && (
@@ -173,7 +173,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
                     </span>
                     {strikes > 0 && (
                       <span className="strikes-display">
-                        {"|".repeat(strikes)}
+                        {"X".repeat(strikes)}
                       </span>
                     )}
                   </div>
@@ -193,7 +193,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
               <div className="dice-container">
                 {room.turnInfo.lastRoll.length > 0
                   ? renderDice()
-                  : <div className="empty-dice neon-text-cyan">Aréna připravena...</div>
+                  : <div className="empty-dice neon-text-purple">Aréna připravena...</div>
                 }
               </div>
             </div>
@@ -224,7 +224,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
               </div>
               <div className="stat-item">
                 <span className="stat-label">BANKOVÁNO</span>
-                <div className="stat-value neon-text-cyan">{currentTurnPoints}</div>
+                <div className="stat-value neon-text-purple">{currentTurnPoints}</div>
               </div>
               <div className="stat-item">
                 <span className="stat-label">VÝBĚR</span>
@@ -238,7 +238,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
               <>
                 {room.turnInfo.canDohodit && (
                    <button className="neon-button full-width gold-border" onClick={onDohodit} disabled={isRolling}>
-                     🔥 DOHODIT (VŠE NEBO NIC)
+                     🔥 DOHODIT NA {room.turnInfo.canDohoditCombo || "VŠE NEBO NIC"}
                    </button>
                 )}
 
@@ -267,7 +267,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
               </>
             ) : (
               <div className="wait-message neon-card glass">
-                Na tahu: <span className="neon-text-cyan">{room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
+                Na tahu: <span className="neon-text-purple">{room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
               </div>
             )}
           </div>

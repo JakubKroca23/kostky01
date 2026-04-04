@@ -77,6 +77,7 @@ function nextTurn(room, bust = false) {
   room.turnInfo.storedDice = []; // RESET
   room.turnInfo.diceCount = 6;
   room.turnInfo.allowedIndexes = [];
+  room.turnInfo.canDohodit = false; // FIXED: Prevent bleed into next turn
   
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
 }
@@ -202,7 +203,8 @@ io.on('connection', (socket) => {
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice,
         allowedIndexes: usedIndexes,
-        canDohodit: room.turnInfo.canDohodit
+        canDohodit: room.turnInfo.canDohodit,
+        canDohoditCombo: room.turnInfo.canDohodit ? (new Set(roll).size === 5 ? "POSTUPKU" : "PÁRY") : ""
       });
     }
   });
@@ -219,17 +221,23 @@ io.on('connection', (socket) => {
     const counts = {}; lastRoll.forEach(v => counts[v] = (counts[v]||0)+1);
     
     // Extract the 5 unique/needed dice
-    let baseDice = [];
+    let comboName = "";
     if (new Set(lastRoll).size === 5) {
-      // Near straight 5/6
       baseDice = Array.from(new Set(lastRoll));
+      comboName = "POSTUPKU";
     } else {
-      // Near pairs - just take first 5 for simplicity or specific pair logic
       baseDice = lastRoll.slice(0, 5); 
+      comboName = "PÁRY";
     }
     
     const virtualDice = [...baseDice, ...roll];
-    const { score } = calculateScore(virtualDice, true); // true because it's completing a 1st-roll combo
+    const { score } = calculateScore(virtualDice, true); 
+
+    io.to(room.id).emit('dice-rolled', { 
+      msg: `🎲 DOHAZUJE NA ${comboName}!`, 
+      roll: virtualDice, 
+      isDohodLaunch: true 
+    });
 
     // Important: Rule 13 says if it fails to complete combination -> 0b
     // Combinations for 6 dice are 2000 (Straight) and 700 (Pairs)

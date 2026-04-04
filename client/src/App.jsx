@@ -115,12 +115,13 @@ function App() {
           diceCount: data.diceCount !== undefined ? data.diceCount : prev.turnInfo.diceCount,
           storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
           allowedIndexes: data.allowedIndexes || [],
-          canDohodit: data.canDohodit || false
+          canDohodit: data.canDohodit || false,
+          canDohoditCombo: data.canDohoditCombo || ""
         }
       }));
       
-      if (data.isBust) {
-        audio.playBust();
+      if (data.isBust || data.msg) {
+        if (data.isBust) audio.playBust();
         setError(data.msg || 'ZELENÁČ! Žádné body.');
         setTimeout(() => setError(''), 3000);
       } else {
@@ -295,7 +296,7 @@ function App() {
       )}
       {screen !== 'room' && (
         <header className="neon-header">
-          <h1 className="neon-text-cyan">KOSTKY</h1>
+          <h1 className="neon-text-purple">KOSTKY</h1>
           <div className="header-controls">
             {nickname && (
               <div className="user-info">
