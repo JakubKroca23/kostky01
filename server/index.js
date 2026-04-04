@@ -117,7 +117,7 @@ io.on('connection', (socket) => {
     const p = players.get(socket.id);
     if (!p) return;
     
-    const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const roomId = generateRoomId(); // Use helper
     const roomName = name || `Hra – ${p.nickname}`;
     const room = {
       id: roomId,
@@ -143,7 +143,8 @@ io.on('connection', (socket) => {
     p.roomId = roomId;
     socket.join(roomId);
     socket.emit('room-joined', { roomId, room });
-    io.emit('room-list-update', getRoomList());
+    io.emit('room-list-update', getRoomList()); // Global sync
+    broadcastGlobalStats();
   });
 
   socket.on('join-room', (roomId) => {
@@ -226,7 +227,7 @@ io.on('connection', (socket) => {
     const fullRoll = [...baseDice, newDieValue];
     
     // 3. Score evaluation (Must be a 6-die combo: 2000 for straight, 700 for pairs)
-    const { score } = scoring.calculateScore(fullRoll);
+    const { score } = calculateScore(fullRoll);
     const success = (score === 2000 || score === 700);
 
     room.turnInfo.lastRoll = fullRoll;
