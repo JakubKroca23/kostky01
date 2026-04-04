@@ -111,8 +111,9 @@ function App() {
           ...prev.turnInfo, 
           lastRoll: data.roll, 
           turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
-          rollCount: prev.turnInfo.rollCount || 0,
-          diceCount: data.diceCount || prev.turnInfo.diceCount,
+          rollCount: data.rollCount !== undefined ? data.rollCount : prev.turnInfo.rollCount,
+          diceCount: data.diceCount !== undefined ? data.diceCount : prev.turnInfo.diceCount,
+          storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
           allowedIndexes: data.allowedIndexes || [],
           canDohodit: data.canDohodit || false
         }
@@ -168,7 +169,6 @@ function App() {
     socket.on('score-updated', onScoreUpdated);
     socket.on('turn-updated', onTurnUpdated);
     socket.on('dice-rolled', onDiceRolled);
-    socket.on('opponent-rolled', onOpponentRolled);
     socket.on('game-over', onGameOver);
     socket.on('reaction-received', onReactionReceived);
 
@@ -187,7 +187,6 @@ function App() {
       socket.off('score-updated', onScoreUpdated);
       socket.off('turn-updated', onTurnUpdated);
       socket.off('dice-rolled', onDiceRolled);
-      socket.off('opponent-rolled', onOpponentRolled);
       socket.off('game-over', onGameOver);
       socket.off('reaction-received', onReactionReceived);
     };

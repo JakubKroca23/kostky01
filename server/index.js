@@ -198,6 +198,9 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('dice-rolled', { 
         roll, 
         turnPoints: room.turnInfo.turnPoints, 
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice,
         allowedIndexes: usedIndexes,
         canDohodit: room.turnInfo.canDohodit
       });
@@ -282,7 +285,14 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
-      io.to(room.id).emit('dice-rolled', { roll, turnPoints: room.turnInfo.turnPoints, allowedIndexes: usedIndexes });
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        turnPoints: room.turnInfo.turnPoints,
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice,
+        allowedIndexes: usedIndexes 
+      });
     }
   });
 
