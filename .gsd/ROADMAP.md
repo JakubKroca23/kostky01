@@ -57,13 +57,10 @@
 - Sound toggle menu (localStorage).
 - Victory Modal (10,000 points celebrate — confetti + neon).
 
----
-
-### Phase 6: Úprava bodování & herních mechanik
+### Phase 6: Úprava bodování
 **Status**: ⬜ Not Started
-**Objective**: Kompletní přepis scoring enginu dle nových pravidel, implementace čárek, pravidla 350b od 3. hodu, Hot Dice mechaniky, "dohodit" speciálních kombinací a aktualizace UI (scoreboard s čárkami, inteligentní výběr kostek).
+**Objective**: Oprava a synchronizace výpočetního enginu pro bodování (kombinace a pravidla).
 **Depends on**: Phase 5
-**Requirements**: REQ-03, REQ-04, REQ-05
 
 **Tasks**:
 - [ ] TBD (run /plan 6 to create)
