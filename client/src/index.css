@@ -174,12 +174,12 @@ body {
   will-change: transform;
 }
 
-/* Během hodu - žádná animace, jen vzhled */
+/* Během hodu - pointer-events off, jinak stejný vzhled */
 .dice-body.rolling {
   pointer-events: none;
-  border-color: var(--neon-gold);
-  box-shadow: 0 0 12px rgba(255, 200, 0, 0.5);
+  /* Žádná barva rámu – kostky vypadají stejně před i po hodu */
 }
+
 
 /* Vybraná kostka */
 .dice-body.selected {
@@ -204,6 +204,63 @@ body {
 .dots-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 100%; gap: 3px; }
 
 /* Scoreboard */
+.scoreboard {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.3s;
+}
+.score-row:last-child { border-bottom: none; }
+.score-row.active-turn {
+  background: rgba(0, 255, 255, 0.08);
+  border-left: 3px solid var(--neon-cyan);
+}
+
+.score-name {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.score-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-pending {
+  font-size: 0.75rem;
+  color: var(--neon-gold);
+  background: rgba(255, 200, 0, 0.15);
+  padding: 2px 7px;
+  border-radius: 10px;
+  animation: pendingPulse 1s infinite alternate;
+}
+@keyframes pendingPulse {
+  from { opacity: 0.7; }
+  to   { opacity: 1; }
+}
+
+.score-value {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--neon-cyan);
+  min-width: 55px;
+  text-align: right;
+}
+.score-max {
+  font-size: 0.65rem;
+  opacity: 0.35;
+}
+
+/* Staré score-item pro zpětnou kompatibilitu */
 .score-item {
   display: flex;
   justify-content: space-between;
@@ -211,12 +268,12 @@ body {
   margin-bottom: 8px;
   border-radius: 12px;
   background: rgba(255,255,255,0.02);
-  transition: 0.3s;
 }
 .score-item.active {
   background: rgba(0, 255, 255, 0.08);
   border-left: 3px solid var(--neon-cyan);
 }
+
 
 /* Victory Overlay */
 .victory-overlay {
