@@ -168,11 +168,18 @@ io.on('connection', (socket) => {
   socket.on('roll-again', (selectedIndexes) => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+    if (!selectedIndexes || selectedIndexes.length === 0) return;
 
     const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
     const { score } = calculateScore(selectedDice);
+
+    // Ochrana: prázdná nebo neplatná kombinace
+    if (score === 0) {
+      socket.emit('nickname-error', 'Vybrané kostky nemají body. Vyber platné kostky.');
+      return;
+    }
+
     room.turnInfo.turnPoints += score;
-    
     const rem = room.turnInfo.diceCount - selectedIndexes.length;
     room.turnInfo.diceCount = rem === 0 ? 6 : rem;
 

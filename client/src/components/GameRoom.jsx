@@ -83,23 +83,13 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   };
 
   const validateAndDo = (action, isStop) => {
-    if (selectedDice.length === 0 && !isStop) {
+    // Při "Hodit zbytkem" musí být něco vybráno
+    if (!isStop && selectedDice.length === 0) {
       setErrorLocal('Musíš vybrat alespoň jednu kostku.');
       setTimeout(() => setErrorLocal(''), 2000);
       return;
     }
-
-    if (selectedDice.length > 0) {
-      const vals = selectedDice.map(i => room.turnInfo.lastRoll[i]);
-      const { score, usedIndexes } = calculateScore(vals);
-      
-      if (score === 0 || usedIndexes.length !== selectedDice.length) {
-        setErrorLocal('Vybrané kostky netvoří celou bodovou kombinaci!');
-        setTimeout(() => setErrorLocal(''), 3000);
-        return;
-      }
-    }
-    
+    // Ostatní validaci zajišťuje server
     action(selectedDice);
   };
 
