@@ -216,15 +216,31 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.3s, opacity 0.3s;
+}
+.score-row:last-child { border-bottom: none; }
+.score-row.active-turn {
+  background: rgba(0, 255, 255, 0.08);
+  border-left: 3px solid var(--neon-cyan);
+}
+.score-row.waiting-entry {
+  opacity: 0.6;
 }
 
-.score-left {
+.score-main {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
+}
+
+.strikes-display {
+  color: var(--neon-pink);
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px var(--neon-pink);
+  font-family: monospace;
 }
 
 .score-name {
@@ -236,6 +252,19 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.neon-button.gold-border {
+  border-color: var(--neon-gold);
+  color: var(--neon-gold);
+  text-shadow: 0 0 10px var(--neon-gold);
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
+  animation: goldPulse 2s infinite;
+}
+
+@keyframes goldPulse {
+  0%, 100% { border-color: var(--neon-gold); box-shadow: 0 0 5px var(--neon-gold); }
+  50% { border-color: white; box-shadow: 0 0 20px var(--neon-gold); }
 }
 
 .score-pending {
@@ -378,8 +407,7 @@ body {
 @keyframes titleFlicker {
   0%, 95%, 100% { opacity: 1; }
   96%           { opacity: 0.7; }
-  97%           { opacity: 1; }
-  98%           { opacity: 0.5; }
+  97%           { opacity: 0.5; }
 }
 
 /* Sekce vítěze */
@@ -548,7 +576,6 @@ body {
 /* Animations */
 .fade-in { animation: fadeIn 0.5s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
 
 /* --- Completion Offer --- */
 .completion-offer-overlay {

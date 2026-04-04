@@ -25,7 +25,6 @@ function App() {
   const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
-  const [completionOffer, setCompletionOffer] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     // Načíst preference zvuku z localStorage, výchozí stav je zapnuto
     const saved = localStorage.getItem('kostky-sound') !== 'false';
@@ -112,15 +111,16 @@ function App() {
           ...prev.turnInfo, 
           lastRoll: data.roll, 
           turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
-          rollCount: prev.turnInfo.rollCount + 1,
+          rollCount: prev.turnInfo.rollCount || 0,
           diceCount: data.diceCount || prev.turnInfo.diceCount,
-          allowedIndexes: data.allowedIndexes || []
+          allowedIndexes: data.allowedIndexes || [],
+          canDohodit: data.canDohodit || false
         }
       }));
       
       if (data.isBust) {
         audio.playBust();
-        setError('ZELENÁČ! Žádné body.');
+        setError(data.msg || 'ZELENÁČ! Žádné body.');
         setTimeout(() => setError(''), 3000);
       } else {
         audio.playRoll();
@@ -135,7 +135,7 @@ function App() {
           ...prev.turnInfo, 
           lastRoll: data.roll, 
           turnPoints: data.turnPoints,
-          rollCount: prev.turnInfo.rollCount + 1
+          rollCount: (prev.turnInfo.rollCount || 0) + 1
         }
       }));
     }
@@ -148,41 +148,6 @@ function App() {
     function onGameOver(data) {
       audio.playVictory();
       setWinnerData(data);
-    }
-
-    function onCanCompleteSpecial(data) {
-      // Only show to the active player
-      if (currentRoom?.turnInfo?.currentTurnId === socket.id) {
-        setCompletionOffer(data);
-      }
-    }
-
-    function onCompletionResult(data) {
-      setCompletionOffer(null);
-      if (data.success) {
-        audio.playScore();
-        setCurrentRoom(prev => ({
-          ...prev,
-          turnInfo: {
-            ...prev.turnInfo,
-            lastRoll: data.roll,
-            allowedIndexes: data.allowedIndexes,
-            isHotDice: false // It's no longer hot, it's a hit
-          }
-        }));
-      } else {
-        audio.playBust();
-        setError('Nedohodil! 0 bodů za tah.');
-        setTimeout(() => setError(''), 3000);
-        setCurrentRoom(prev => ({
-          ...prev,
-          turnInfo: {
-            ...prev.turnInfo,
-            lastRoll: data.roll,
-            strikes: data.strikes || prev.turnInfo.strikes
-          }
-        }));
-      }
     }
 
     socket.on('connect', onConnect);
@@ -201,13 +166,6 @@ function App() {
     socket.on('dice-rolled', onDiceRolled);
     socket.on('opponent-rolled', onOpponentRolled);
     socket.on('game-over', onGameOver);
-    socket.on('can-complete-special', onCanCompleteSpecial);
-    socket.on('completion-result', onCompletionResult);
-    socket.on('completion-declined', () => setCompletionOffer(null));
-    socket.on('stop-error', (msg) => {
-      setError(msg);
-      setTimeout(() => setError(''), 4000);
-    });
 
     return () => {
       socket.off('connect', onConnect);
@@ -226,10 +184,6 @@ function App() {
       socket.off('dice-rolled', onDiceRolled);
       socket.off('opponent-rolled', onOpponentRolled);
       socket.off('game-over', onGameOver);
-      socket.off('can-complete-special', onCanCompleteSpecial);
-      socket.off('completion-result', onCompletionResult);
-      socket.off('completion-declined');
-      socket.off('stop-error');
     };
   }, []);
 
@@ -270,20 +224,15 @@ function App() {
     socket.emit('stop-turn', selectedIndexes);
   };
 
-  const handleAcceptCompletion = () => {
-    socket.emit('accept-completion');
-  };
-
-  const handleDeclineCompletion = () => {
-    setCompletionOffer(null);
-    socket.emit('decline-completion');
-  };
-
   const handleChangeNickname = () => {
     const newName = prompt('Zadej nové jméno:', nickname);
     if (newName && newName.trim().length >= 3) {
       socket.emit('change-nickname', newName.trim());
     }
+  };
+
+  const handleDohodit = () => {
+    socket.emit('dohodit');
   };
 
   return (
@@ -348,10 +297,8 @@ function App() {
           onRollAgain={handleRollAgain}
           onStop={handleStopTurn}
           onStart={handleStartGame}
+          onDohodit={handleDohodit}
           isConnected={isConnected}
-          completionOffer={completionOffer}
-          onAcceptCompletion={handleAcceptCompletion}
-          onDeclineCompletion={handleDeclineCompletion}
         />
       )}
     </div>

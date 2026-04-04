@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Kostky pro smažky 🎲</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --neon-green: #39ff14;
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --glass: rgba(255, 255, 255, 0.1);
+            --main: var(--neon-pink); 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            -webkit-tap-highlight-color: transparent;
+            transition: border-color 0.5s ease, color 0.5s ease, text-shadow 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* --- SCREENY --- */
+        .screen { display: none; flex-direction: column; width: 100%; height: 100%; max-width: 600px; margin: 0 auto; padding: 40px 20px; text-align: center; position: relative; z-index: 10; }
+        .screen.active { display: flex; }
+        h1 { font-size: 2.2rem; color: var(--main); text-shadow: 0 0 20px var(--main); margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; }
+        .stack { display: flex; flex-direction: column; gap: 15px; }
+        input { background: rgba(0,0,0,0.6); border: 2px solid var(--main); padding: 15px; color: white; font-size: 1.2rem; border-radius: 12px; outline: none; text-align: center; }
+        button { background: rgba(0,0,0,0.4); border: 2px solid var(--main); padding: 15px; color: var(--main); font-size: 1.1rem; font-weight: bold; cursor: pointer; border-radius: 12px; text-transform: uppercase; }
+        button:active { background: var(--main); color: black; }
+        button:disabled { opacity: 0.2 !important; cursor: not-allowed; }
+        
+        #leaderboard { font-size: 0.9rem; background: var(--glass); padding: 10px; border-radius: 15px; margin-bottom: 5px; display: flex; flex-direction: column; gap: 5px; border: 1px solid rgba(255,255,255,0.1); }
+        .lb-entry { display: flex; justify-content: space-between; padding: 6px 12px; border-radius: 8px; align-items: center; }
+        .lb-entry.active-turn { background: rgba(0, 255, 255, 0.15); border: 1px solid var(--neon-blue); }
+        
+        .points-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .points-display { background: rgba(0,0,0,0.3); padding: 8px 25px; border-radius: 20px; border: 1px solid var(--neon-green); width: fit-content; }
+        .pts-total { font-size: 1.2rem; font-weight: 900; color: var(--neon-green); }
+        
+        #vibe-trigger { 
+            font-size: 2.5rem; 
+            cursor: pointer; 
+            filter: drop-shadow(0 0 10px var(--main));
+            user-select: none;
+            transition: transform 0.1s;
+            position: relative;
+            z-index: 100;
+        }
+        #vibe-trigger:active { transform: scale(0.8); }
+        
+        /* Floating Emoji Style */
+        .floating-emoji {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 2rem;
+            will-change: transform, opacity;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(var(--tr)); opacity: 0; }
+        }
+        
+        #game-area { flex: 1; display: flex; position: relative; border: 3px solid var(--main); margin: 5px 0; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); border-radius: 20px; overflow: hidden; }
+        #dice-table { flex: 1; position: relative; }
+        #aside-storage { width: 70px; border-left: 2px solid var(--main); background: rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; align-items: center; padding: 10px 0; overflow-y: auto; }
+        
+        .die { position: absolute; width: 45px; height: 45px; background: #fff; color: black; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; font-weight: 900; border-radius: 8px; box-shadow: 0 4px 0 #bbb; cursor: pointer; user-select: none; }
+        .die.can-take { box-shadow: 0 0 15px var(--neon-green); border: 2px solid var(--neon-green); }
+        .die-stored { width: 35px; height: 35px; background: white; color: black; margin-bottom: 8px; display: flex; justify-content: center; align-items: center; font-weight: bold; border-radius: 5px; font-size: 1.1rem; box-shadow: 0 2px 0 #bbb; flex-shrink: 0; }
+        
+        #msg-box { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: var(--main); color: black; padding: 12px 30px; border-radius: 30px; font-weight: bold; display: none; z-index: 9999; box-shadow: 0 0 20px var(--main); }
+
+        #lobby-chat { background: rgba(0,0,0,0.5); border: 1px solid var(--main); border-radius: 12px; margin-top: 10px; display: flex; flex-direction: column; flex: 1; min-height: 200px; text-align: left; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.8rem; color: #ccc; }
+        #chat-input-area { display: flex; border-top: 1px solid var(--main); }
+        #chat-input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; }
+        #chat-send-btn { border-radius: 0; border: none; border-left: 1px solid var(--main); }
+
+        #btn-start {
+            margin-top: 15px;
+            width: 100%;
+            background: rgba(57, 255, 20, 0.1);
+            border: 3px solid var(--neon-green);
+            color: var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="msg-box"></div>
+
+    <div id="game-container" style="height: 100%; width: 100%;">
+        <section id="screen-setup" class="screen active">
+            <h1>KOSTKY PRO SMAŽKY 💉</h1>
+            <div class="stack">
+                <input type="text" id="player-name" placeholder="Přezdívka">
+                <input type="text" id="game-id" placeholder="ID Místnosti">
+                <button id="btn-create">VYTVOŘIT ✨</button>
+                <button id="btn-join">PŘIPOJIT SE 🔌</button>
+            </div>
+        </section>
+
+        <section id="screen-lobby" class="screen">
+            <h1>LOBBY 🏠</h1>
+            <p>Místnost: <span id="display-game-id" style="color:var(--neon-blue)">-</span></p>
+            <div id="lobby-chat">
+                <div id="chat-messages"></div>
+                <div id="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Napiš něco...">
+                    <button id="chat-send-btn">POSLAT</button>
+                </div>
+            </div>
+            <button id="btn-start" style="display:none;">ROZDAT FRČKA 🔥</button>
+        </section>
+
+        <section id="screen-game" class="screen">
+            <div id="leaderboard"></div>
+            <div class="points-container">
+                <div class="points-display">
+                    <span id="combined-pts" class="pts-total">0</span>
+                </div>
+                <!-- Buchna -->
+                <div id="vibe-trigger" title="Změnit vibe">💉</div>
+            </div>
+            <div id="game-area">
+                <div id="dice-table"></div>
+                <div id="aside-storage">
+                    <div id="stored-dice-list"></div>
+                </div>
+            </div>
+            <div class="stack" style="flex-direction:row; gap:10px; margin-bottom:10px;">
+                <button id="roll-btn" style="flex:2; border-color: var(--neon-green); color: var(--neon-green);">HODIT 🎲</button>
+                <button id="bank-btn" style="flex:1;">BANK 💰</button>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update, get, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq7OrMn7HRkqw6dWNTSOc6IpiI77y7Ck4",
+            authDomain: "smazacky-doupe.firebaseapp.com",
+            databaseURL: "https://smazacky-doupe-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "smazacky-doupe",
+            storageBucket: "smazacky-doupe.firebasestorage.app",
+            messagingSenderId: "828398165984",
+            appId: "1:828398165984:web:b5fcc159ba48c3af661585"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let myData = { name: '', room: '', id: Math.random().toString(36).substr(2, 9), isHost: false };
+        let dicePhysics = [];
+        let animFrame;
+
+        const junkEmoji = ['💉', '💊', '🚬', '🧪', '🍄', '🥴', '🥦', '⚡', '🔥', '🍬', '🍺', '🌈', '💀', '🧊'];
+
+        function burstEmojis(e) {
+            const count = 15 + Math.floor(Math.random() * 10);
+            const x = e ? e.clientX : window.innerWidth / 2;
+            const y = e ? e.clientY : window.innerHeight / 2;
+
+            for (let i = 0; i < count; i++) {
+                const emoji = junkEmoji[Math.floor(Math.random() * junkEmoji.length)];
+                const span = document.createElement('span');
+                span.className = 'floating-emoji';
+                span.innerText = emoji;
+                
+                // Náhodný směr výstřelu
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 100 + Math.random() * 300;
+                const tx = Math.cos(angle) * dist;
+                const ty = Math.sin(angle) * dist;
+                const tr = Math.random() * 360;
+                
+                span.style.left = `${x}px`;
+                span.style.top = `${y}px`;
+                span.style.setProperty('--tx', `${tx}px`);
+                span.style.setProperty('--ty', `${ty}px`);
+                span.style.setProperty('--tr', `${tr}deg`);
+                
+                span.style.animation = `explode ${0.6 + Math.random() * 0.4}s forwards cubic-bezier(0.1, 0.8, 0.3, 1)`;
+                
+                document.body.appendChild(span);
+                setTimeout(() => span.remove(), 1000);
+            }
+        }
+
+        function changeVibe(e) {
+            const colors = ['#ff00ff', '#39ff14', '#00ffff', '#ffff00', '#ff0000', '#7b2ff7', '#ff8c00', '#ffffff'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            document.documentElement.style.setProperty('--main', randomColor);
+            burstEmojis(e);
+        }
+
+        document.getElementById('vibe-trigger').addEventListener('click', changeVibe);
+
+        function showMsg(t) {
+            const b = document.getElementById('msg-box');
+            b.innerText = t; b.style.display = 'block';
+            setTimeout(() => b.style.display = 'none', 3000);
+        }
+
+        function showS(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        async function connect(type) {
+            const n = document.getElementById('player-name').value.trim();
+            const r = document.getElementById('game-id').value.trim();
+            if(!n || !r) return;
+            myData.name = n; myData.room = r; myData.isHost = (type === 'create');
+            document.getElementById('display-game-id').innerText = r;
+            
+            showS('screen-lobby');
+
+            if (myData.isHost) {
+                await set(ref(db, `rooms/${r}`), { 
+                    status: 'lobby', 
+                    hostId: myData.id,
+                    state: { turn: myData.id, lastDice: [1,2,3,4,5,6], storedDice: [], rollCount: 0, hasTakenThisRoll: true, turnBasePoints: 0 },
+                    chat: {}
+                });
+            }
+
+            await set(ref(db, `rooms/${r}/players/${myData.id}`), { name: n, id: myData.id, score: 0, strikes: 0 });
+            
+            onValue(ref(db, `rooms/${r}`), snap => { 
+                const data = snap.val();
+                if(data) syncUI(data); 
+            });
+        }
+
+        function syncUI(data) {
+            const players = Object.values(data.players || {});
+            
+            const chatBox = document.getElementById('chat-messages');
+            if(data.chat) {
+                const msgs = Object.values(data.chat).sort((a,b) => a.time - b.time);
+                chatBox.innerHTML = msgs.map(m => `<div><b style="color:var(--main)">${m.sender}:</b> ${m.text}</div>`).join('');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            if(data.status === 'playing') {
+                showS('screen-game');
+                const s = data.state;
+                document.getElementById('combined-pts').innerText = s.turnBasePoints || 0;
+                document.getElementById('leaderboard').innerHTML = players.sort((a,b) => b.score - a.score).map(p => `
+                    <div class="lb-entry ${p.id === s.turn ? 'active-turn' : ''}">
+                        <span>${p.name} <small style="color:red">${"|".repeat(p.strikes || 0)}</small></span>
+                        <b>${p.score}</b>
+                    </div>
+                `).join('');
+                
+                renderStoredDice(s.storedDice || []);
+
+                if (s.isAnimating) startPhysicsAnimation(s.lastDice?.length || 6);
+                else { stopPhysicsAnimation(); renderDice(s.lastDice || [], s.rollCount, s.turn === myData.id); }
+                
+                document.getElementById('roll-btn').disabled = (s.turn !== myData.id || !s.hasTakenThisRoll);
+                document.getElementById('bank-btn').disabled = (s.turn !== myData.id || s.turnBasePoints < 350);
+            } else if (data.status === 'lobby') {
+                showS('screen-lobby');
+                if(data.hostId === myData.id || myData.isHost) {
+                    document.getElementById('btn-start').style.display = 'block';
+                } else {
+                    document.getElementById('btn-start').style.display = 'none';
+                }
+            }
+        }
+
+        function renderStoredDice(stored) {
+            const list = document.getElementById('stored-dice-list');
+            list.innerHTML = '';
+            stored.forEach(val => {
+                const d = document.createElement('div');
+                d.className = 'die-stored';
+                d.innerText = val;
+                list.appendChild(d);
+            });
+        }
+
+        function startPhysicsAnimation(count) {
+            if(animFrame) return;
+            const table = document.getElementById('dice-table');
+            dicePhysics = Array.from({length: count}, () => ({
+                x: Math.random()*(table.clientWidth-45), y: Math.random()*(table.clientHeight-45),
+                vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30, r: Math.random()*360
+            }));
+            const loop = () => {
+                table.innerHTML = '';
+                dicePhysics.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if(p.x<0 || p.x>table.clientWidth-45) p.vx*=-0.9;
+                    if(p.y<0 || p.y>table.clientHeight-45) p.vy*=-0.9;
+                    const d = document.createElement('div'); d.className = 'die';
+                    d.innerText = Math.floor(Math.random()*6)+1;
+                    d.style.left = p.x+'px'; d.style.top = p.y+'px'; d.style.transform = `rotate(${p.r}deg)`;
+                    table.appendChild(d);
+                });
+                animFrame = requestAnimationFrame(loop);
+            };
+            loop();
+        }
+
+        function stopPhysicsAnimation() { if(animFrame) { cancelAnimationFrame(animFrame); animFrame = null; } }
+
+        function renderDice(dice, rollCount, isMyTurn) {
+            const table = document.getElementById('dice-table');
+            table.innerHTML = '';
+            let counts = {}; dice.forEach(v => counts[v] = (counts[v] || 0) + 1);
+            dice.forEach((val, i) => {
+                const isStraight = (dice.length === 6 && new Set(dice).size === 6);
+                const canTake = (val===1 || val===5 || counts[val]>=3 || isStraight);
+                const d = document.createElement('div'); d.className = 'die';
+                if(rollCount > 0 && canTake && isMyTurn) d.classList.add('can-take');
+                d.innerText = val;
+                const p = dicePhysics[i] || { x: 20 + i*50, y: 50 };
+                d.style.left = p.x+'px'; d.style.top = p.y+'px';
+                d.onclick = () => { if(isMyTurn && rollCount>0 && canTake) takeDie(i, val, dice); };
+                table.appendChild(d);
+            });
+        }
+
+        async function takeDie(idx, val, currentDice) {
+            const snap = await get(ref(db, `rooms/${myData.room}/state`));
+            const state = snap.val();
+            let dice = [...currentDice], stored = [...(state.storedDice || [])], added = 0;
+            let counts = {}; dice.forEach(v => counts[v] = (counts[v] || 0) + 1);
+            
+            if(dice.length === 6 && new Set(dice).size === 6) { 
+                added = 1500; stored.push(...dice); dice = []; 
+            } else if(counts[val] >= 3) {
+                let c = counts[val];
+                added = (val === 1 ? 1000 : val * 100) * Math.pow(2, c-3);
+                dice = dice.filter(v => v !== val); 
+                for(let i=0; i<c; i++) stored.push(val);
+            } else { 
+                added = val === 1 ? 100 : 50; 
+                stored.push(val); dice.splice(idx, 1); 
+            }
+            
+            update(ref(db, `rooms/${myData.room}/state`), { 
+                lastDice: dice, storedDice: stored, 
+                turnBasePoints: (state.turnBasePoints || 0) + added, hasTakenThisRoll: true 
+            });
+        }
+
+        async function handleRoll() {
+            const snap = await get(ref(db, `rooms/${myData.room}/state`));
+            const s = snap.val();
+            let count = (s.lastDice?.length > 0) ? s.lastDice.length : 6;
+            await update(ref(db, `rooms/${myData.room}/state`), { isAnimating: true, hasTakenThisRoll: false });
+            setTimeout(async () => {
+                const finalDice = Array.from({length: count}, () => Math.floor(Math.random()*6)+1);
+                const canScore = hasScoring(finalDice);
+                await update(ref(db, `rooms/${myData.room}/state`), { lastDice: finalDice, rollCount: (s.rollCount || 0) + 1, isAnimating: false });
+                if(!canScore) { showMsg("💩 NULA!"); setTimeout(() => passTurn(0), 2000); }
+            }, 1000);
+        }
+
+        function hasScoring(dice) {
+            let c = {}; dice.forEach(v => c[v] = (c[v] || 0) + 1);
+            return dice.includes(1) || dice.includes(5) || Object.values(c).some(v => v >= 3) || (dice.length === 6 && new Set(dice).size === 6);
+        }
+
+        async function passTurn(pts) {
+            const roomSnap = await get(ref(db, `rooms/${myData.room}`));
+            const playersArr = Object.keys(roomSnap.val().players);
+            const next = playersArr[(playersArr.indexOf(myData.id) + 1) % playersArr.length];
+            const pSnap = await get(ref(db, `rooms/${myData.room}/players/${myData.id}`));
+            let { score=0, strikes=0 } = pSnap.val();
+            
+            if(pts > 0) { score += pts; strikes = 0; }
+            else { strikes++; if(strikes >= 3) { score = 0; strikes = 0; showMsg("💀 SMAZÁNO!"); } }
+            
+            await update(ref(db, `rooms/${myData.room}/players/${myData.id}`), { score, strikes });
+            update(ref(db, `rooms/${myData.room}/state`), { turn: next, lastDice: [1,2,3,4,5,6], storedDice: [], rollCount: 0, turnBasePoints: 0, hasTakenThisRoll: true });
+        }
+
+        document.getElementById('btn-create').onclick = () => connect('create');
+        document.getElementById('btn-join').onclick = () => connect('join');
+        document.getElementById('btn-start').onclick = () => {
+            if(myData.isHost) update(ref(db, `rooms/${myData.room}`), { status: 'playing' });
+        };
+        document.getElementById('roll-btn').onclick = handleRoll;
+        document.getElementById('bank-btn').onclick = () => {
+            get(ref(db, `rooms/${myData.room}/state`)).then(s => passTurn(s.val().turnBasePoints));
+        };
+        document.getElementById('chat-send-btn').onclick = () => {
+            const input = document.getElementById('chat-input');
+            if(input.value) push(ref(db, `rooms/${myData.room}/chat`), { sender: myData.name, text: input.value, time: Date.now() });
+            input.value = '';
+        };
+
+    </script>
+</body>
+</html>

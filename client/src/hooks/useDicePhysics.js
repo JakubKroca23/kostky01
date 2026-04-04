@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 
-const DIE_SIZE = 74;
+const DIE_SIZE = 66;
 
 export function useDicePhysics(diceCount, isRolling, arenaWidth = 460, arenaHeight = 340) {
   const engineRef = useRef(null);

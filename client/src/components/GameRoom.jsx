@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
-import { calculateScore } from '../utils/scoring.js';
 
-function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConnected, completionOffer, onAcceptCompletion, onDeclineCompletion }) {
+function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
@@ -38,33 +37,27 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConn
   const handleDieClick = (index) => {
     if (isRolling || !isMyTurn) return;
 
-    const isAllowed = (room.turnInfo.allowedIndexes || []).includes(index);
-    if (!isAllowed) return;
+    const allowed = room.turnInfo.allowedIndexes || [];
+    if (!allowed.includes(index)) return;
 
-    const dieValue = room.turnInfo.lastRoll[index];
-    const occurrencesInRoll = room.turnInfo.lastRoll.filter(v => v === dieValue).length;
+    if (selectedDice.includes(index)) {
+      setSelectedDice(prev => prev.filter(i => i !== index));
+      audio.playClick();
+      return;
+    }
+
+    const roll = room.turnInfo.lastRoll || [];
+    const dieValue = roll[index];
     
-    // Smart selection logic:
-    // If it's a 3+ combination, select/deselect whole group.
-    // If it's 1 or 2 ones/fives, select/deselect individually.
-    const isCombo = occurrencesInRoll >= 3;
-
-    if (isCombo) {
-      // Find all indexes of this value that are in allowedIndexes
-      const comboIndexes = (room.turnInfo.allowedIndexes || []).filter(
-        i => room.turnInfo.lastRoll[i] === dieValue
-      );
-      const allSelected = comboIndexes.every(i => selectedDice.includes(i));
-      
-      if (allSelected) {
-        setSelectedDice(prev => prev.filter(i => !comboIndexes.includes(i)));
-      } else {
-        setSelectedDice(prev => [...new Set([...prev, ...comboIndexes])]);
-      }
+    // Check if it's a special 6-dice combo (Straight or Pairs)
+    // If all 6 dice are allowed and it's the first roll, it's likely a combo.
+    if (room.turnInfo.rollCount === 1 && allowed.length === 6) {
+      setSelectedDice(allowed);
     } else {
-      // Individual toggle
-      if (selectedDice.includes(index)) {
-        setSelectedDice(prev => prev.filter(i => i !== index));
+      // Standard group select for multiples (3+)
+      const sameValueIndices = allowed.filter(i => roll[i] === dieValue);
+      if (sameValueIndices.length >= 3) {
+        setSelectedDice(prev => [...new Set([...prev, ...sameValueIndices])]);
       } else {
         setSelectedDice(prev => [...prev, index]);
       }
@@ -116,21 +109,6 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConn
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
 
-      {completionOffer && room.turnInfo.currentTurnId === myId && (
-        <div className="completion-offer-overlay fade-in">
-          <div className="completion-modal neon-card glass">
-            <h3 className="neon-text-pink">DOHODIT?</h3>
-            <p>Máš 5/6 kostek k <strong>{completionOffer.type === 'postupka' ? 'POSTUPCE' : 'TŘEM PÁRŮM'}</strong>!</p>
-            <p>Chceš dohodit chybějící <strong>{completionOffer.missingValue}</strong>?</p>
-            <div className="completion-warning">⚠️ Neúspěch = 0 bodů za tah + čárka!</div>
-            <div className="completion-actions">
-              <button className="neon-button primary" onClick={onAcceptCompletion}>DOHODIT</button>
-              <button className="neon-button pink-border" onClick={onDeclineCompletion}>ODMÍTNOUT</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="room-header-neon">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name}</h2>
@@ -160,19 +138,21 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConn
             {room.players.map(p => {
               const totalScore = (room.turnInfo.scores && room.turnInfo.scores[p.id]) || 0;
               const strikes = (room.turnInfo.strikes && room.turnInfo.strikes[p.id]) || 0;
+              const hasEntered = (room.turnInfo.enteredBoard && room.turnInfo.enteredBoard[p.id]);
               const isActive = room.turnInfo.currentTurnId === p.id;
               const pending = isActive ? currentTurnPoints : 0;
+              
               return (
-                <div key={p.id} className={`score-row ${isActive ? 'active-turn' : ''}`}>
-                  <div className="score-left">
+                <div key={p.id} className={`score-row ${isActive ? 'active-turn' : ''} ${!hasEntered ? 'waiting-entry' : ''}`}>
+                  <div className="score-main">
                     <span className="score-name">
                       {isActive ? '🎲 ' : ''}{p.nickname}
                     </span>
-                    <div className="score-strikes">
-                      {[...Array(strikes)].map((_, i) => (
-                        <span key={i} className="strike-mark">▪</span>
-                      ))}
-                    </div>
+                    {strikes > 0 && (
+                      <span className="strikes-display">
+                        {"|".repeat(strikes)}
+                      </span>
+                    )}
                   </div>
                   <div className="score-right">
                     {pending > 0 && (
@@ -211,6 +191,17 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConn
           <div className="game-controls">
             {isMyTurn ? (
               <>
+                {/* Rule 13: Dohazování */}
+                {room.turnInfo.canDohodit && (
+                   <button 
+                    className="neon-button full-width gold-border" 
+                    onClick={onDohodit}
+                    disabled={isRolling}
+                   >
+                     🔥 DOHODIT (VŠE NEBO NIC)
+                   </button>
+                )}
+
                 {/* První hod v tahu NEBO animace stále běží */}
                 {room.turnInfo.rollCount === 0 ? (
                   <button
@@ -230,17 +221,15 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConn
                     >
                       {isRolling
                         ? '⏳ Hod...'
-                        : room.turnInfo.diceCount === 6 
-                          ? 'HODIT DO PLNÝCH (Hot Dice! 🎲)'
-                          : `HODIT ZBYTKEM (${room.turnInfo.diceCount - selectedDice.length})`
+                        : `HODIT ZBYTKEM (${room.turnInfo.diceCount - selectedDice.length})`
                       }
                     </button>
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
-                      disabled={isRolling || (room.turnInfo.turnPoints + (calculateScore(selectedDice.map(i => room.turnInfo.lastRoll[i]), false).score)) < 350}
+                      disabled={isRolling || (room.turnInfo.turnPoints + (selectedDice.length > 0 ? 1 : 0) < 350 && !room.turnInfo.enteredBoard[myId])}
                     >
-                      ZAPSAT BODY ({currentTurnPoints + (calculateScore(selectedDice.map(i => room.turnInfo.lastRoll[i]), false).score)})
+                      ZAPSAT BODY ({currentTurnPoints})
                     </button>
                   </>
                 )}
