@@ -1,8 +1,10 @@
 /**
- * Pevná bodovací tabulka dle Phase 6 specifikace.
- * Formát: { hodnota: { počet: body } }
+ * Unified Scoring Engine for "10 000" (Server Copy)
+ * Handles fixed scoring table, special combinations, and first-roll-only restrictions.
  */
-const SCORE_TABLE = {
+
+const SCORING_FIXED_TABLE = {
+  // val: { count: score }
   1: { 3: 1000, 4: 2000, 5: 3000, 6: 4000 },
   2: { 3: 200,  4: 400,  5: 600,  6: 800  },
   3: { 3: 300,  4: 600,  5: 900,  6: 1200 },
@@ -12,13 +14,13 @@ const SCORE_TABLE = {
 };
 
 /**
- * Vypočítá skóre pro zadané kostky podle pravidel 10 000 (Phase 6).
- * @param {number[]} dice - Pole s hodnotami kostek (1-6).
- * @param {boolean} allowSpecials - Zda povolit speciální kombinace (postupka, páry).
- * @returns {{ score: number, usedIndexes: number[] }} Výsledek bodování.
+ * Calculates score for a given set of dice.
+ * @param {number[]} dice - Array of dice values (1-6).
+ * @param {boolean} isFirstRoll - Whether this is the first roll of a turn.
+ * @returns {{ score: number, usedIndexes: number[], canDohodit: boolean }} Result.
  */
-export function calculateScore(dice, allowSpecials = true) {
-  if (!dice || dice.length === 0) return { score: 0, usedIndexes: [] };
+export function calculateScore(dice, isFirstRoll = false) {
+  if (!dice || dice.length === 0) return { score: 0, usedIndexes: [], canDohodit: false };
 
   const counts = {};
   dice.forEach((val) => {
@@ -27,6 +29,7 @@ export function calculateScore(dice, allowSpecials = true) {
 
   let totalScore = 0;
   let usedIndexes = new Set();
+  let canDohodit = false;
 
   const markUsed = (val, countToMark) => {
     let marked = 0;
@@ -38,42 +41,45 @@ export function calculateScore(dice, allowSpecials = true) {
     });
   };
 
-  if (allowSpecials && dice.length === 6) {
-    // 1. Speciální kombinace: Velká postupka (1-6) = 2000b
+  // 1. COMBINATIONS (STRAIGHT, PAIRS) - ONLY ON FIRST ROLL (or "Dohodit" logic)
+  if (isFirstRoll && dice.length === 6) {
+    // 1A. Straight 1-2-3-4-5-6 = 2000b
     if (Object.keys(counts).length === 6) {
-      return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5] };
+       return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false };
     }
 
-    // 2. Speciální kombinace: Tři dvojice = 700b
+    // 1B. Three pairs (e.g. 2,2,4,4,6,6) = 700b
     const pairs = Object.entries(counts).filter(([, count]) => count === 2);
     if (pairs.length === 3) {
-      return { score: 700, usedIndexes: [0, 1, 2, 3, 4, 5] };
+      return { score: 700, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false };
     }
   }
 
-  // 3. Počítání násobků (3+ stejných) a osamocených 1 a 5
+  // 2. MULTIPLES (3+ of same)
   for (let val = 1; val <= 6; val++) {
     const num = Number(val);
     const count = counts[num] || 0;
 
     if (count >= 3) {
-      // Body z pevné tabulky
-      totalScore += SCORE_TABLE[num][count];
+      totalScore += SCORING_FIXED_TABLE[num][count];
       markUsed(num, count);
-    } else {
-      // Kostky s méně než 3 výskyty
-      if (num === 1) {
-        totalScore += count * 100;
-        markUsed(num, count);
-      } else if (num === 5) {
-        totalScore += count * 50;
-        markUsed(num, count);
-      }
+      counts[num] = 0; // Prevent lone 1s/5s from using these dice
     }
+  }
+
+  // 3. LONE ONES AND FIVES (1, 2 items)
+  if (counts[1] > 0) {
+    totalScore += counts[1] * 100;
+    markUsed(1, counts[1]);
+  }
+  if (counts[5] > 0) {
+    totalScore += counts[5] * 50;
+    markUsed(5, counts[5]);
   }
 
   return {
     score: totalScore,
-    usedIndexes: Array.from(usedIndexes)
+    usedIndexes: Array.from(usedIndexes),
+    canDohodit: canDohodit // Logic for Plan 6.3
   };
 }
