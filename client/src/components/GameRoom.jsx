@@ -249,12 +249,16 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
                 ) : (
                   <>
                     <button className="neon-button full-width" onClick={handleRollAgain} disabled={isRolling}>
-                      HODIT ZBYTKEM ({room.turnInfo.diceCount - selectedDice.length})
+                      {isRolling ? '⏳ Hod...' : 
+                        (room.turnInfo.diceCount - selectedDice.length === 0 
+                          ? '🔥 HODIT VŠECH 6 KOSTEK' 
+                          : `HODIT ZBYTKEM (${room.turnInfo.diceCount - selectedDice.length})`)
+                      }
                     </button>
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
-                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350 && !room.turnInfo.enteredBoard[myId]) || (currentTurnPoints + selectedPoints === 0)}
+                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350)}
                     >
                       ZAPSAT BODY ({currentTurnPoints + selectedPoints})
                     </button>

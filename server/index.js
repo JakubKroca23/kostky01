@@ -184,7 +184,7 @@ io.on('connection', (socket) => {
     const isBust = (score === 0);
     const totalPotential = room.turnInfo.turnPoints + score;
     
-    // Rule 3: 3rd roll threshold
+    // Rule 3: 3rd roll threshold (STRICT: Must have 350 by 3rd roll every turn)
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (isBust || isTooLowAfter3) {
@@ -273,8 +273,8 @@ io.on('connection', (socket) => {
     const { score: nextScore, usedIndexes } = calculateScore(roll, room.turnInfo.rollCount === 1);
     room.turnInfo.allowedIndexes = usedIndexes;
     const totalPotential = room.turnInfo.turnPoints + nextScore;
-
-    // Rule 3: 3rd roll threshold
+    
+    // Rule 3: 3rd roll threshold (STRICT: Must have 350 by 3rd roll every turn)
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (nextScore === 0 || isTooLowAfter3) {

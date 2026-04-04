@@ -194,33 +194,43 @@ function App() {
   }, []);
 
   const burstEmojis = (emoji) => {
-    const count = 5 + Math.floor(Math.random() * 4); // Snížený počet
-    const x = window.innerWidth / 2;
-    const y = window.innerHeight / 2;
+    // 1. Launch a rocket first
+    const rocket = document.createElement('span');
+    rocket.className = 'firework-rocket';
+    rocket.innerText = emoji; // Or maybe a 🚀 emoji
+    document.body.appendChild(rocket);
+    
+    // 2. Explode at peak
+    setTimeout(() => {
+        rocket.remove();
+        
+        const count = 6 + Math.floor(Math.random() * 4);
+        const x = window.innerWidth / 2;
+        const y = window.innerHeight / 2;
 
-    for (let i = 0; i < count; i++) {
-        const span = document.createElement('span');
-        span.className = 'floating-emoji';
-        span.innerText = emoji;
-        
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 50 + Math.random() * 200; // Menší rozlet
-        const tx = Math.cos(angle) * dist;
-        const ty = Math.sin(angle) * dist;
-        const tr = Math.random() * 180;
-        
-        span.style.left = `${x}px`;
-        span.style.top = `${y}px`;
-        span.style.setProperty('--tx', `${tx}px`);
-        span.style.setProperty('--ty', `${ty}px`);
-        span.style.setProperty('--tr', `${tr}deg`);
-        
-        // Pomalejší animace (1.2s - 1.8s)
-        span.style.animation = `explode ${1.2 + Math.random() * 0.6}s forwards cubic-bezier(0.1, 0.6, 0.2, 1)`;
-        
-        document.body.appendChild(span);
-        setTimeout(() => span.remove(), 2000);
-    }
+        for (let i = 0; i < count; i++) {
+            const span = document.createElement('span');
+            span.className = 'floating-emoji';
+            span.innerText = emoji;
+            
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 60 + Math.random() * 180;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist;
+            const tr = Math.random() * 180;
+            
+            span.style.left = `${x}px`;
+            span.style.top = `${y}px`;
+            span.style.setProperty('--tx', `${tx}px`);
+            span.style.setProperty('--ty', `${ty}px`);
+            span.style.setProperty('--tr', `${tr}deg`);
+            
+            span.style.animation = `explode ${1.5 + Math.random() * 0.5}s forwards cubic-bezier(0.1, 0.6, 0.2, 1)`;
+            
+            document.body.appendChild(span);
+            setTimeout(() => span.remove(), 2000);
+        }
+    }, 800); // 800ms is the duration of rocketLaunch
   };
 
   const handleSendReaction = (emoji) => {
