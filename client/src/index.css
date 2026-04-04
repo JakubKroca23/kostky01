@@ -653,26 +653,84 @@ body {
 }
 
 /* REACTIONS */
-.reaction-buttons-row {
+.room-header-neon.compact {
+  padding: 8px 0;
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin: 10px 0;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 10px;
 }
 
-.reaction-btn {
-  background: rgba(255, 255, 255, 0.05);
+/* REACTION FLYOUT */
+.reactions-container {
+  position: relative;
+}
+
+.reaction-trigger {
+  background: var(--card-bg);
   border: 1px solid var(--glass-border);
-  font-size: 1.5rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s;
+}
+.reaction-trigger:hover, .reaction-trigger.active {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.reactions-flyout {
+  position: absolute;
+  top: 50px;
+  right: 0;
   padding: 8px;
   border-radius: 12px;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: slideDown 0.2s ease-out;
 }
 
-.reaction-btn:active {
-  transform: scale(0.85);
-  background: rgba(255, 255, 255, 0.15);
+.reaction-btn-mini {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.reaction-btn-mini:active { transform: scale(0.8); }
+
+/* DIE STORAGE STATES */
+.die-stored.locked {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.die-stored.active {
+  cursor: pointer;
+  border: 1px solid var(--neon-cyan);
+}
+
+.die-stored.active.pulse {
+  animation: storagePulse 2s infinite;
+}
+
+@keyframes storagePulse {
+  0%, 100% { border-color: var(--neon-cyan); box-shadow: 0 0 5px var(--neon-cyan); }
+  50% { border-color: white; box-shadow: 0 0 15px var(--neon-cyan); }
+}
+
+.reaction-buttons-row {
+  display: none; /* Skryto ve hře, nahrazeno výsuvným menu */
 }
 
 .completion-modal {

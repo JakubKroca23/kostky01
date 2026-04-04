@@ -194,7 +194,7 @@ function App() {
   }, []);
 
   const burstEmojis = (emoji) => {
-    const count = 15 + Math.floor(Math.random() * 10);
+    const count = 5 + Math.floor(Math.random() * 4); // Snížený počet
     const x = window.innerWidth / 2;
     const y = window.innerHeight / 2;
 
@@ -204,10 +204,10 @@ function App() {
         span.innerText = emoji;
         
         const angle = Math.random() * Math.PI * 2;
-        const dist = 100 + Math.random() * 300;
+        const dist = 50 + Math.random() * 200; // Menší rozlet
         const tx = Math.cos(angle) * dist;
         const ty = Math.sin(angle) * dist;
-        const tr = Math.random() * 360;
+        const tr = Math.random() * 180;
         
         span.style.left = `${x}px`;
         span.style.top = `${y}px`;
@@ -215,10 +215,11 @@ function App() {
         span.style.setProperty('--ty', `${ty}px`);
         span.style.setProperty('--tr', `${tr}deg`);
         
-        span.style.animation = `explode ${0.6 + Math.random() * 0.4}s forwards cubic-bezier(0.1, 0.8, 0.3, 1)`;
+        // Pomalejší animace (1.2s - 1.8s)
+        span.style.animation = `explode ${1.2 + Math.random() * 0.6}s forwards cubic-bezier(0.1, 0.6, 0.2, 1)`;
         
         document.body.appendChild(span);
-        setTimeout(() => span.remove(), 1000);
+        setTimeout(() => span.remove(), 2000);
     }
   };
 
@@ -283,33 +284,34 @@ function App() {
           onBack={handleBackToLobby}
         />
       )}
-      <header className="neon-header">
-        <h1 className="neon-text-cyan">KOSTKY</h1>
-        <div className="header-controls">
-          {nickname && (
-            <div className="user-info">
-              <span className="nickname-display">{nickname}</span>
-              <button className="neon-button btn-mini" onClick={handleChangeNickname}>Změnit</button>
+      {screen !== 'room' && (
+        <header className="neon-header">
+          <h1 className="neon-text-cyan">KOSTKY</h1>
+          <div className="header-controls">
+            {nickname && (
+              <div className="user-info">
+                <span className="nickname-display">{nickname}</span>
+                <button className="neon-button btn-mini" onClick={handleChangeNickname}>Změnit</button>
+              </div>
+            )}
+            <button 
+              id="sound-toggle-btn"
+              className={`sound-toggle ${soundEnabled ? 'active' : ''}`}
+              onClick={() => {
+                const next = !soundEnabled;
+                audio.setEnabled(next);
+                localStorage.setItem('kostky-sound', next);
+                setSoundEnabled(next);
+              }}
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+            </button>
+            <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
+              {isConnected ? 'ONLINE' : '...'}
             </div>
-          )}
-          <button 
-            id="sound-toggle-btn"
-            className={`sound-toggle ${soundEnabled ? 'active' : ''}`}
-            onClick={() => {
-              // Přepnout stav a okamžitě synchronizovat audio engine i localStorage
-              const next = !soundEnabled;
-              audio.setEnabled(next);
-              localStorage.setItem('kostky-sound', next);
-              setSoundEnabled(next);
-            }}
-          >
-            {soundEnabled ? '🔊' : '🔇'}
-          </button>
-          <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
-            {isConnected ? 'ONLINE' : '...'}
           </div>
-        </div>
-      </header>
+        </header>
+      )}
       
       {screen === 'loading' && <div className="loading">Pripojovani...</div>}
 

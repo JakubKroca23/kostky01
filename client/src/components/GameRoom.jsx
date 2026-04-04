@@ -7,6 +7,7 @@ import { calculateScore } from '../utils/scoring';
 function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
+  const [isReactionsOpen, setIsReactionsOpen] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
 
   const physicsPositions = useDicePhysics(
@@ -29,8 +30,6 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
 
   const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
 
-  // Spustí animaci hodu – délka musí být KRATŠÍ než server timeout (1500ms)
-  // aby se controls odemkly dřív než přijde nový turn od serveru
   useEffect(() => {
     setSelectedDice([]);
     setErrorLocal('');
@@ -47,21 +46,13 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
     const allowed = room.turnInfo.allowedIndexes || [];
     if (!allowed.includes(index)) return;
 
-    if (selectedDice.includes(index)) {
-      setSelectedDice(prev => prev.filter(i => i !== index));
-      audio.playClick();
-      return;
-    }
-
     const roll = room.turnInfo.lastRoll || [];
     const dieValue = roll[index];
     
     // Check if it's a special 6-dice combo (Straight or Pairs)
-    // If all 6 dice are allowed and it's the first roll, it's likely a combo.
     if (room.turnInfo.rollCount === 1 && allowed.length === 6) {
       setSelectedDice(allowed);
     } else {
-      // Standard group select for multiples (3+)
       const sameValueIndices = allowed.filter(i => roll[i] === dieValue);
       if (sameValueIndices.length >= 3) {
         setSelectedDice(prev => [...new Set([...prev, ...sameValueIndices])]);
@@ -69,13 +60,20 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
         setSelectedDice(prev => [...prev, index]);
       }
     }
+    audio.playClick();
+  };
 
+  const handleUnselect = (indexInSelected) => {
+    if (isRolling || !isMyTurn) return;
+    const indexInRoll = selectedDice[indexInSelected];
+    setSelectedDice(prev => prev.filter(i => i !== indexInRoll));
     audio.playClick();
   };
 
   const renderDice = () => {
     return room.turnInfo.lastRoll.map((value, index) => {
-      const isSelected = selectedDice.includes(index);
+      if (selectedDice.includes(index)) return null;
+
       const canSelect = isMyTurn && (room.turnInfo.allowedIndexes || []).includes(index);
       const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
 
@@ -89,7 +87,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
         <Die
           key={index}
           value={value}
-          isSelected={isSelected}
+          isSelected={false}
           isRolling={isRolling}
           canSelect={canSelect}
           style={style}
@@ -116,7 +114,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
 
-      <div className="room-header-neon">
+      <div className="room-header-neon compact">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name}</h2>
           <span className="room-tag">ID: {room.id}</span>
@@ -124,6 +122,24 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
         {!room.gameStarted && canStart && (
           <button className="neon-button sm" onClick={onStart}>START HRY</button>
         )}
+        
+        <div className="reactions-container">
+          <button 
+            className={`reaction-trigger ${isReactionsOpen ? 'active' : ''}`}
+            onClick={() => setIsReactionsOpen(!isReactionsOpen)}
+          >
+            🎭
+          </button>
+          {isReactionsOpen && (
+            <div className="reactions-flyout glass fade-in">
+              {emojis.map(e => (
+                <button key={e} className="reaction-btn-mini" onClick={() => { onReaction(e); setIsReactionsOpen(false); }}>
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {!room.gameStarted ? (
@@ -166,7 +182,6 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
                       <span className="score-pending">+{pending}</span>
                     )}
                     <span className="score-value">{totalScore}</span>
-                    <span className="score-max">/ 10 000</span>
                   </div>
                 </div>
               );
@@ -186,21 +201,27 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
             <aside className="aside-storage glass">
                <span className="storage-label">ODLOŽENO</span>
                {(room.turnInfo.storedDice || []).map((val, i) => (
-                 <div key={i} className="die-stored">{val}</div>
+                 <div key={`stored-${i}`} className="die-stored locked">{val}</div>
+               ))}
+               {selectedDice.map((idx, i) => (
+                 <div 
+                  key={`selected-${i}`} 
+                  className="die-stored active pulse"
+                  onClick={() => handleUnselect(i)}
+                  title="Vrátit do hry"
+                 >
+                   {room.turnInfo.lastRoll[idx]}
+                 </div>
                ))}
             </aside>
           </div>
 
-          <div className="reaction-buttons-row">
-            {emojis.map(e => (
-              <button key={e} className="reaction-btn" onClick={() => onReaction(e)}>
-                {e}
-              </button>
-            ))}
-          </div>
-
           <div className="turn-summary neon-card">
             <div className="turn-stats">
+              <div className="stat-item">
+                <span className="stat-label">HOD</span>
+                <div className="stat-value">{room.turnInfo.rollCount || 0}/3</div>
+              </div>
               <div className="stat-item">
                 <span className="stat-label">BANKOVÁNO</span>
                 <div className="stat-value neon-text-cyan">{currentTurnPoints}</div>
@@ -209,53 +230,31 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
                 <span className="stat-label">VÝBĚR</span>
                 <div className="stat-value neon-text-pink">+{selectedPoints}</div>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">HOD</span>
-                <div className="stat-value">{room.turnInfo.rollCount || 0}</div>
-              </div>
             </div>
           </div>
 
           <div className="game-controls">
             {isMyTurn ? (
               <>
-                {/* Rule 13: Dohazování */}
                 {room.turnInfo.canDohodit && (
-                   <button 
-                    className="neon-button full-width gold-border" 
-                    onClick={onDohodit}
-                    disabled={isRolling}
-                   >
+                   <button className="neon-button full-width gold-border" onClick={onDohodit} disabled={isRolling}>
                      🔥 DOHODIT (VŠE NEBO NIC)
                    </button>
                 )}
 
-                {/* První hod v tahu NEBO animace stále běží */}
                 {room.turnInfo.rollCount === 0 ? (
-                  <button
-                    className="neon-button full-width"
-                    onClick={onRoll}
-                    disabled={isRolling}
-                  >
+                  <button className="neon-button full-width primary" onClick={onRoll} disabled={isRolling}>
                     HODIT KOSTKOU
                   </button>
                 ) : (
-                  /* Po hodu: zobraz tlačítka pro výběr i během animace */
                   <>
-                    <button
-                      className="neon-button full-width"
-                      onClick={handleRollAgain}
-                      disabled={isRolling}
-                    >
-                      {isRolling
-                        ? '⏳ Hod...'
-                        : `HODIT ZBYTKEM (${room.turnInfo.diceCount - selectedDice.length})`
-                      }
+                    <button className="neon-button full-width" onClick={handleRollAgain} disabled={isRolling}>
+                      HODIT ZBYTKEM ({room.turnInfo.diceCount - selectedDice.length})
                     </button>
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
-                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350 && !room.turnInfo.enteredBoard[myId])}
+                      disabled={isRolling || (currentTurnPoints + selectedPoints < 350 && !room.turnInfo.enteredBoard[myId]) || (currentTurnPoints + selectedPoints === 0)}
                     >
                       ZAPSAT BODY ({currentTurnPoints + selectedPoints})
                     </button>
@@ -264,10 +263,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
               </>
             ) : (
               <div className="wait-message neon-card glass">
-                Čekáme na tah:{' '}
-                <span className="neon-text-cyan">
-                  {room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}
-                </span>
+                Na tahu: <span className="neon-text-cyan">{room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
               </div>
             )}
           </div>
