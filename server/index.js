@@ -210,7 +210,12 @@ io.on('connection', (socket) => {
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
     
     if (room.turnInfo.scores[socket.id] >= 10000) {
-      io.to(room.id).emit('game-over', { winner: players.get(socket.id).nickname, scores: room.turnInfo.scores });
+      // Převést skóre z socket ID na přezdívky pro přehledné zobrazení ve VictoryModal
+      const namedScores = {};
+      room.players.forEach(p => {
+        namedScores[p.nickname] = room.turnInfo.scores[p.id] ?? 0;
+      });
+      io.to(room.id).emit('game-over', { winner: players.get(socket.id).nickname, scores: namedScores });
       rooms.delete(room.id);
       io.emit('room-list-update', getRoomList());
     } else {

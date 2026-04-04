@@ -145,7 +145,7 @@ function App() {
     }
 
     function onGameOver(data) {
-      audio.playScore();
+      audio.playVictory();
       setWinnerData(data);
     }
 
