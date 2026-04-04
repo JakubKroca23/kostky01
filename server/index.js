@@ -117,7 +117,7 @@ io.on('connection', (socket) => {
     const p = players.get(socket.id);
     if (!p) return;
     
-    const roomId = generateRoomId(); // Use helper
+    const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
     const roomName = name || `Hra – ${p.nickname}`;
     const room = {
       id: roomId,
@@ -143,8 +143,7 @@ io.on('connection', (socket) => {
     p.roomId = roomId;
     socket.join(roomId);
     socket.emit('room-joined', { roomId, room });
-    io.emit('room-list-update', getRoomList()); // Global sync
-    broadcastGlobalStats();
+    io.emit('room-list-update', getRoomList());
   });
 
   socket.on('join-room', (roomId) => {
@@ -193,7 +192,14 @@ io.on('connection', (socket) => {
 
     if (isBust || isTooLowAfter3) {
       const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
-      io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg });
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        isBust: true, 
+        msg,
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice
+      });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
       // Store the canDohodit state in turnInfo so it persists until next action
@@ -213,46 +219,58 @@ io.on('connection', (socket) => {
 
   socket.on('dohodit', () => {
     const room = rooms.get(players.get(socket.id)?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+    if (!room || room.turnInfo.currentTurnId !== socket.id || !room.turnInfo.canDohodit) return;
 
-    // 1. Identify which 5 dice form the base
+    // Rule 13: Freeze 5, roll chybějící (1)
+    room.turnInfo.rollCount++;
+    const roll = [Math.floor(Math.random() * 6) + 1];
+    // Create virtual 6-dice set: 5 from last roll (unique ones) + 1 new
     const lastRoll = room.turnInfo.lastRoll;
-    const allowed = room.turnInfo.allowedIndexes || [];
+    const counts = {}; lastRoll.forEach(v => counts[v] = (counts[v]||0)+1);
     
-    // We only take the dice that were marked as part of the "near miss" earlier
-    const baseDice = lastRoll.filter((_, i) => allowed.includes(i));
+    // Extract the 5 unique/needed dice
+    let baseDice = [];
+    let comboName = "";
+    if (new Set(lastRoll).size === 5) {
+      baseDice = Array.from(new Set(lastRoll));
+      comboName = "POSTUPKU";
+    } else {
+      baseDice = lastRoll.slice(0, 5); 
+      comboName = "PÁRY";
+    }
     
-    // 2. Roll the 6th die
-    const newDieValue = Math.floor(Math.random() * 6) + 1;
-    const fullRoll = [...baseDice, newDieValue];
-    
-    // 3. Score evaluation (Must be a 6-die combo: 2000 for straight, 700 for pairs)
-    const { score } = calculateScore(fullRoll);
+    const virtualDice = [...baseDice, ...roll];
+    const { score } = calculateScore(virtualDice, true); 
+
+    io.to(room.id).emit('dice-rolled', { 
+      msg: `🎲 DOHAZUJE NA ${comboName}!`, 
+      roll: virtualDice, 
+      isDohodLaunch: true 
+    });
+
     const success = (score === 2000 || score === 700);
 
-    room.turnInfo.lastRoll = fullRoll;
-    room.turnInfo.rollCount++;
-    room.turnInfo.diceCount = 6;
-    
     if (success) {
       room.turnInfo.turnPoints = score;
-      room.turnInfo.allowedIndexes = [0,1,2,3,4,5]; // All can be banked now
-      room.turnInfo.diceCount = 0; // Trigger "Hot Dice"
-      
+      room.turnInfo.lastRoll = virtualDice;
+      room.turnInfo.diceCount = 0; // Trigger "Do plných" automatically
+      room.turnInfo.canDohodit = false;
       io.to(room.id).emit('dice-rolled', { 
-        roll: fullRoll, 
-        msg: "DOHOD VYŠEL! 🔥", 
-        lockedCount: 5,
+        roll: virtualDice, 
         turnPoints: score,
-        rollCount: room.turnInfo.rollCount
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice,
+        allowedIndexes: [0,1,2,3,4,5] 
       });
     } else {
       io.to(room.id).emit('dice-rolled', { 
-        roll: fullRoll, 
+        roll, 
         isBust: true, 
         msg: "SMŮLA, ZKUS TO PŘÍŠTĚ!",
-        lockedCount: 5,
-        rollCount: room.turnInfo.rollCount
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice
       });
       setTimeout(() => nextTurn(room, true), 1500);
     }

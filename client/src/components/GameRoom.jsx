@@ -1,42 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 import { calculateScore } from '../utils/scoring';
 
-function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection }) {
+function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
-  const arenaRef = React.useRef(null);
-  const [arenaSize, setArenaSize] = React.useState({ w: 420, h: 340 });
+  const [errorLocal, setErrorLocal] = useState('');
+  const [arenaWidth, setArenaWidth] = useState(460);
+  const arenaRef = useRef(null);
 
   useEffect(() => {
     if (!arenaRef.current) return;
-    const observer = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver(entries => {
       for (let entry of entries) {
-        setArenaSize({
-          w: Math.floor(entry.contentRect.width),
-          h: Math.floor(entry.contentRect.height)
-        });
+        setArenaWidth(entry.contentRect.width);
       }
     });
     observer.observe(arenaRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // SEEDED PHYSICS SYNC
-  const physicsSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
+  // CRITICAL: Guard before any room-dependent logic
+  if (!room || !room.turnInfo) return null;
+
+  const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
+  const logicalWidth = 460;
+  const logicalHeight = 340;
+  const scale = arenaWidth < logicalWidth ? (arenaWidth / logicalWidth) : 1;
+
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
     isRolling,
-    physicsSeed,
-    arenaSize.w,
-    arenaSize.h,
-    room.turnInfo.lockedCount || 0
+    rollSeed,
+    logicalWidth,
+    logicalHeight
   );
-
-  if (!room) return null;
 
   const myId = room.players.find(p => p.nickname === nickname)?.id;
   const isMyTurn = room.turnInfo.currentTurnId === myId;
@@ -222,31 +223,46 @@ function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop
             })}
           </div>
 
-          <div className="dice-arena-wrapper">
-            <div className="dice-arena" ref={arenaRef}>
-              <div className="dice-container">
-                {room.turnInfo.lastRoll.length > 0
-                  ? renderDice()
-                  : <div className="empty-dice neon-text-cyan">Aréna připravena...</div>
-                }
+          <div className="game-main-horizontal-layout">
+            <div className="dice-arena-wrapper" ref={arenaRef}>
+              <div className="game-main-area">
+                <div 
+                  className="dice-arena" 
+                  style={{ 
+                    width: `${logicalWidth}px`, 
+                    height: `${logicalHeight}px`,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top center',
+                    marginBottom: `calc(${logicalHeight}px * (1 - ${scale}) * -1)`
+                  }}
+                >
+                  <div className="dice-container">
+                    {room.turnInfo.lastRoll.length > 0
+                      ? renderDice()
+                      : <div className="empty-dice neon-text-cyan">Aréna připravena...</div>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
 
             <aside className="aside-storage glass">
                <span className="storage-label">ODLOŽENO</span>
-               {(room.turnInfo.storedDice || []).map((val, i) => (
-                 <div key={`stored-${i}`} className="die-stored locked">{val}</div>
-               ))}
-               {selectedDice.map((idx, i) => (
-                 <div 
-                  key={`selected-${i}`} 
-                  className="die-stored active pulse"
-                  onClick={() => handleUnselect(i)}
-                  title="Vrátit do hry"
-                 >
-                   {room.turnInfo.lastRoll[idx]}
-                 </div>
-               ))}
+               <div className="storage-grid">
+                 {(room.turnInfo.storedDice || []).map((val, i) => (
+                   <div key={`stored-${i}`} className="die-stored locked">{val}</div>
+                 ))}
+                  {selectedDice.filter(idx => room.turnInfo.lastRoll[idx] !== undefined).map((idx, i) => (
+                    <div 
+                      key={`selected-${i}`} 
+                      className="die-stored"
+                      style={{ borderColor: isMyTurn ? 'var(--neon-pink)' : 'white' }}
+                      onClick={() => handleUnselect(i)}
+                    >
+                      {room.turnInfo.lastRoll[idx]}
+                    </div>
+                  ))}
+               </div>
             </aside>
           </div>
 

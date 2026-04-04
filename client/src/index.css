@@ -427,14 +427,6 @@ body {
   margin-bottom: 20px;
 }
 
-.game-room {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding-bottom: env(safe-area-inset-bottom, 20px); /* SAFARI FIX */
-}
-
 @keyframes titleFlicker {
   0%, 95%, 100% { opacity: 1; }
   96%           { opacity: 0.7; }
@@ -456,51 +448,13 @@ body {
 
 .winner-name {
   font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 15px var(--neon-cyan);
+  font-weight: 900;
+  color: var(--neon-pink);
+  text-shadow:
+    0 0 10px var(--neon-pink),
+    0 0 30px rgba(255, 0, 222, 0.5);
   display: block;
-}
-
-.final-scores {
-  margin: 20px 0;
-  text-align: left;
-}
-
-.final-score-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.final-score-item:last-child {
-  border-bottom: none;
-}
-
-.final-score-name { opacity: 0.8; }
-.final-score-val { color: var(--neon-pink); font-weight: 700; }
-
-.victory-action {
-  margin-top: 10px;
-}
-
-/* REACTIONS OVERLAY */
-.reactions-overlay {
-  position: fixed;
-  bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
-  padding: 10px 20px;
-  background: rgba(0,0,0,0.8);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-  z-index: 100;
-  border: 1px solid var(--glass-border);
-  border-bottom: none;
+  animation: nameShine 2s ease-in-out infinite alternate;
 }
 
 @keyframes nameShine {
@@ -579,16 +533,62 @@ body {
 
 
 /* Lobby & Lists */
-.lobby-layout { display: flex; flex-direction: column; gap: 20px; }
-.lobby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.game-room-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh; /* Modern viewport unit for mobile */
+  padding: 10px;
+  gap: 12px;
+  overflow-x: hidden;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
 
-.game-room {
+.game-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding-bottom: env(safe-area-inset-bottom, 20px); /* SAFARI FIX */
+  gap: 12px;
 }
+
+.game-main-horizontal-layout {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.aside-storage {
+  width: 140px;
+  min-height: 200px;
+  padding: 12px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.storage-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.storage-label {
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  opacity: 0.5;
+  text-align: center;
+  text-transform: uppercase;
+}
+.lobby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+
+.room-list { display: flex; flex-direction: column; gap: 12px; }
 .room-item {
   display: flex;
   justify-content: space-between;
@@ -628,7 +628,13 @@ body {
 .stat-label { font-size: 0.65rem; opacity: 0.5; letter-spacing: 1px; margin-bottom: 5px; display: block; }
 .stat-value { font-size: 1.4rem; font-weight: 900; }
 
-.game-controls { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.game-controls { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  margin-top: auto; 
+  padding-bottom: 2px;
+}
 
 .global-error-toast {
   position: fixed;
@@ -660,8 +666,7 @@ body {
   transform: translateX(-50%);
   font-size: 2rem;
   z-index: 9999;
-  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s;
-  pointer-events: none;
+  animation: rocketLaunch 0.8s ease-out forwards;
 }
 
 @keyframes rocketLaunch {
@@ -684,9 +689,12 @@ body {
   100% { transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(var(--tr)); opacity: 0; }
 }
 
-/* SIDE STORAGE      <div className="game-arena-wrapper">
-        <div className="game-arena glass" ref={arenaRef}>
-          {room.turnInfo.lastRoll.map((value, i) => (
+/* SIDE STORAGE */
+.dice-arena-wrapper {
+  display: flex;
+  height: 320px;
+  margin: 10px 0;
+  gap: 10px;
 }
 
 .dice-arena {

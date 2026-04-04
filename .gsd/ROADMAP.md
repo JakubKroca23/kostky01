@@ -57,13 +57,13 @@
 - Sound toggle menu (localStorage).
 - Victory Modal (10,000 points celebrate — confetti + neon).
 
-### Phase 6: Úprava bodování
-**Status**: ⬜ Not Started
+### Phase 6: Úprava bodování & Sync
+**Status**: ✅ Complete
 **Objective**: Oprava a synchronizace výpočetního enginu pro bodování (kombinace a pravidla).
 **Depends on**: Phase 5
 
 **Tasks**:
-- [ ] TBD (run /plan 6 to create)
+- [x] Dokončena oprava a synchronizace enginu.
 
 **Verification**:
 - TBD

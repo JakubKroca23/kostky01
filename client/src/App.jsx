@@ -99,32 +99,34 @@ function App() {
     }
 
     function onTurnUpdated(data) {
-      setRemoteSelection([]); // SYNC CLEANUP: Clear ghost selections on turn change
+      setRemoteSelection([]); // CRITICAL: Clear ghost selection on every turn start
       setCurrentRoom(prev => ({
         ...prev,
-        turnInfo: data.turnInfo
+        turnInfo: { ...prev.turnInfo, ...data.turnInfo }
       }));
     }
 
     function onDiceRolled(data) {
-      setRemoteSelection([]); // SYNC CLEANUP: Clear ghost selections on new roll
-      
-      setCurrentRoom(prev => ({
-        ...prev,
-        gameStarted: true,
-        turnInfo: {
-          ...prev.turnInfo,
-          ...data,
-          lastRoll: data.roll,
-          rollCount: data.rollCount !== undefined ? data.rollCount : prev.turnInfo.rollCount,
-          diceCount: data.diceCount !== undefined ? data.diceCount : data.roll.length,
-          storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
-          lockedCount: data.lockedCount // Track locked dice
-        }
-      }));
+      setRemoteSelection([]); // CRITICAL: Clear ghost selection on every roll
+      setCurrentRoom(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          turnInfo: { 
+            ...prev.turnInfo, 
+            lastRoll: data.roll, 
+            turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
+            rollCount: data.rollCount !== undefined ? data.rollCount : prev.turnInfo.rollCount,
+            diceCount: data.diceCount !== undefined ? data.diceCount : prev.turnInfo.diceCount,
+            storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
+            allowedIndexes: data.allowedIndexes || [],
+            canDohodit: data.canDohodit || false
+          }
+        };
+      });
       
       if (data.isBust || data.msg) {
-        // Delay results until dice settle (1500ms)
+        // Delay results until dice settle (1200ms)
         setTimeout(() => {
           if (data.isBust) audio.playBust();
           setError(data.msg || 'SMŮLA, ZKUS TO PŘÍŠTĚ!');

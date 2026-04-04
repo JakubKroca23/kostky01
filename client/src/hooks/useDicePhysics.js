@@ -16,7 +16,7 @@ function createSeededRandom(seedString) {
   };
 }
 
-export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460, arenaHeight = 340, lockedCount = 0) {
+export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460, arenaHeight = 340) {
   const engineRef = useRef(null);
   const bodiesRef = useRef([]);
   const wallsRef = useRef([]);
@@ -54,7 +54,6 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
         x: body.position.x - arenaWidth / 2,
         y: body.position.y - arenaHeight / 2,
         angle: body.angle,
-        isStatic: body.isStatic
       }));
       setPositions([...pos]);
       rafRef.current = requestAnimationFrame(loop);
@@ -97,24 +96,22 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
 
     const rand = createSeededRandom(seed + "init");
     const newBodies = Array.from({ length: diceCount }, (_, i) => {
-      const isLocked = i < lockedCount;
       const col = i % 3;
       const row = Math.floor(i / 3);
       const x = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 10);
       const y = arenaHeight / 2 - DIE_SIZE / 2 + row * (DIE_SIZE + 10);
 
       return Matter.Bodies.rectangle(x, y, DIE_SIZE, DIE_SIZE, {
-        restitution: isLocked ? 0.2 : 0.7,
+        restitution: 0.7,
         friction: 0.1,
         frictionAir: 0.04,
         density: 0.005,
-        isStatic: isLocked
       });
     });
 
     Matter.Composite.add(world, newBodies);
     bodiesRef.current = newBodies;
-  }, [diceCount, arenaWidth, arenaHeight, seed, lockedCount]);
+  }, [diceCount, arenaWidth, arenaHeight, seed]);
 
   useEffect(() => {
     if (!isRolling || !engineRef.current || bodiesRef.current.length === 0) return;
@@ -122,8 +119,6 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     const rand = createSeededRandom(seed + "roll");
 
     bodiesRef.current.forEach((body, i) => {
-      if (body.isStatic) return;
-
       const cx = arenaWidth / 2 + (rand() - 0.5) * 50;
       const cy = arenaHeight / 2 + (rand() - 0.5) * 50;
       Matter.Body.setPosition(body, { x: cx, y: cy });

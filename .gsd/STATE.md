@@ -1,6 +1,6 @@
-- **Phase**: 6
-- **Task**: Plan 6.1 - Unified Scoring Engine
-- **Status**: Active (executing)
+- **Phase**: Complete
+- **Task**: Project Finished
+- **Status**: Finished
 
 ## Next Steps
 1. /plan 6 — Vytvořit prováděcí plány pro opravu a synchronizaci bodování
