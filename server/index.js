@@ -220,6 +220,7 @@ io.on('connection', (socket) => {
     const counts = {}; lastRoll.forEach(v => counts[v] = (counts[v]||0)+1);
     
     // Extract the 5 unique/needed dice
+    let baseDice = [];
     let comboName = "";
     if (new Set(lastRoll).size === 5) {
       baseDice = Array.from(new Set(lastRoll));
@@ -238,8 +239,6 @@ io.on('connection', (socket) => {
       isDohodLaunch: true 
     });
 
-    // Important: Rule 13 says if it fails to complete combination -> 0b
-    // Combinations for 6 dice are 2000 (Straight) and 700 (Pairs)
     const success = (score === 2000 || score === 700);
 
     if (success) {
@@ -247,11 +246,31 @@ io.on('connection', (socket) => {
       room.turnInfo.lastRoll = virtualDice;
       room.turnInfo.diceCount = 0; // Trigger "Do plných" automatically
       room.turnInfo.canDohodit = false;
-      io.to(room.id).emit('dice-rolled', { roll: virtualDice, turnPoints: score, allowedIndexes: [0,1,2,3,4,5] });
+      io.to(room.id).emit('dice-rolled', { 
+        roll: virtualDice, 
+        turnPoints: score,
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice,
+        allowedIndexes: [0,1,2,3,4,5] 
+      });
     } else {
-      io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg: "DOHOD NEVYŠEL! (0 bodů)" });
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        isBust: true, 
+        msg: "DOHOD NEVYŠEL! (0 bodů)",
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice
+      });
       setTimeout(() => nextTurn(room, true), 1500);
     }
+  });
+
+  socket.on('update-selection', (indices) => {
+    const room = rooms.get(players.get(socket.id)?.roomId);
+    if (!room) return;
+    socket.to(room.id).emit('selection-updated', { playerId: socket.id, indices });
   });
 
   socket.on('roll-again', (selectedIndexes) => {
@@ -314,8 +333,10 @@ io.on('connection', (socket) => {
     }
 
     if (selectedIndexes.length > 0) {
-      const { score } = calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]));
-      room.turnInfo.turnPoints += score;
+      const selectedPoints = (selectedIndexes.length > 0 && room.turnInfo.lastRoll.length >= selectedIndexes.length)
+    ? calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]).filter(v => v !== undefined), room.turnInfo.rollCount === 1).score 
+    : 0;
+      room.turnInfo.turnPoints += selectedPoints;
     }
 
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;

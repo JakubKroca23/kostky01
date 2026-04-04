@@ -4,15 +4,18 @@ import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 import { calculateScore } from '../utils/scoring';
 
-function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction }) {
+function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
 
+  // SEEDED PHYSICS SYNC
+  const physicsSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
     isRolling,
+    physicsSeed,
     420,
     340
   );
@@ -24,6 +27,13 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
   const canStart = !room.gameStarted && room.players[0].nickname === nickname;
   const currentTurnPoints = room.turnInfo.turnPoints || 0;
   
+  // SYNC REMOTE SELECTION
+  useEffect(() => {
+    if (!isMyTurn && remoteSelection) {
+      setSelectedDice(remoteSelection);
+    }
+  }, [remoteSelection, isMyTurn]);
+
   const selectedPoints = selectedDice.length > 0 
     ? calculateScore(selectedDice.map(i => room.turnInfo.lastRoll[i]), room.turnInfo.rollCount === 1).score 
     : 0;
@@ -31,7 +41,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
   const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
 
   useEffect(() => {
-    setSelectedDice([]);
+    if (isMyTurn) setSelectedDice([]);
     setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
       setIsRolling(true);
@@ -49,24 +59,29 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, onDoho
     const roll = room.turnInfo.lastRoll || [];
     const dieValue = roll[index];
     
+    let newSelection = [];
     // Check if it's a special 6-dice combo (Straight or Pairs)
     if (room.turnInfo.rollCount === 1 && allowed.length === 6) {
-      setSelectedDice(allowed);
+      newSelection = allowed;
     } else {
       const sameValueIndices = allowed.filter(i => roll[i] === dieValue);
       if (sameValueIndices.length >= 3) {
-        setSelectedDice(prev => [...new Set([...prev, ...sameValueIndices])]);
+        newSelection = [...new Set([...selectedDice, ...sameValueIndices])];
       } else {
-        setSelectedDice(prev => [...prev, index]);
+        newSelection = [...selectedDice, index];
       }
     }
+    setSelectedDice(newSelection);
+    onUpdateSelection?.(newSelection);
     audio.playClick();
   };
 
   const handleUnselect = (indexInSelected) => {
     if (isRolling || !isMyTurn) return;
     const indexInRoll = selectedDice[indexInSelected];
-    setSelectedDice(prev => prev.filter(i => i !== indexInRoll));
+    const newSelection = selectedDice.filter(i => i !== indexInRoll);
+    setSelectedDice(newSelection);
+    onUpdateSelection?.(newSelection);
     audio.playClick();
   };
 

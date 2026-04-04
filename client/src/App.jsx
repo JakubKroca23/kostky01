@@ -22,6 +22,7 @@ function App() {
   const [nickname, setNickname] = useState(localStorage.getItem('kostky-nickname') || '');
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
+  const [remoteSelection, setRemoteSelection] = useState([]);
   const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
@@ -168,7 +169,17 @@ function App() {
     socket.on('game-started', onGameStarted);
     socket.on('score-updated', onScoreUpdated);
     socket.on('turn-updated', onTurnUpdated);
+    function onSelectionUpdated(data) {
+      if (data.playerId !== socket.id) {
+        // Emit a custom event or update currentRoom turnInfo?
+        // Let's just update the room's current selection state if possible
+        // Actually, we can just pass this down as a prop to GameRoom
+        setRemoteSelection(data.indices);
+      }
+    }
+
     socket.on('dice-rolled', onDiceRolled);
+    socket.on('selection-updated', onSelectionUpdated);
     socket.on('game-over', onGameOver);
     socket.on('reaction-received', onReactionReceived);
 
@@ -333,23 +344,26 @@ function App() {
       {screen === 'lobby' && (
         <Lobby 
           rooms={rooms} 
-          onlineStats={onlineStats}
-          onCreateRoom={handleCreateRoom}
-          onJoinRoom={handleJoinRoom}
-          onReaction={handleSendReaction}
+          nickname={nickname} 
+          onlineStats={onlineStats} 
+          onCreateRoom={handleCreateRoom} 
+          onJoinRoom={handleJoinRoom} 
+          onChangeNickname={handleChangeNickname}
         />
       )}
 
-      {screen === 'room' && (
+      {screen === 'room' && currentRoom && (
         <GameRoom 
           room={currentRoom} 
-          nickname={nickname}
-          onRoll={handleRollDice}
-          onRollAgain={handleRollAgain}
-          onStop={handleStopTurn}
-          onStart={handleStartGame}
+          nickname={nickname} 
+          remoteSelection={remoteSelection}
+          onRoll={handleRollDice} 
+          onRollAgain={handleRollAgain} 
+          onStop={handleStopTurn} 
+          onStart={handleStartGame} 
           onDohodit={handleDohodit}
           onReaction={handleSendReaction}
+          onUpdateSelection={(indices) => socket.emit('update-selection', indices)}
           isConnected={isConnected}
         />
       )}
