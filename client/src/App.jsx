@@ -99,29 +99,31 @@ function App() {
     }
 
     function onTurnUpdated(data) {
+      setRemoteSelection([]); // SYNC CLEANUP: Clear ghost selections on turn change
       setCurrentRoom(prev => ({
         ...prev,
-        turnInfo: { ...prev.turnInfo, ...data.turnInfo }
+        turnInfo: data.turnInfo
       }));
     }
 
     function onDiceRolled(data) {
+      setRemoteSelection([]); // SYNC CLEANUP: Clear ghost selections on new roll
+      
       setCurrentRoom(prev => ({
         ...prev,
-        turnInfo: { 
-          ...prev.turnInfo, 
-          lastRoll: data.roll, 
-          turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
+        gameStarted: true,
+        turnInfo: {
+          ...prev.turnInfo,
+          ...data,
+          lastRoll: data.roll,
           rollCount: data.rollCount !== undefined ? data.rollCount : prev.turnInfo.rollCount,
-          diceCount: data.diceCount !== undefined ? data.diceCount : prev.turnInfo.diceCount,
-          storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
-          allowedIndexes: data.allowedIndexes || [],
-          canDohodit: data.canDohodit || false
+          diceCount: data.diceCount !== undefined ? data.diceCount : data.roll.length,
+          storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice
         }
       }));
       
       if (data.isBust || data.msg) {
-        // Delay results until dice settle (1200ms)
+        // Delay results until dice settle (1500ms)
         setTimeout(() => {
           if (data.isBust) audio.playBust();
           setError(data.msg || 'SMŮLA, ZKUS TO PŘÍŠTĚ!');

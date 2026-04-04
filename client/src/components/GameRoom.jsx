@@ -8,7 +8,22 @@ function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
-  const [errorLocal, setErrorLocal] = useState('');
+  const arenaRef = React.useRef(null);
+  const [arenaSize, setArenaSize] = React.useState({ w: 420, h: 340 });
+
+  useEffect(() => {
+    if (!arenaRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setArenaSize({
+          w: Math.floor(entry.contentRect.width),
+          h: Math.floor(entry.contentRect.height)
+        });
+      }
+    });
+    observer.observe(arenaRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // SEEDED PHYSICS SYNC
   const physicsSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
@@ -16,8 +31,8 @@ function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop
     room?.turnInfo?.lastRoll?.length || 0,
     isRolling,
     physicsSeed,
-    420,
-    340
+    arenaSize.w,
+    arenaSize.h
   );
 
   if (!room) return null;
@@ -207,7 +222,7 @@ function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop
           </div>
 
           <div className="dice-arena-wrapper">
-            <div className="dice-arena">
+            <div className="dice-arena" ref={arenaRef}>
               <div className="dice-container">
                 {room.turnInfo.lastRoll.length > 0
                   ? renderDice()
