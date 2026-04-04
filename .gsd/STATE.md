@@ -1,7 +1,5 @@
-- **Milestone**: v1.0 (Multiplayer MVP) - COMPLETE
-- **Current Position**: Idle
-- **Status**: Milestone Finished
+## Gap Closure Mode
+Addressing 3 gaps from v1.0 milestone audit (Persistence, DRY Scoring, Socket Resilience).
 
 ## Next Steps
-1. /new-milestone — Define the next milestone (e.g., v1.1 Polish & Features)
-2. /plan 1 — Start the first phase of the next milestone
+1. /execute 7 --gaps-only — Execute phase 7 gap closure plans

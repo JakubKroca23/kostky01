@@ -11,6 +11,15 @@
 
 ## Phases
 
+### Phase 7: Gap Closure (Address Technical Debt)
+**Status**: ⬜ Not Started
+**Objective**: Fix persistence, shared logic, and error handling from the v1.0 milestone audit.
+
+**Gaps to Close:**
+- [ ] **State Persistence**: Prohibit data loss by implementing a simple session storage for rooms.
+- [ ] **DRY Scoring**: Unify scoring logic between client and server to prevent drift.
+- [ ] **Socket Resilience**: Improve client-side handling of disconnects and timeouts.
+
 > Previous milestone "v1.0 (Multiplayer MVP)" archived in `.gsd/milestones/v1.0-MVP/`
 
 ---
