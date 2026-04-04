@@ -1,7 +1,9 @@
-# JOURNAL.md - Project Development Log
+# Journal
 
-## 2026-04-03
-- Relace obnovena. 
-- Provedena kontrola kódu (Phase 1). Infrastruktura (Vite + Socket.io) a design systém (neon tokens) jsou připraveny.
-- Klient i server jsou nastaveny pro real-time komunikaci.
-- Plán pro dnešní práci: Ověření spojení a zahájení práce na Phase 2 (Lobby).
+> Previous milestone "v1.0 (Multiplayer MVP)" journal archived in `.gsd/milestones/v1.0-MVP/JOURNAL.md`
+
+---
+## 2026-04-05
+- Milestone v1.0 (Multiplayer MVP) completed and archived.
+- Core mechanics, physics, and lobby are stable.
+- Preparing for next milestone.

@@ -1,0 +1,7 @@
+# JOURNAL.md - Project Development Log
+
+## 2026-04-03
+- Relace obnovena. 
+- Provedena kontrola kódu (Phase 1). Infrastruktura (Vite + Socket.io) a design systém (neon tokens) jsou připraveny.
+- Klient i server jsou nastaveny pro real-time komunikaci.
+- Plán pro dnešní práci: Ověření spojení a zahájení práce na Phase 2 (Lobby).

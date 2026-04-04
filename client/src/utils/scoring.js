@@ -41,8 +41,8 @@ export function calculateScore(dice, isFirstRoll = false) {
     });
   };
 
-  // 1. COMBINATIONS (STRAIGHT, PAIRS) - AVAILABLE WHENEVER 6 DICE ARE ROLLED
-  if (dice.length === 6) {
+  // 1. COMBINATIONS (STRAIGHT, PAIRS) - ONLY ON FIRST ROLL OF A TURN (6 DICE)
+  if (isFirstRoll && dice.length === 6) {
     // 1A. Straight 1-2-3-4-5-6 = 2000b
     if (Object.keys(counts).length === 6) {
       return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false };

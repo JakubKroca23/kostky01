@@ -1,8 +1,7 @@
-- **Phase**: Complete
-- **Task**: Project Finished
-- **Status**: Finished
+- **Milestone**: v1.0 (Multiplayer MVP) - COMPLETE
+- **Current Position**: Idle
+- **Status**: Milestone Finished
 
 ## Next Steps
-1. /plan 6 — Vytvořit prováděcí plány pro opravu a synchronizaci bodování
-2. /execute 6 — Spustit opravu pravidel
-
+1. /new-milestone — Define the next milestone (e.g., v1.1 Polish & Features)
+2. /plan 1 — Start the first phase of the next milestone
