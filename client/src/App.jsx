@@ -26,7 +26,10 @@ function App() {
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    return localStorage.getItem('kostky-sound') !== 'false';
+    // Načíst preference zvuku z localStorage, výchozí stav je zapnuto
+    const saved = localStorage.getItem('kostky-sound') !== 'false';
+    audio.setEnabled(saved);
+    return saved;
   });
 
   useEffect(() => {
@@ -246,8 +249,15 @@ function App() {
             </div>
           )}
           <button 
+            id="sound-toggle-btn"
             className={`sound-toggle ${soundEnabled ? 'active' : ''}`}
-            onClick={() => setSoundEnabled(!soundEnabled)}
+            onClick={() => {
+              // Přepnout stav a okamžitě synchronizovat audio engine i localStorage
+              const next = !soundEnabled;
+              audio.setEnabled(next);
+              localStorage.setItem('kostky-sound', next);
+              setSoundEnabled(next);
+            }}
           >
             {soundEnabled ? '🔊' : '🔇'}
           </button>
