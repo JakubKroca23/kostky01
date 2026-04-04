@@ -34,8 +34,11 @@ function GameRoom({ room, nickname, remoteSelection, onRoll, onRollAgain, onStop
     }
   }, [remoteSelection, isMyTurn]);
 
-  const selectedPoints = selectedDice.length > 0 
-    ? calculateScore(selectedDice.map(i => room.turnInfo.lastRoll[i]), room.turnInfo.rollCount === 1).score 
+  // Robust guard for index out of bounds
+  const validSelected = selectedDice.filter(i => i < (room.turnInfo.lastRoll?.length || 0));
+  
+  const selectedPoints = validSelected.length > 0 
+    ? calculateScore(validSelected.map(i => room.turnInfo.lastRoll[i]), room.turnInfo.rollCount === 1).score 
     : 0;
 
   const emojis = ['🔥', '😂', '😭', '🎲', '👑'];

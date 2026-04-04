@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 
-const DIE_SIZE = 66;
+const DIE_SIZE = 54;
 
 // Simple seeded PRNG
 function createSeededRandom(seedString) {
@@ -29,7 +29,6 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
      getRand.current = createSeededRandom(seed);
   }, [seed]);
 
-  // ... (keeping existing Engine creation and Loop logic)
   useEffect(() => {
     engineRef.current = Matter.Engine.create({
       gravity: { x: 0, y: 0 },
@@ -69,7 +68,7 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     wallsRef.current.forEach(w => Matter.Composite.remove(world, w));
     const t = 60;
     const pad = DIE_SIZE / 2;
-    const wallOpts = { isStatic: true, restitution: 0.7, friction: 0.1 };
+    const wallOpts = { isStatic: true, restitution: 0.5, friction: 0.1 };
     const walls = [
       Matter.Bodies.rectangle(arenaWidth / 2, -t / 2 + pad, arenaWidth, t, wallOpts),
       Matter.Bodies.rectangle(arenaWidth / 2, arenaHeight + t / 2 - pad, arenaWidth, t, wallOpts),
@@ -94,13 +93,13 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     const newBodies = Array.from({ length: diceCount }, (_, i) => {
       const col = i % 3;
       const row = Math.floor(i / 3);
-      const x = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 8);
-      const y = arenaHeight / 2 - DIE_SIZE / 2 + row * (DIE_SIZE + 8);
+      const x = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 10);
+      const y = arenaHeight / 2 - DIE_SIZE / 2 + row * (DIE_SIZE + 10);
 
       return Matter.Bodies.rectangle(x, y, DIE_SIZE, DIE_SIZE, {
-        restitution: 0.8,
+        restitution: 0.7,
         friction: 0.1,
-        frictionAir: 0.03,
+        frictionAir: 0.04,
         density: 0.005,
       });
     });
@@ -112,12 +111,11 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
   useEffect(() => {
     if (!isRolling || !engineRef.current || bodiesRef.current.length === 0) return;
 
-    // Use seed for deterministic rollout
     const rand = createSeededRandom(seed + "roll");
 
     bodiesRef.current.forEach((body, i) => {
-      const cx = arenaWidth / 2 + (rand() - 0.5) * 40;
-      const cy = arenaHeight / 2 + (rand() - 0.5) * 40;
+      const cx = arenaWidth / 2 + (rand() - 0.5) * 50;
+      const cy = arenaHeight / 2 + (rand() - 0.5) * 50;
       Matter.Body.setPosition(body, { x: cx, y: cy });
       Matter.Body.setVelocity(body, { x: 0, y: 0 });
       Matter.Body.setAngularVelocity(body, 0);

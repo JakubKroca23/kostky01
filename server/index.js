@@ -189,7 +189,7 @@ io.on('connection', (socket) => {
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (isBust || isTooLowAfter3) {
-      const msg = isBust ? "ZELENÁČ!" : "MÁLO BODŮ (LIMIT 350)!";
+      const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
       io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
@@ -258,7 +258,7 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('dice-rolled', { 
         roll, 
         isBust: true, 
-        msg: "DOHOD NEVYŠEL! (0 bodů)",
+        msg: "SMŮLA, ZKUS TO PŘÍŠTĚ!",
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice
@@ -307,7 +307,7 @@ io.on('connection', (socket) => {
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (nextScore === 0 || isTooLowAfter3) {
-      const msg = nextScore === 0 ? "ZELENÁČ!" : "MÁLO BODŮ (LIMIT 350)!";
+      const msg = nextScore === 0 ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
       io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {

@@ -121,9 +121,12 @@ function App() {
       }));
       
       if (data.isBust || data.msg) {
-        if (data.isBust) audio.playBust();
-        setError(data.msg || 'ZELENÁČ! Žádné body.');
-        setTimeout(() => setError(''), 3000);
+        // Delay results until dice settle (1200ms)
+        setTimeout(() => {
+          if (data.isBust) audio.playBust();
+          setError(data.msg || 'SMŮLA, ZKUS TO PŘÍŠTĚ!');
+          setTimeout(() => setError(''), 3000);
+        }, 1500);
       } else {
         audio.playRoll();
       }

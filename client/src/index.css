@@ -156,24 +156,27 @@ body {
 }
 
 /* Základní styl kostky - pohyb řídí JS přes inline style */
-.dice-body {
-  width: 70px;
-  height: 70px;
-  background: rgba(0, 0, 0, 0.75);
-  border: 2px solid var(--neon-cyan);
-  border-radius: 14px;
+.die {
+  width: 54px;
+  height: 54px;
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
   display: flex;
-  padding: 10px;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8rem;
+  font-weight: 800;
   cursor: pointer;
-  user-select: none;
+  box-shadow: var(--neon-shadow);
+  transition: transform 0.2s, border-color 0.2s;
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-top: -35px;
-  margin-left: -35px;
-  /* Pohyb se aplikuje z JS jako inline style transform */
-  transition: border-color 0.2s, box-shadow 0.2s;
-  will-change: transform;
+  margin-left: -27px;
+  margin-top: -27px;
+  transform: translate(var(--tx), var(--ty)) rotate(var(--tr));
+  user-select: none;
 }
 
 /* Během hodu - pointer-events off, jinak stejný vzhled */
