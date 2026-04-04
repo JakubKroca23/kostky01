@@ -115,8 +115,7 @@ function App() {
           diceCount: data.diceCount !== undefined ? data.diceCount : prev.turnInfo.diceCount,
           storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
           allowedIndexes: data.allowedIndexes || [],
-          canDohodit: data.canDohodit || false,
-          canDohoditCombo: data.canDohoditCombo || ""
+          canDohodit: data.canDohodit || false
         }
       }));
       
@@ -296,7 +295,7 @@ function App() {
       )}
       {screen !== 'room' && (
         <header className="neon-header">
-          <h1 className="neon-text-purple">KOSTKY</h1>
+          <h1 className="neon-text-cyan">KOSTKY</h1>
           <div className="header-controls">
             {nickname && (
               <div className="user-info">

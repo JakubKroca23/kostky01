@@ -57,15 +57,12 @@ export function calculateScore(dice, isFirstRoll = false) {
 
   // 1C. Check for "Dohodit" (5/6 pieces) - ONLY ON FIRST ROLL
   if (isFirstRoll && dice.length === 6) {
-    // 5/6 toward Straight
     if (Object.keys(counts).length === 5 && Object.values(counts).every(v => v <= 2)) {
-      canDohodit = true; // Potentially 5 different values
+      canDohodit = "POSTUPKU"; 
     }
-    // 5/6 toward Pairs (already have 2 full pairs, and one lone die from another pair candidate?)
-    // This logic is a bit complex, but let's simplify for now
     const pairsCount = Object.values(counts).filter(c => c === 2).length;
     if (pairsCount === 2 && Object.values(counts).filter(c => c === 1).length === 2) {
-      canDohodit = true; // 2 pairs + 2 unique
+      if (!canDohodit) canDohodit = "PÁRY"; 
     }
   }
 

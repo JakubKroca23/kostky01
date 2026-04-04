@@ -203,8 +203,7 @@ io.on('connection', (socket) => {
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice,
         allowedIndexes: usedIndexes,
-        canDohodit: room.turnInfo.canDohodit,
-        canDohoditCombo: room.turnInfo.canDohodit ? (new Set(roll).size === 5 ? "POSTUPKU" : "PÁRY") : ""
+        canDohodit: room.turnInfo.canDohodit
       });
     }
   });

@@ -80,17 +80,18 @@ export function calculateScore(dice, isFirstRoll = false) {
   // 1C. Check for "Dohodit" (5/6 pieces) - ONLY ON FIRST ROLL
   if (isFirstRoll && dice.length === 6) {
     if (Object.keys(counts).length === 5 && Object.values(counts).every(v => v <= 2)) {
-      canDohodit = true; 
+      canDohodit = "POSTUPKU"; 
     }
     const pairsCount = Object.values(counts).filter(c => c === 2).length;
     if (pairsCount === 2 && Object.values(counts).filter(c => c === 1).length === 2) {
-      canDohodit = true; 
+      // If we already have "POSTUPKU" as high priority, keep it, otherwise Pairs
+      if (!canDohodit) canDohodit = "PÁRY"; 
     }
   }
 
   return {
     score: totalScore,
     usedIndexes: Array.from(usedIndexes),
-    canDohodit: canDohodit // Logic for Plan 6.3
+    canDohodit: canDohodit // String or false
   };
 }
