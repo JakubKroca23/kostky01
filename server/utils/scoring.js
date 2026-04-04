@@ -14,9 +14,10 @@ const SCORE_TABLE = {
 /**
  * Vypočítá skóre pro zadané kostky podle pravidel 10 000 (Phase 6).
  * @param {number[]} dice - Pole s hodnotami kostek (1-6).
+ * @param {boolean} allowSpecials - Zda povolit speciální kombinace (postupka, páry).
  * @returns {{ score: number, usedIndexes: number[] }} Výsledek bodování.
  */
-export function calculateScore(dice) {
+export function calculateScore(dice, allowSpecials = true) {
   if (!dice || dice.length === 0) return { score: 0, usedIndexes: [] };
 
   const counts = {};
@@ -37,15 +38,17 @@ export function calculateScore(dice) {
     });
   };
 
-  // 1. Speciální kombinace: Velká postupka (1-6) = 2000b
-  if (Object.keys(counts).length === 6 && dice.length === 6) {
-    return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5] };
-  }
+  if (allowSpecials && dice.length === 6) {
+    // 1. Speciální kombinace: Velká postupka (1-6) = 2000b
+    if (Object.keys(counts).length === 6) {
+      return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5] };
+    }
 
-  // 2. Speciální kombinace: Tři dvojice = 700b
-  const pairs = Object.entries(counts).filter(([, count]) => count === 2);
-  if (pairs.length === 3 && dice.length === 6) {
-    return { score: 700, usedIndexes: [0, 1, 2, 3, 4, 5] };
+    // 2. Speciální kombinace: Tři dvojice = 700b
+    const pairs = Object.entries(counts).filter(([, count]) => count === 2);
+    if (pairs.length === 3) {
+      return { score: 700, usedIndexes: [0, 1, 2, 3, 4, 5] };
+    }
   }
 
   // 3. Počítání násobků (3+ stejných) a osamocených 1 a 5

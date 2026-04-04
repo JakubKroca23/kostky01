@@ -8,11 +8,11 @@ files_modified:
 autonomous: true
 must_haves:
   truths:
-    - "Hráč nemůže zastavit tah s méně než 350b pokud ještě nehodil 3x (pravidlo platí od 3. hodu)"
+    - "Hráč nemůže zastavit tah s méně než 350b kdykoliv (minimum 350b pro každý Stop)"
     - "Pokud hráč odloží všech 6 kostek (Hot Dice), hází znovu se všemi 6 bez přerušení tahu"
-    - "Zelenáč (bust) přidá čárku, 3 čárky vynulují totalScore hráče"
+    - "Zelenáč (bust) přidá čárku, 3 čárky vynulují totalScore hráče (platí i po Hot Dice)"
     - "Čárky se vymažou při zapsání libovolných bodů > 0"
-    - "Postupka a páry jsou přijímány POUZE pokud jde o 1. hod tahu (rollCount === 1)"
+    - "Postupka a páry jsou přijímány POUZE pokud jde o 1. hod tahu (nebo 1. hod po Hot Dice)"
   artifacts:
     - "server/index.js — rozšířený turnInfo s čárkami, hot dice state"
 ---
@@ -20,7 +20,7 @@ must_haves:
 # Plan 6.2: Server — Čárky, 350b pravidlo, Hot Dice
 
 <objective>
-Implementovat nové herní mechaniky na serveru: systém čárek, pravidlo 350b od 3. hodu,
+Implementovat nové herní mechaniky na serveru: systém čárek, povinné pravidlo 350b pro každý Stop,
 Hot Dice (hráč hází znovu po odložení všech 6 kostek) a omezení postupky/párů na 1. hod.
 
 Purpose: Server je single source of truth — veškerá herní logika musí být vynucena zde.
@@ -45,7 +45,7 @@ Load for context:
     ```js
     turnInfo: {
       // ... stávající pole
-      rollCount: 0,          // Počet hodů v aktuálním tahu (důležité pro 350b pravidlo)
+      rollCount: 0,          // Počet hodů v aktuálním tahu
       turnPoints: 0,         // Odložené body v aktuálním tahu
       isHotDice: false,      // True = hráč právě odložil všech 6 kostek, hází znovu
       // Čárky jsou per-hráč, ne per-tah → přesunout do scores struktury
@@ -104,7 +104,7 @@ Load for context:
 
     --- STOP-TURN VALIDACE ---
     Handler stop-turn musí odmítnout zastavení pokud:
-    1. `room.turnInfo.rollCount < 3 && turnPoints_after_this_stop < 350`
+    1. `newTurnPoints < 350` (VŽDY, bez ohledu na počet hodů)
     2. `room.turnInfo.isHotDice === true` (nesmí zastavit před hodem po Hot Dice)
 
     ```js
@@ -118,9 +118,9 @@ Load for context:
         return;
       }
 
-      // Pravidlo: min 350b od 3. hodu dál
-      if (room.turnInfo.rollCount < 3 && newTurnPoints < 350) {
-        socket.emit('stop-error', `Minimum je 350b od 3. hodu. Máš ${newTurnPoints}b po ${room.turnInfo.rollCount}. hodu.`);
+      // Pravidlo: min 350b pro jakýkoliv zápis bodů
+      if (newTurnPoints < 350) {
+        socket.emit('stop-error', `Musíš mít alespoň 350b pro ukončení tahu. Máš jen ${newTurnPoints}b.`);
         return;
       }
 

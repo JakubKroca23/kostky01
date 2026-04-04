@@ -152,6 +152,26 @@ Load for context:
   </done>
 </task>
 
+<task type="auto">
+  <name>Physics Refinement: Přesné odrazy od okrajů (bez překryvu)</name>
+  <files>client/src/hooks/useDicePhysics.js, client/src/index.css</files>
+  <action>
+    Synchronizovat rozměry kostek v Matter.js a CSS.
+
+    1. V useDicePhysics.js:
+       - Změnit `DIE_SIZE` z 66 na **74** (odpovídá 70px + 2*2px border v CSS).
+    2. V index.css:
+       - Ověřit, že `.dice-body` má přesně tyto rozměry.
+    3. Ladění odrazů:
+       - V useDicePhysics.js zajistit, že těla se tvoří jako `Matter.Bodies.rectangle(x, y, 74, 74)`.
+       - Pokud se kostka stále "půlí" o hranu, přidat do wallOpts malý `slop` nebo mírně posunout stěny o 2-3px vně arény.
+
+    AVOID: Změnit DIE_SIZE v JS bez ohledu na CSS — musí být identické, jinak dochází k vizuálnímu překryvu.
+  </action>
+  <verify>Ruční test: Kostky se odráží přesně hranou od stěny arény a nikdy se nepřekrývají s okrajem.</verify>
+  <done>Kolizní model Matter.js odpovídá vizuálnímu modelu v browseru.</done>
+</task>
+
 </tasks>
 
 <verification>
@@ -160,11 +180,11 @@ After all tasks, verify:
 - [ ] Klik na trojici odloží celou kombinaci
 - [ ] Klik na jednu z dvou jedniček odloží jen ji
 - [ ] stop-error toast se zobrazí při pokusu o stop s < 350b
-- [ ] allowedIndexes jsou vizuálně odlišeny
+- [ ] Kostky se odráží bez překryvu s okraji (Edge Bounce)
 </verification>
 
 <success_criteria>
-- [ ] Všechna UI vizuální pravidla implementována
+- [ ] Všechna UI a fyzikální pravidla implementována
 - [ ] checkpoint:human-verify schválen uživatelem
-- [ ] Hra hratelná end-to-end s novými pravidly
+- [ ] Hra hratelná end-to-end s novými pravidly a čistou fyzikou
 </success_criteria>
