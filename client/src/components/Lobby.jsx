@@ -36,29 +36,12 @@ function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom, onReaction }) {
       <div className="lobby-header">
         <h2 className="neon-text-pink">Aktivní Místnosti</h2>
         <button 
-          className="neon-button primary compact" 
-          onClick={() => setIsCreating(!isCreating)}
+          className="neon-button primary" 
+          onClick={() => onCreateRoom()}
         >
-          {isCreating ? 'ZRUŠIT' : 'NOVÁ HRA'}
+          NOVÁ HRA
         </button>
       </div>
-
-      {isCreating && (
-        <div className="neon-card creation-pane">
-          <form onSubmit={handleCreate} className="nickname-form">
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="Název hry..."
-              maxLength={20}
-              required
-              className="neon-input"
-            />
-            <button type="submit" className="neon-button full-width primary">ZALOŽIT A VSTOUPIT</button>
-          </form>
-        </div>
-      )}
 
       <div className="room-list">
         {rooms.length === 0 ? (

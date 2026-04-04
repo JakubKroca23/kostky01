@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 
-const DIE_SIZE = 54;
+const DIE_SIZE = 62;
 
 // Simple seeded PRNG
 function createSeededRandom(seedString) {
@@ -66,14 +66,19 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     if (!engineRef.current) return;
     const world = engineRef.current.world;
     wallsRef.current.forEach(w => Matter.Composite.remove(world, w));
-    const t = 60;
+    const t = 1000; // Massive walls to prevent tunneling
     const pad = DIE_SIZE / 2;
-    const wallOpts = { isStatic: true, restitution: 0.5, friction: 0.1 };
+    const wallOpts = { isStatic: true, restitution: 0.1, friction: 0.1 };
+
     const walls = [
-      Matter.Bodies.rectangle(arenaWidth / 2, -t / 2 + pad, arenaWidth, t, wallOpts),
-      Matter.Bodies.rectangle(arenaWidth / 2, arenaHeight + t / 2 - pad, arenaWidth, t, wallOpts),
-      Matter.Bodies.rectangle(-t / 2 + pad, arenaHeight / 2, t, arenaHeight, wallOpts),
-      Matter.Bodies.rectangle(arenaWidth + t / 2 - pad, arenaHeight / 2, t, arenaHeight, wallOpts),
+      // Top (shifted up by t/2 minus half die pad)
+      Matter.Bodies.rectangle(arenaWidth / 2, -t / 2 + pad, arenaWidth + t, t, wallOpts),
+      // Bottom
+      Matter.Bodies.rectangle(arenaWidth / 2, arenaHeight + t / 2 - pad, arenaWidth + t, t, wallOpts),
+      // Left
+      Matter.Bodies.rectangle(-t / 2 + pad, arenaHeight / 2, t, arenaHeight + t, wallOpts),
+      // Right
+      Matter.Bodies.rectangle(arenaWidth + t / 2 - pad, arenaHeight / 2, t, arenaHeight + t, wallOpts),
     ];
     Matter.Composite.add(world, walls);
     wallsRef.current = walls;
@@ -121,7 +126,7 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
       Matter.Body.setAngularVelocity(body, 0);
 
       const angle = (i / bodiesRef.current.length) * Math.PI * 2 + (rand() - 0.5) * 2;
-      const speed = 25 + rand() * 15;
+      const speed = 35 + rand() * 25; // 35-60px/frame - SLAM IT! 
       Matter.Body.setVelocity(body, {
         x: Math.cos(angle) * speed,
         y: Math.sin(angle) * speed,

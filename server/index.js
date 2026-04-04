@@ -114,13 +114,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('create-room', (name) => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const roomId = generateRoomId();
+    const p = players.get(socket.id);
+    if (!p) return;
+    
+    const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const roomName = name || `Hra – ${p.nickname}`;
     const room = {
       id: roomId,
-      name: name || `${player.nickname}'s Game`,
-      players: [{ id: socket.id, nickname: player.nickname }],
+      name: roomName,
+      players: [{ id: socket.id, nickname: p.nickname }],
       maxPlayers: 6,
       gameStarted: false,
       turnInfo: {
@@ -131,14 +133,14 @@ io.on('connection', (socket) => {
         strikes: { [socket.id]: 0 },
         enteredBoard: { [socket.id]: false },
         lastRoll: [],
-        storedDice: [], // NEW: Rule 2/11
+        storedDice: [],
         diceCount: 6,
         allowedIndexes: [],
         canDohodit: false
       }
     };
     rooms.set(roomId, room);
-    player.roomId = roomId;
+    p.roomId = roomId;
     socket.join(roomId);
     socket.emit('room-joined', { roomId, room });
     io.emit('room-list-update', getRoomList());
