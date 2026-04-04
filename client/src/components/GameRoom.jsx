@@ -3,7 +3,7 @@ import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 
-function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
+function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart, isConnected, completionOffer, onAcceptCompletion, onDeclineCompletion }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
@@ -104,6 +104,21 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
 
+      {completionOffer && room.turnInfo.currentTurnId === myId && (
+        <div className="completion-offer-overlay fade-in">
+          <div className="completion-modal neon-card glass">
+            <h3 className="neon-text-pink">DOHODIT?</h3>
+            <p>Máš 5/6 kostek k <strong>{completionOffer.type === 'postupka' ? 'POSTUPCE' : 'TŘEM PÁRŮM'}</strong>!</p>
+            <p>Chceš dohodit chybějící <strong>{completionOffer.missingValue}</strong>?</p>
+            <div className="completion-warning">⚠️ Neúspěch = 0 bodů za tah + čárka!</div>
+            <div className="completion-actions">
+              <button className="neon-button primary" onClick={onAcceptCompletion}>DOHODIT</button>
+              <button className="neon-button pink-border" onClick={onDeclineCompletion}>ODMÍTNOUT</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="room-header-neon">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name}</h2>
@@ -201,7 +216,7 @@ function GameRoom({ room, nickname, onRoll, onRollAgain, onStop, onStart }) {
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
-                      disabled={isRolling || currentTurnPoints < 350}
+                      disabled={isRolling}
                     >
                       ZAPSAT BODY ({currentTurnPoints})
                     </button>

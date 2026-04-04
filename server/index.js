@@ -6,6 +6,48 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { calculateScore } from './utils/scoring.js';
 
+function detectNearlySpecial(dice) {
+  const counts = {};
+  dice.forEach(v => counts[v] = (counts[v] || 0) + 1);
+  const uniqueValues = Object.keys(counts).map(Number);
+  
+  if (dice.length !== 6) return null;
+
+  // 1. Nearly Postupka (1-6)
+  if (uniqueValues.length === 5) {
+    const missingValue = [1,2,3,4,5,6].find(v => !uniqueValues.includes(v));
+    const duplicateValue = uniqueValues.find(v => counts[v] === 2);
+    const frozenDice = [];
+    let removed = false;
+    dice.forEach(v => {
+      if (v === duplicateValue && !removed) {
+        removed = true;
+      } else {
+        frozenDice.push(v);
+      }
+    });
+
+    return { type: 'postupka', frozenDice, missingValue };
+  }
+
+  // 2. Nearly Tři páry
+  const pairs = uniqueValues.filter(v => counts[v] === 2);
+  if (pairs.length === 2 && uniqueValues.length === 4) {
+    const singletons = uniqueValues.filter(v => counts[v] === 1);
+    const targetValue = singletons[0];
+    const leaveValue = singletons[1];
+    
+    const frozenDice = dice.filter((v, i) => {
+      const firstLeaveIndex = dice.indexOf(leaveValue);
+      return i !== firstLeaveIndex;
+    });
+
+    return { type: 'pary', frozenDice, missingValue: targetValue };
+  }
+
+  return null;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -60,6 +102,7 @@ function nextTurn(room) {
   room.turnInfo.lastRoll = [];
   room.turnInfo.diceCount = 6;
   room.turnInfo.allowedIndexes = [];
+  room.turnInfo.isHotDice = false;
   
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
 }
@@ -110,9 +153,11 @@ io.on('connection', (socket) => {
         turnPoints: 0,
         rollCount: 0,
         scores: { [socket.id]: 0 },
+        strikes: { [socket.id]: 0 },
         lastRoll: [],
         diceCount: 6,
-        allowedIndexes: []
+        allowedIndexes: [],
+        isHotDice: false
       }
     };
     rooms.set(roomId, room);
@@ -129,6 +174,7 @@ io.on('connection', (socket) => {
     
     room.players.push({ id: socket.id, nickname: player.nickname });
     room.turnInfo.scores[socket.id] = 0;
+    room.turnInfo.strikes[socket.id] = 0;
     player.roomId = roomId;
     socket.join(roomId);
     socket.emit('room-joined', { roomId, room });
@@ -154,14 +200,50 @@ io.on('connection', (socket) => {
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
     room.turnInfo.lastRoll = roll;
     
-    const { score, usedIndexes } = calculateScore(roll);
+    // Specials only allowed on first roll (rollCount 1) or after Hot Dice
+    const canHaveSpecials = room.turnInfo.rollCount === 1 || room.turnInfo.isHotDice;
+    const { score, usedIndexes } = calculateScore(roll, canHaveSpecials);
+    
     room.turnInfo.allowedIndexes = usedIndexes;
+    room.turnInfo.isHotDice = false;
 
     if (score === 0) {
-      io.to(room.id).emit('dice-rolled', { roll, isBust: true });
+      // Bust: add strike
+      room.turnInfo.strikes[socket.id] = (room.turnInfo.strikes[socket.id] || 0) + 1;
+      let scorePenalty = false;
+      if (room.turnInfo.strikes[socket.id] >= 3) {
+        room.turnInfo.scores[socket.id] = 0; // Reset total score
+        room.turnInfo.strikes[socket.id] = 0; // Reset strikes
+        scorePenalty = true;
+      }
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        isBust: true, 
+        strikes: room.turnInfo.strikes,
+        scorePenalty 
+      });
       setTimeout(() => nextTurn(room), 1500);
     } else {
-      io.to(room.id).emit('dice-rolled', { roll, turnPoints: room.turnInfo.turnPoints, allowedIndexes: usedIndexes });
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        turnPoints: room.turnInfo.turnPoints, 
+        allowedIndexes: usedIndexes,
+        strikes: room.turnInfo.strikes
+      });
+
+      // Task 6.3: Detect nearly special on 1st roll
+      if (room.turnInfo.rollCount === 1) {
+        const nearly = detectNearlySpecial(roll);
+        if (nearly) {
+          room.turnInfo.nearlySpecial = nearly;
+          io.to(room.id).emit('can-complete-special', {
+            type: nearly.type,
+            frozenDice: nearly.frozenDice,
+            missingValue: nearly.missingValue,
+            currentRoll: roll
+          });
+        }
+      }
     }
   });
 
@@ -173,28 +255,58 @@ io.on('connection', (socket) => {
     const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
     const { score } = calculateScore(selectedDice);
 
-    // Ochrana: prázdná nebo neplatná kombinace
     if (score === 0) {
-      socket.emit('nickname-error', 'Vybrané kostky nemají body. Vyber platné kostky.');
+      socket.emit('stop-error', 'Vybrané kostky nemají body. Vyber platné kostky.');
       return;
     }
 
     room.turnInfo.turnPoints += score;
     const rem = room.turnInfo.diceCount - selectedIndexes.length;
-    room.turnInfo.diceCount = rem === 0 ? 6 : rem;
+    
+    if (rem === 0) {
+      // Hot Dice!
+      room.turnInfo.diceCount = 6;
+      room.turnInfo.isHotDice = true;
+    } else {
+      room.turnInfo.diceCount = rem;
+      room.turnInfo.isHotDice = false;
+    }
 
+    room.turnInfo.rollCount++;
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
     room.turnInfo.lastRoll = roll;
-    room.turnInfo.rollCount++;
-
-    const { score: nextScore, usedIndexes } = calculateScore(roll);
+    
+    // Specials only allowed on first roll (unlikely here) or after Hot Dice
+    const canHaveSpecials = room.turnInfo.isHotDice; 
+    const { score: nextScore, usedIndexes } = calculateScore(roll, canHaveSpecials);
+    
     room.turnInfo.allowedIndexes = usedIndexes;
+    // Note: isHotDice stays true until the next roll is processed (in the sense of detection, but here we reset it after the roll)
+    room.turnInfo.isHotDice = false; 
 
     if (nextScore === 0) {
-      io.to(room.id).emit('dice-rolled', { roll, isBust: true });
+      // Bust: add strike
+      room.turnInfo.strikes[socket.id] = (room.turnInfo.strikes[socket.id] || 0) + 1;
+      let scorePenalty = false;
+      if (room.turnInfo.strikes[socket.id] >= 3) {
+        room.turnInfo.scores[socket.id] = 0;
+        room.turnInfo.strikes[socket.id] = 0;
+        scorePenalty = true;
+      }
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        isBust: true, 
+        strikes: room.turnInfo.strikes,
+        scorePenalty 
+      });
       setTimeout(() => nextTurn(room), 1500);
     } else {
-      io.to(room.id).emit('dice-rolled', { roll, turnPoints: room.turnInfo.turnPoints, allowedIndexes: usedIndexes });
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        turnPoints: room.turnInfo.turnPoints, 
+        allowedIndexes: usedIndexes,
+        strikes: room.turnInfo.strikes
+      });
     }
   });
 
@@ -202,12 +314,23 @@ io.on('connection', (socket) => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room || room.turnInfo.currentTurnId !== socket.id) return;
 
-    if (selectedIndexes.length > 0) {
-      const { score } = calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]));
-      room.turnInfo.turnPoints += score;
+    const extraScoreData = calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]), false);
+    const extraScore = extraScoreData.score;
+    const finalTurnPoints = room.turnInfo.turnPoints + extraScore;
+
+    if (room.turnInfo.isHotDice) {
+      socket.emit('stop-error', 'Musíš hodit — jdeš do plných!');
+      return;
     }
 
+    if (finalTurnPoints < 350) {
+      socket.emit('stop-error', `Musíš mít alespoň 350b pro ukončení tahu. Máš jen ${finalTurnPoints}b.`);
+      return;
+    }
+
+    room.turnInfo.turnPoints = finalTurnPoints;
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
+    room.turnInfo.strikes[socket.id] = 0; // Reset strikes on successful turn
     
     if (room.turnInfo.scores[socket.id] >= 10000) {
       // Převést skóre z socket ID na přezdívky pro přehledné zobrazení ve VictoryModal
@@ -222,6 +345,49 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
       nextTurn(room);
     }
+  });
+
+  socket.on('accept-completion', () => {
+    const room = rooms.get(players.get(socket.id)?.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id || !room.turnInfo.nearlySpecial) return;
+
+    const { frozenDice, missingValue } = room.turnInfo.nearlySpecial;
+    const finalDie = Math.floor(Math.random() * 6) + 1;
+    const fullRoll = [...frozenDice, finalDie];
+    
+    room.turnInfo.nearlySpecial = null;
+    room.turnInfo.lastRoll = fullRoll;
+
+    if (finalDie === missingValue) {
+      // Success! Recalculate with specials allowed
+      const { score, usedIndexes } = calculateScore(fullRoll, true);
+      room.turnInfo.allowedIndexes = usedIndexes;
+      io.to(room.id).emit('completion-result', { success: true, roll: fullRoll, allowedIndexes: usedIndexes });
+    } else {
+      // Failure: Bust + strike
+      room.turnInfo.strikes[socket.id] = (room.turnInfo.strikes[socket.id] || 0) + 1;
+      let scorePenalty = false;
+      if (room.turnInfo.strikes[socket.id] >= 3) {
+        room.turnInfo.scores[socket.id] = 0;
+        room.turnInfo.strikes[socket.id] = 0;
+        scorePenalty = true;
+      }
+      io.to(room.id).emit('completion-result', { 
+        success: false, 
+        roll: fullRoll, 
+        strikes: room.turnInfo.strikes,
+        scorePenalty 
+      });
+      setTimeout(() => nextTurn(room), 2000);
+    }
+  });
+
+  socket.on('decline-completion', () => {
+    const room = rooms.get(players.get(socket.id)?.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+    room.turnInfo.nearlySpecial = null;
+    // Just a confirmation, client continues with current roll
+    socket.emit('completion-declined');
   });
 
   socket.on('disconnect', () => {

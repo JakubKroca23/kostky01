@@ -547,3 +547,49 @@ body {
 /* Animations */
 .fade-in { animation: fadeIn 0.5s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@charset " UTF-8\;
+
+/* --- Completion Offer --- */
+.completion-offer-overlay {
+ position: fixed;
+ top: 0; left: 0; right: 0; bottom: 0;
+ background: rgba(0, 0, 0, 0.85);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ z-index: 2000;
+ backdrop-filter: blur(8px);
+}
+
+.completion-modal {
+ width: 90%;
+ max-width: 400px;
+ padding: 30px;
+ text-align: center;
+ border-radius: 20px;
+ animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.completion-modal h3 {
+ font-size: 2rem;
+ margin-bottom: 15px;
+}
+
+.completion-warning {
+ color: #ff3e3e;
+ font-size: 0.9rem;
+ margin: 15px 0;
+ font-weight: bold;
+}
+
+.completion-actions {
+ display: flex;
+ flex-direction: column;
+ gap: 12px;
+ margin-top: 20px;
+}
+
+@keyframes modalPop {
+ 0% { transform: scale(0.8); opacity: 0; }
+ 100% { transform: scale(1); opacity: 1; }
+}
