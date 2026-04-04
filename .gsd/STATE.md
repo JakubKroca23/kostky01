@@ -1,6 +1,6 @@
 - **Phase**: 6
-- **Task**: Ready for planning
-- **Status**: ⬜ Not Started
+- **Task**: Planning complete
+- **Status**: Ready for execution
 
 ## Next Steps
 1. /plan 6 — Vytvořit prováděcí plány pro opravu a synchronizaci bodování
