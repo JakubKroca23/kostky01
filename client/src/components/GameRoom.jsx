@@ -29,10 +29,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;
   const logicalHeight = 340;
-  const asideWidth = arenaWidth < 600 ? 50 : 80;
+  const asideWidth = arenaWidth < 600 ? 55 : 80;
   const gapWidth = arenaWidth < 600 ? 10 : 20;
-  const horizontalPadding = 32; // App container padding (16px * 2)
-  const totalRequiredWidth = logicalWidth + asideWidth + gapWidth + horizontalPadding;
+  const horizontalPadding = 16; // App container padding (8px * 2)
+  const safetyMargin = 15; // Extra cushion
+  const totalRequiredWidth = logicalWidth + asideWidth + gapWidth + horizontalPadding + safetyMargin;
   const scale = arenaWidth < totalRequiredWidth ? (arenaWidth / totalRequiredWidth) : 1;
 
   const physicsPositions = useDicePhysics(
