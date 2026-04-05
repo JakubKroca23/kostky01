@@ -317,7 +317,8 @@ io.on('connection', (socket) => {
     if (!selectedIndexes || selectedIndexes.length === 0) return;
 
     const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
-    const { score } = calculateScore(selectedDice);
+    const isFirstRoll = (room.turnInfo.rollCount === 1);
+    const { score } = calculateScore(selectedDice, isFirstRoll);
 
     // Ochrana: prázdná nebo neplatná kombinace
     if (score === 0) {
@@ -372,8 +373,9 @@ io.on('connection', (socket) => {
     }
 
     if (selectedIndexes.length > 0) {
+      const isFirstRoll = (room.turnInfo.rollCount === 1);
       const selectedPoints = (selectedIndexes.length > 0 && room.turnInfo.lastRoll.length >= selectedIndexes.length)
-    ? calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]).filter(v => v !== undefined), room.turnInfo.rollCount === 1).score 
+    ? calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]).filter(v => v !== undefined), isFirstRoll).score 
     : 0;
       room.turnInfo.turnPoints += selectedPoints;
     }
