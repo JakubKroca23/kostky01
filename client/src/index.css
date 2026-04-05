@@ -232,9 +232,10 @@ body {
 .scoreboard {
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 2px; /* MINIMAL MARGIN */
   display: flex;
   flex-direction: column;
+  flex-shrink: 0; /* KEEP FIXED */
 }
 
 @media (max-width: 500px) {
@@ -558,24 +559,25 @@ body {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  padding: env(safe-area-inset-top) 4px env(safe-area-inset-bottom) 4px;
-  gap: 4px;
+  padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom) 8px;
+  gap: 2px; /* TIGHTER */
   overflow: hidden;
+  width: 100%;
 }
 
 .game-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0; /* CRITICAL FOR FLEX-1 CHILD OVERFLOW */
 }
 
 .game-main-horizontal-layout {
   display: flex;
-  flex-direction: row; /* FORCE ROW */
+  flex-direction: row;
   justify-content: center;
-  align-items: flex-start;
-  gap: 8px; /* MINIMAL GAP FOR MOBILE */
+  align-items: stretch; /* STRETCH TO FILL AVAILABLE HEIGHT */
+  gap: 6px;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -728,14 +730,12 @@ body {
 /* SIDE STORAGE */
 .dice-arena-wrapper {
   display: flex;
-  flex-direction: row-reverse;
   flex: 1;
   min-height: 0;
   width: 100%;
   justify-content: center;
-  align-items: center;
+  align-items: center; /* CENTER ARENA VERTICALLY WITHIN FLEX-1 */
   position: relative;
-  overflow: hidden;
 }
 
 @media (min-width: 600px) {
@@ -758,13 +758,13 @@ body {
 
 .aside-storage {
   display: flex;
-  flex-direction: column; /* ALWAYS COLUMN */
-  width: 64px; /* SLIMMER FOR MOBILE */
-  height: 240px; /* MATCH ARENA SCALE */
-  padding: 4px;
+  flex-direction: column;
+  width: 60px;
+  height: 100%; /* FILL THE FLEX-1 CONTAINER HEIGHT */
+  min-height: 280px; /* ENSURE 6 DICE FIT */
+  padding: 4px 0;
   gap: 4px;
   overflow-y: auto;
-  overflow-x: hidden;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
   border: 1px solid var(--glass-border);

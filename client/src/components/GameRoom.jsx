@@ -261,7 +261,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             </aside>
           </div>
 
-          <div className="turn-summary-compact neon-card">
+          <div className="turn-summary-compact">
             <div className="turn-stats">
               <div className="stat-item">
                 <span className="stat-label">HOD {room.turnInfo.rollCount || 0}/3</span>
@@ -290,7 +290,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   </button>
                 ) : (
                   <>
-                    <button className="neon-button full-width" onClick={handleRollAgain} disabled={isRolling}>
+                    <button className="neon-button full-width" onClick={handleRollAgain} style={{ height: '42px', padding: '0' }} disabled={isRolling}>
                       {isRolling ? '⏳ Hod...' : 
                         (room.turnInfo.diceCount - selectedDice.length === 0 
                           ? '🔥 HODIT VŠECH 6 KOSTEK' 
@@ -300,6 +300,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <button
                       className="neon-button pink-border full-width"
                       onClick={handleStop}
+                      style={{ height: '42px', padding: '0' }}
                       disabled={isRolling || (currentTurnPoints + selectedPoints < 350) || (room.turnInfo.diceCount - selectedDice.length === 0)}
                     >
                       ZAPSAT BODY ({currentTurnPoints + selectedPoints})
