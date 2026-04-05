@@ -36,9 +36,9 @@ body {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 0 12px;
-  position: fixed; 
-  inset: 0;
+  padding: 0 10px;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Header */
@@ -230,9 +230,30 @@ body {
 
 /* Scoreboard */
 .scoreboard {
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 500px) {
+  .scoreboard {
+    flex-direction: row;
+    overflow-x: auto;
+    background: rgba(0,0,0,0.2);
+    gap: 4px;
+    padding: 4px;
+  }
+  .score-row {
+    flex-shrink: 0;
+    padding: 4px 8px !important;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    flex-direction: column !important;
+    min-width: 80px;
+    gap: 2px !important;
+  }
 }
 
 .score-row {
@@ -536,26 +557,35 @@ body {
 .game-room-layout {
   display: flex;
   flex-direction: column;
-  padding: 4px 8px;
-  gap: 4px;
   height: 100dvh;
+  padding: env(safe-area-inset-top) 4px env(safe-area-inset-bottom) 4px;
+  gap: 4px;
   overflow: hidden;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .game-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  height: 100%;
 }
 
 .game-main-horizontal-layout {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column; /* MOBILE FIRST */
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 600px) {
+  .game-main-horizontal-layout {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+  }
 }
 
 /* .aside-storage consolidated below */
@@ -587,8 +617,25 @@ body {
 }
 
 .room-info h3 { color: var(--neon-cyan); margin-bottom: 2px; font-size: 1.1rem; }
-.room-player-names { font-size: 0.7rem; opacity: 0.6; margin-bottom: 10px; color: var(--neon-pink); }
-.room-id { font-size: 0.6rem; opacity: 0.3; letter-spacing: 1px; }
+.room-tag-sm {
+  font-size: 0.65rem;
+  opacity: 0.4;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
+.reaction-trigger-sm {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 /* Global Stats Panel */
 .online-players-card { padding: 16px !important; margin-bottom: 15px; }
@@ -682,9 +729,20 @@ body {
 /* SIDE STORAGE */
 .dice-arena-wrapper {
   display: flex;
-  height: 320px;
-  margin: 10px 0;
-  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 600px) {
+  .dice-arena-wrapper {
+    height: 320px;
+    flex: none;
+  }
 }
 
 .dice-arena {
@@ -698,17 +756,26 @@ body {
 }
 
 .aside-storage {
-  width: 70px;
-  max-height: 100%;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 0;
-  overflow-y: auto;
+  flex-direction: row; /* ALWAYS ROW ON MOBILE */
+  width: 100%;
+  padding: 6px;
   gap: 8px;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  align-items: center;
+}
+
+@media (min-width: 600px) {
+  .aside-storage {
+    width: 70px;
+    height: 320px;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 }
 
 .storage-label {

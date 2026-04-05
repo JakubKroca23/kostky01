@@ -154,16 +154,15 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
       <div className="room-header-neon compact">
         <div className="header-top">
-          <h2 className="neon-text-cyan">{room.name}</h2>
-          <span className="room-tag">ID: {room.id}</span>
+          <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
         </div>
         {!room.gameStarted && canStart && (
-          <button className="neon-button sm" onClick={onStart}>START HRY</button>
+          <button className="neon-button sm" onClick={onStart}>START</button>
         )}
         
         <div className="reactions-container">
           <button 
-            className={`reaction-trigger ${isReactionsOpen ? 'active' : ''}`}
+            className={`reaction-trigger-sm ${isReactionsOpen ? 'active' : ''}`}
             onClick={() => setIsReactionsOpen(!isReactionsOpen)}
           >
             🎭
@@ -219,58 +218,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             })}
           </div>
 
-          <style>{`
-            .game-main-horizontal-layout {
-              display: flex;
-              flex-direction: row;
-              justify-content: center;
-              align-items: flex-start;
-              gap: 20px;
-            }
-
-            @media (max-width: 500px) {
-              .game-main-horizontal-layout {
-                padding: env(safe-area-inset-top) 8px 8px 8px;
-                gap: 4px;
-                overflow: hidden;
-                height: 100dvh;
-                justify-content: space-between;
-                flex-direction: column;
-                align-items: center;
-              }
-              
-              .aside-storage {
-                width: 100% !important;
-                height: clamp(200px, 35vh, 280px);
-                background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
-                border: 1px solid var(--glass-border);
-                border-radius: 24px;
-                margin: 4px 0;
-                position: relative;
-                overflow: hidden;
-                box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
-                min-height: auto !important;
-                flex-direction: row !important;
-                padding: 8px !important;
-                overflow-y: hidden !important;
-                overflow-x: auto !important;
-                justify-content: center;
-              }
-              
-              .storage-grid {
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                overflow-x: auto;
-                width: auto;
-              }
-
-              .storage-label {
-                writing-mode: tb-rl;
-                transform: rotate(180deg);
-                margin: 0 !important;
-              }
-            }
-          `}</style>
 
           <div className="game-main-horizontal-layout">
             <div className="dice-arena-wrapper" ref={arenaRef}>
@@ -282,7 +229,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     height: `${logicalHeight}px`,
                     transform: `scale(${scale})`,
                     transformOrigin: 'top center',
-                    marginBottom: `calc(${logicalHeight}px * (1 - ${scale}) * -1)`
                   }}
                 >
                   <div className="dice-container">
