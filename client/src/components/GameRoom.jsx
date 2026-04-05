@@ -29,10 +29,10 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;
   const logicalHeight = 340;
-  // On mobile (< 500px), we don't need to account for aside width in scale
-  const isMobile = arenaWidth < 500;
-  const totalContentWidth = isMobile ? logicalWidth : (logicalWidth + 20 + 80);
-  const scale = arenaWidth < totalContentWidth ? (arenaWidth / totalContentWidth) : 1;
+  const asideWidth = arenaWidth < 600 ? 64 : 80;
+  const gapWidth = arenaWidth < 600 ? 8 : 20;
+  const totalRequiredWidth = logicalWidth + asideWidth + gapWidth;
+  const scale = arenaWidth < totalRequiredWidth ? (arenaWidth / totalRequiredWidth) : 1;
 
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
