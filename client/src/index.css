@@ -238,23 +238,25 @@ body {
   flex-shrink: 0; /* KEEP FIXED */
 }
 
+/* Scoreboard - Back to vertical rows as requested */
 @media (max-width: 500px) {
   .scoreboard {
-    flex-direction: row;
-    overflow-x: auto;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
     background: rgba(0,0,0,0.2);
-    gap: 4px;
+    gap: 2px;
     padding: 2px;
-    height: 48px; /* FIXED HEIGHT FOR GRID ROW 2 */
+    max-height: 100px; /* SHIFT UP: Limit scoreboard height */
   }
   .score-row {
     flex-shrink: 0;
-    padding: 2px 6px !important;
+    padding: 4px 10px !important;
     border-radius: 8px;
     border: 1px solid var(--glass-border);
-    flex-direction: column !important;
-    min-width: 70px;
-    gap: 0 !important;
+    flex-direction: row !important; /* BACK TO ROW internal */
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
@@ -557,16 +559,19 @@ body {
 
 /* Lobby & Lists */
 .game-room-layout {
-  display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-  gap: 4px;
+  gap: 4px; /* SHIFT UP: Tight spacing between components */
+  justify-content: flex-start; /* FORCE EVERYTHING TO STACK FROM TOP */
 }
 
 .game-area {
-  display: contents; /* UNWRAP TO GRID ROWS */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .game-main-horizontal-layout {
@@ -765,12 +770,11 @@ body {
 .game-main-horizontal-layout {
   display: flex;
   flex-direction: row;
-  height: 100%;
-  min-height: 0;
   width: 100%;
-  margin: 4px 0;
+  margin: 2px 0;
   gap: 4px;
   justify-content: center;
+  align-items: flex-start;
 }
 
 @media (min-width: 600px) {
