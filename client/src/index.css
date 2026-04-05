@@ -704,13 +704,18 @@ body {
 .btn-row {
   display: flex;
   width: 100%;
-  gap: 10px;
+  gap: 6px;
   height: 50px;
 }
 
-.neon-button.grow-2 { flex: 2; height: 100%; padding: 0; }
-.neon-button.grow-1 { flex: 1; height: 100%; padding: 0; }
-.neon-button.d-btn { width: 50px; height: 100%; padding: 0; flex-shrink: 0; }
+.neon-button.grow-2 { flex: 2; height: 100%; padding: 0; font-size: 0.8rem; }
+.neon-button.grow-1 { flex: 1.2; height: 100%; padding: 0; font-size: 0.8rem; }
+.neon-button.d-btn { 
+  border-color: var(--color-gold) !important; 
+  color: var(--color-gold) !important;
+  font-size: 0.8rem;
+  padding: 0 4px !important;
+}
 
 .wait-pill {
   width: 100%;
@@ -768,6 +773,14 @@ body {
   font-size: 2.2rem;
   will-change: transform, opacity;
   user-select: none;
+}
+
+.die-locked {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+  box-shadow: 0 0 15px var(--neon-pink) !important;
+  border: 1px solid var(--neon-pink) !important;
+  pointer-events: none;
 }
 
 @keyframes explode {

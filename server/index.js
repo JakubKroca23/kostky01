@@ -273,15 +273,10 @@ io.on('connection', (socket) => {
     }
     
     const virtualDice = [...baseDice, ...roll];
-    const { score } = calculateScore(virtualDice, true); 
+    const { score, usedIndexes } = calculateScore(virtualDice, true); 
 
-    io.to(room.id).emit('dice-rolled', { 
-      msg: `🎲 DOHAZUJE NA ${comboName}!`, 
-      roll: virtualDice, 
-      isDohodLaunch: true 
-    });
-
-    const success = (score === 2000 || score === 700);
+    // Success if we got the full 6-dice combo (all dice used)
+    const success = (usedIndexes.length === 6);
 
     if (success) {
       room.turnInfo.turnPoints = score;

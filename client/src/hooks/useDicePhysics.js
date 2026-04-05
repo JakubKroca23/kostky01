@@ -16,7 +16,7 @@ function createSeededRandom(seedString) {
   };
 }
 
-export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460, arenaHeight = 340) {
+export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460, arenaHeight = 340, indicesToIgnore = []) {
   const engineRef = useRef(null);
   const bodiesRef = useRef([]);
   const wallsRef = useRef([]);
@@ -71,13 +71,9 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     const wallOpts = { isStatic: true, restitution: 0.1, friction: 0.1 };
 
     const walls = [
-      // Top (shifted up by t/2 minus half die pad)
       Matter.Bodies.rectangle(arenaWidth / 2, -t / 2 + pad, arenaWidth + t, t, wallOpts),
-      // Bottom
       Matter.Bodies.rectangle(arenaWidth / 2, arenaHeight + t / 2 - pad, arenaWidth + t, t, wallOpts),
-      // Left
       Matter.Bodies.rectangle(-t / 2 + pad, arenaHeight / 2, t, arenaHeight + t, wallOpts),
-      // Right
       Matter.Bodies.rectangle(arenaWidth + t / 2 - pad, arenaHeight / 2, t, arenaHeight + t, wallOpts),
     ];
     Matter.Composite.add(world, walls);
@@ -87,30 +83,36 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
   useEffect(() => {
     if (!engineRef.current) return;
     const world = engineRef.current.world;
-    bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
+    
+    // Only remove and recreate bodies if the count changed OR it's a completely new roll (not ignoring indices)
+    // Actually, to keep them in place, we should only add the missing ones or just check which ones are there.
+    // For simplicity, we recreate but only IF count != current bodies length
     if (diceCount === 0) {
+      bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
       bodiesRef.current = [];
       setPositions([]);
       return;
     }
 
-    const rand = createSeededRandom(seed + "init");
-    const newBodies = Array.from({ length: diceCount }, (_, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const x = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 10);
-      const y = arenaHeight / 2 - DIE_SIZE / 2 + row * (DIE_SIZE + 10);
+    if (bodiesRef.current.length !== diceCount) {
+      bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
+      const rand = createSeededRandom(seed + "init");
+      const newBodies = Array.from({ length: diceCount }, (_, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const x = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 10);
+        const y = arenaHeight / 2 - DIE_SIZE / 2 + row * (DIE_SIZE + 10);
 
-      return Matter.Bodies.rectangle(x, y, DIE_SIZE, DIE_SIZE, {
-        restitution: 0.7,
-        friction: 0.1,
-        frictionAir: 0.04,
-        density: 0.005,
+        return Matter.Bodies.rectangle(x, y, DIE_SIZE, DIE_SIZE, {
+          restitution: 0.7,
+          friction: 0.1,
+          frictionAir: 0.04,
+          density: 0.005,
+        });
       });
-    });
-
-    Matter.Composite.add(world, newBodies);
-    bodiesRef.current = newBodies;
+      Matter.Composite.add(world, newBodies);
+      bodiesRef.current = newBodies;
+    }
   }, [diceCount, arenaWidth, arenaHeight, seed]);
 
   useEffect(() => {
@@ -119,6 +121,9 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     const rand = createSeededRandom(seed + "roll");
 
     bodiesRef.current.forEach((body, i) => {
+      // SKIP indices we want to keep in place
+      if (indicesToIgnore.includes(i)) return;
+
       const cx = arenaWidth / 2 + (rand() - 0.5) * 50;
       const cy = arenaHeight / 2 + (rand() - 0.5) * 50;
       Matter.Body.setPosition(body, { x: cx, y: cy });
@@ -126,14 +131,14 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
       Matter.Body.setAngularVelocity(body, 0);
 
       const angle = (i / bodiesRef.current.length) * Math.PI * 2 + (rand() - 0.5) * 2;
-      const speed = 35 + rand() * 25; // 35-60px/frame - SLAM IT! 
+      const speed = 35 + rand() * 25; 
       Matter.Body.setVelocity(body, {
         x: Math.cos(angle) * speed,
         y: Math.sin(angle) * speed,
       });
       Matter.Body.setAngularVelocity(body, (rand() - 0.5) * 0.8);
     });
-  }, [isRolling, arenaWidth, arenaHeight, seed]);
+  }, [isRolling, arenaWidth, arenaHeight, seed, indicesToIgnore]);
 
   return positions;
 }
