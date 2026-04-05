@@ -164,6 +164,17 @@ function App() {
       burstEmojis(data.emoji);
     }
 
+    function onChatMessageReceived(msg) {
+      setCurrentRoom(prev => {
+        if (!prev) return prev;
+        const newChat = [...(prev.turnInfo.chat || []), msg].slice(-50);
+        return {
+          ...prev,
+          turnInfo: { ...prev.turnInfo, chat: newChat }
+        };
+      });
+    }
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('nickname-set', onNicknameSet);
@@ -190,6 +201,7 @@ function App() {
     socket.on('selection-updated', onSelectionUpdated);
     socket.on('game-over', onGameOver);
     socket.on('reaction-received', onReactionReceived);
+    socket.on('chat-message-received', onChatMessageReceived);
 
     return () => {
       socket.off('connect', onConnect);
@@ -208,6 +220,7 @@ function App() {
       socket.off('dice-rolled', onDiceRolled);
       socket.off('game-over', onGameOver);
       socket.off('reaction-received', onReactionReceived);
+      socket.off('chat-message-received', onChatMessageReceived);
     };
   }, []);
 
@@ -253,6 +266,10 @@ function App() {
 
   const handleSendReaction = (emoji) => {
     socket.emit('send-reaction', emoji);
+  };
+
+  const handleSendMessage = (text) => {
+    socket.emit('send-chat-message', text);
   };
 
   const handleBackToLobby = () => {
@@ -370,6 +387,7 @@ function App() {
           onStop={handleStopTurn} 
           onStart={handleStartGame} 
           onDohodit={handleDohodit}
+          onSendMessage={handleSendMessage}
           onReaction={handleSendReaction}
           onUpdateSelection={(indices) => socket.emit('update-selection', indices)}
           isConnected={isConnected}

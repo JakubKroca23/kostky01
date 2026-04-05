@@ -164,7 +164,8 @@ io.on('connection', (socket) => {
         lastRoll: [],
         storedDice: [],
         diceCount: 6,
-        allowedIndexes: []
+        allowedIndexes: [],
+        chat: []
       }
     };
     rooms.set(roomId, room);
@@ -178,7 +179,12 @@ io.on('connection', (socket) => {
   socket.on('join-room', (roomId) => {
     const player = players.get(socket.id);
     const room = rooms.get(roomId);
-    if (!player || !room || room.players.length >= 6) return;
+    if (!player || !room) return;
+    if (room.gameStarted) {
+      socket.emit('nickname-error', 'Tato hra již začala. Nelze se připojit.');
+      return;
+    }
+    if (room.players.length >= 6) return;
     
     room.players.push({ id: socket.id, nickname: player.nickname });
     room.turnInfo.scores[socket.id] = 0;
@@ -334,6 +340,21 @@ io.on('connection', (socket) => {
       nextTurn(room);
     }
     saveState();
+  });
+
+  socket.on('send-chat-message', (text) => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player?.roomId);
+    if (room && text && text.trim().length > 0) {
+      const msg = {
+        id: Date.now(),
+        sender: player.nickname,
+        text: text.trim().substring(0, 200),
+        time: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })
+      };
+      room.turnInfo.chat = [...(room.turnInfo.chat || []), msg].slice(-50);
+      io.to(room.id).emit('chat-message-received', msg);
+    }
   });
 
   socket.on('send-reaction', (emoji) => {

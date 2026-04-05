@@ -17,7 +17,7 @@ function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom, onReaction }) {
     <main className="hero-section lobby-layout fade-in">
       {/* Global Status Bar */}
       <div className="online-players-card neon-card glass">
-        <h3 className="section-title">ONLINE LEGENDY ({onlineStats.onlineCount})</h3>
+        <h3 className="section-title">ONLINE HRÁČI ({onlineStats.onlineCount})</h3>
         <div className="online-list-horizontal">
            {onlineStats.players.map((p, i) => (
              <span key={i} className="online-user-pill">{p}</span>

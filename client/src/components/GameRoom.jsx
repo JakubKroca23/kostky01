@@ -4,12 +4,14 @@ import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 import { calculateScore } from '@shared/scoring.js';
 
-function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection }) {
+function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
   const [arenaWidth, setArenaWidth] = useState(460);
+  const [chatInput, setChatInput] = useState('');
+  const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
   useEffect(() => {
@@ -22,6 +24,12 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     observer.observe(arenaRef.current);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [room.turnInfo.chat]);
 
   // CRITICAL: Guard before any room-dependent logic
   if (!room || !room.turnInfo) return null;
@@ -180,7 +188,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
       {!room.gameStarted ? (
         <div className="players-grid">
-          <h3 className="section-title">Čekání na hru...</h3>
+          <h3 className="section-title">ONLINE HRÁČI ({onlineStats?.onlineCount || 1})</h3>
           <div className="lobby-players">
           {room.players.map((p, i) => (
             <div key={p.id} className="player-joined-row fade-in">
@@ -195,6 +203,36 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
         {!room.gameStarted && canStart && (
           <button className="neon-button start-hero" onClick={onStart}>🔥 START HRY 🔥</button>
         )}
+
+        <div className="room-chat glass neon-card">
+          <div className="chat-messages" ref={chatRef}>
+            {(room.turnInfo.chat || []).map((m) => (
+              <div key={m.id} className="chat-msg">
+                <span className="msg-time">{m.time}</span>
+                <span className="msg-sender">{m.sender}:</span>
+                <span className="msg-text">{m.text}</span>
+              </div>
+            ))}
+            {(room.turnInfo.chat || []).length === 0 && <div className="chat-empty">Žádné zprávy...</div>}
+          </div>
+          <form className="chat-form" onSubmit={(e) => {
+            e.preventDefault();
+            if (chatInput.trim()) {
+              onSendMessage(chatInput);
+              setChatInput('');
+            }
+          }}>
+             <input 
+               type="text" 
+               className="chat-input glass" 
+               value={chatInput} 
+               onChange={(e) => setChatInput(e.target.value)}
+               placeholder="Napiš zprávu..."
+               maxLength={100}
+             />
+             <button type="submit" className="neon-button sm chat-send">Odeslat</button>
+          </form>
+        </div>
          </div>
       ) : (
         <div className="game-area fade-in">
