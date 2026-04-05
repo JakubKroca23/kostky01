@@ -4,13 +4,14 @@ import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 import { calculateScore } from '@shared/scoring.js';
 
-function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats }) {
+function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats, onLeave }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
   const [arenaWidth, setArenaWidth] = useState(460);
   const [chatInput, setChatInput] = useState('');
+  const [valuesVisible, setValuesVisible] = useState(true);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -78,7 +79,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
       setIsRolling(true);
-      const timer = setTimeout(() => setIsRolling(false), 1200);
+      setValuesVisible(false);
+      const timer = setTimeout(() => {
+        setIsRolling(false);
+        setValuesVisible(true);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll]);
@@ -140,6 +145,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           canSelect={canSelect}
           style={style}
           onClick={() => handleDieClick(index)}
+          showValue={valuesVisible}
         />
       );
     });
@@ -165,6 +171,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       <div className="room-header-neon compact">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
+          <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti">Odejít</button>
         </div>
         
         <div className="reactions-container">

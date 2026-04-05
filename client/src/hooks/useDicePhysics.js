@@ -97,7 +97,6 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
 
     if (shouldRecreate) {
       bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
-      const rand = createSeededRandom(seed + "init");
       const newBodies = Array.from({ length: diceCount }, (_, i) => {
         const col = i % 3;
         const row = Math.floor(i / 3);
@@ -120,26 +119,31 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     if (!isRolling || !engineRef.current || bodiesRef.current.length === 0) return;
 
     const rand = createSeededRandom(seed + "roll");
-
+    
+    // DETERMINISTIC START: Reset all bodies to a fixed starting grid before the roll
     bodiesRef.current.forEach((body, i) => {
-      // SKIP indices we want to keep in place
-      if (indicesToIgnore.includes(i)) return;
-
-      const cx = arenaWidth / 2 + (rand() - 0.5) * 50;
-      const cy = arenaHeight / 2 + (rand() - 0.5) * 50;
-      Matter.Body.setPosition(body, { x: cx, y: cy });
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const startX = arenaWidth / 2 - DIE_SIZE + col * (DIE_SIZE + 5);
+      const startY = arenaHeight / 2 - DIE_SIZE + row * (DIE_SIZE + 5);
+      
+      Matter.Body.setPosition(body, { x: startX, y: startY });
       Matter.Body.setVelocity(body, { x: 0, y: 0 });
       Matter.Body.setAngularVelocity(body, 0);
+      Matter.Body.setAngle(body, rand() * Math.PI * 2);
 
-      const angle = (i / bodiesRef.current.length) * Math.PI * 2 + (rand() - 0.5) * 2;
-      const speed = 35 + rand() * 25; 
-      Matter.Body.setVelocity(body, {
-        x: Math.cos(angle) * speed,
-        y: Math.sin(angle) * speed,
+      const forceMagnitude = 0.4 + rand() * 0.4;
+      const forceAngle = rand() * Math.PI * 2;
+      
+      Matter.Body.applyForce(body, body.position, {
+        x: Math.cos(forceAngle) * forceMagnitude,
+        y: Math.sin(forceAngle) * forceMagnitude
       });
-      Matter.Body.setAngularVelocity(body, (rand() - 0.5) * 0.8);
+      
+      Matter.Body.setAngularVelocity(body, (rand() - 0.5) * 0.5);
     });
-  }, [isRolling, arenaWidth, arenaHeight, seed, indicesToIgnore]);
+
+  }, [isRolling, arenaWidth, arenaHeight, seed]);
 
   return positions;
 }

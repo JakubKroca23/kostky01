@@ -9,8 +9,8 @@ const DOTS_MAP = {
   6: [0, 3, 6, 2, 5, 8]
 };
 
-function Die({ value, isSelected, onClick, isRolling, canSelect, style }) {
-  const dots = DOTS_MAP[value] || [];
+function Die({ value, isSelected, onClick, isRolling, canSelect, style, showValue = true }) {
+  const dots = showValue ? (DOTS_MAP[value] || []) : [];
 
   // style obsahuje --tx, --ty, --tr z Matter.js
   // Aplikujeme transform přímo kvůli 60fps real-time updatu

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 
-function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom, onReaction }) {
+function Lobby({ rooms, onlineStats, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
   const [newRoomName, setNewRoomName] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const chatRef = React.useRef(null);
 
-  const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
+  React.useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [globalChat]);
 
-  const handleCreate = (e) => {
-    e.preventDefault();
-    onCreateRoom(newRoomName);
-    setNewRoomName('');
-    setIsCreating(false);
-  };
+  const emojis = ['🔥', '😂', '😭', '🎲', '👑', '🎆'];
 
   return (
     <main className="hero-section lobby-layout fade-in">
@@ -30,6 +30,36 @@ function Lobby({ rooms, onlineStats, onCreateRoom, onJoinRoom, onReaction }) {
               {e}
             </button>
           ))}
+        </div>
+
+        <div className="lobby-global-chat glass neon-card">
+          <div className="global-chat-messages" ref={chatRef}>
+            {(globalChat || []).map((m) => (
+              <div key={m.id} className="chat-msg">
+                <span className="msg-time">{m.time}</span>
+                <span className="msg-sender">{m.sender}:</span>
+                <span className="msg-text">{m.text}</span>
+              </div>
+            ))}
+            {(globalChat || []).length === 0 && <div className="chat-empty">Zatím žádné zprávy...</div>}
+          </div>
+          <form className="chat-form" onSubmit={(e) => {
+            e.preventDefault();
+            if (chatInput.trim()) {
+              onSendMessage(chatInput);
+              setChatInput('');
+            }
+          }}>
+             <input 
+               type="text" 
+               className="chat-input glass" 
+               value={chatInput} 
+               onChange={(e) => setChatInput(e.target.value)}
+               placeholder="Napiš všem..."
+               maxLength={100}
+             />
+             <button type="submit" className="neon-button sm chat-send">Poslat</button>
+          </form>
         </div>
       </div>
 

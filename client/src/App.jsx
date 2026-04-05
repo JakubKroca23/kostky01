@@ -4,7 +4,13 @@ import NicknameScreen from './components/NicknameScreen';
 import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
 import VictoryModal from './components/VictoryModal';
+import Navbar from './components/Navbar';
+import Leaderboard from './components/Leaderboard';
+import MaintenanceOverlay from './components/MaintenanceOverlay';
+import AdminMenu from './components/AdminMenu';
 import { audio } from './utils/audio';
+import { account, client as appClient } from './lib/appwrite';
+import { ID } from 'appwrite';
 
 const isProd = import.meta.env.PROD;
 const socket = io(isProd ? undefined : 'http://localhost:3001', {
@@ -24,6 +30,11 @@ function App() {
   const [currentRoom, setCurrentRoom] = useState(null);
   const [remoteSelection, setRemoteSelection] = useState([]);
   const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
+  const [globalChat, setGlobalChat] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -34,19 +45,29 @@ function App() {
   });
 
   useEffect(() => {
-    // If stuck loading for too long, fallback to nickname
     const loadTimeout = setTimeout(() => {
       if (screen === 'loading' && !nickname) setScreen('nickname');
     }, 2000);
 
-    function onConnect() {
-      setIsConnected(true);
-      const stashedNick = localStorage.getItem('kostky-nickname');
-      if (stashedNick) {
-        socket.emit('set-nickname', stashedNick);
-      } else {
+    async function initApp() {
+      try {
+        const session = await account.get();
+        if (session) {
+          const name = session.name || session.$id.substring(0, 8);
+          setNickname(name);
+          socket.emit('set-nickname', name);
+          setScreen('lobby');
+        } else {
+          setScreen('nickname');
+        }
+      } catch (err) {
         setScreen('nickname');
       }
+    }
+
+    function onConnect() {
+      setIsConnected(true);
+      initApp();
     }
 
     function onDisconnect() {
@@ -62,7 +83,6 @@ function App() {
 
     function onNicknameError(msg) {
       setError(msg);
-      // If we were trying to auto-login, go to login screen
       if (screen === 'loading') setScreen('nickname');
     }
 
@@ -72,6 +92,24 @@ function App() {
 
     function onGlobalStatsUpdate(stats) {
       setOnlineStats(stats);
+    }
+
+    function onGlobalChatUpdate(msgs) {
+      setGlobalChat(msgs);
+    }
+
+    function onLeaderboardUpdate(list) {
+      setLeaderboard(list);
+    }
+
+    function onMaintenanceStatus(status) {
+      setMaintenanceMode(status);
+    }
+
+    function onKickedToLobby(msg) {
+      setCurrentRoom(null);
+      setScreen('lobby');
+      setError(msg);
     }
 
     function onRoomJoined(data) {
@@ -86,12 +124,16 @@ function App() {
       });
     }
 
+    function onLeftRoom() {
+      setCurrentRoom(null);
+      setScreen('lobby');
+    }
+
     function onGameStarted(data) {
       setCurrentRoom(data.room);
     }
 
     function onScoreUpdated(data) {
-      audio.playScore();
       setCurrentRoom(prev => ({
         ...prev,
         turnInfo: { ...prev.turnInfo, scores: data.scores }
@@ -99,69 +141,34 @@ function App() {
     }
 
     function onTurnUpdated(data) {
-      setRemoteSelection([]); // CRITICAL: Clear ghost selection on every turn start
       setCurrentRoom(prev => ({
         ...prev,
-        turnInfo: { ...prev.turnInfo, ...data.turnInfo }
+        turnInfo: data.turnInfo
       }));
     }
 
     function onDiceRolled(data) {
-      setRemoteSelection([]); // CRITICAL: Clear ghost selection on every roll
-      setCurrentRoom(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          turnInfo: { 
-            ...prev.turnInfo, 
-            lastRoll: data.roll, 
-            turnPoints: data.turnPoints !== undefined ? data.turnPoints : prev.turnInfo.turnPoints,
-            rollCount: data.rollCount !== undefined ? data.rollCount : prev.turnInfo.rollCount,
-            diceCount: data.diceCount !== undefined ? data.diceCount : prev.turnInfo.diceCount,
-            storedDice: data.storedDice !== undefined ? data.storedDice : prev.turnInfo.storedDice,
-            allowedIndexes: data.allowedIndexes || [],
-            canDohodit: data.canDohodit || false
-          }
-        };
-      });
-      
-      if (data.isBust || data.msg) {
-        // Delay results until dice settle (1200ms)
-        setTimeout(() => {
-          if (data.isBust) audio.playBust();
-          setError(data.msg || 'SMŮLA, ZKUS TO PŘÍŠTĚ!');
-          setTimeout(() => setError(''), 3000);
-        }, 1500);
-      } else {
-        audio.playRoll();
-      }
-    }
-
-    function onOpponentRolled(data) {
-      audio.playRoll();
-       setCurrentRoom(prev => ({
+      setCurrentRoom(prev => ({
         ...prev,
-        turnInfo: { 
-          ...prev.turnInfo, 
-          lastRoll: data.roll, 
-          turnPoints: data.turnPoints,
-          rollCount: (prev.turnInfo.rollCount || 0) + 1
+        turnInfo: {
+          ...prev.turnInfo,
+          lastRoll: data.roll,
+          turnPoints: data.turnPoints || prev.turnInfo.turnPoints,
+          rollCount: data.rollCount,
+          diceCount: data.diceCount,
+          storedDice: data.storedDice,
+          allowedIndexes: data.allowedIndexes || []
         }
       }));
-    }
-
-    function onLeftRoom() {
-      setCurrentRoom(null);
-      setScreen('lobby');
+      audio.playRoll();
     }
 
     function onGameOver(data) {
-      audio.playVictory();
       setWinnerData(data);
     }
 
-    function onReactionReceived(data) {
-      burstEmojis(data.emoji);
+    function onReactionReceived(emoji) {
+      burstEmojis(emoji);
     }
 
     function onChatMessageReceived(msg) {
@@ -181,6 +188,7 @@ function App() {
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
     socket.on('global-stats-update', onGlobalStatsUpdate);
+    socket.on('global-chat-update', onGlobalChatUpdate);
     socket.on('room-joined', onRoomJoined);
     socket.on('player-joined', onRoomUpdate);
     socket.on('player-left', onRoomUpdate);
@@ -188,28 +196,28 @@ function App() {
     socket.on('game-started', onGameStarted);
     socket.on('score-updated', onScoreUpdated);
     socket.on('turn-updated', onTurnUpdated);
-    function onSelectionUpdated(data) {
-      if (data.playerId !== socket.id) {
-        // Emit a custom event or update currentRoom turnInfo?
-        // Let's just update the room's current selection state if possible
-        // Actually, we can just pass this down as a prop to GameRoom
-        setRemoteSelection(data.indices);
-      }
-    }
-
     socket.on('dice-rolled', onDiceRolled);
-    socket.on('selection-updated', onSelectionUpdated);
+    socket.on('selection-updated', (data) => {
+       if (data.playerId !== socket.id) setRemoteSelection(data.indices);
+    });
     socket.on('game-over', onGameOver);
     socket.on('reaction-received', onReactionReceived);
     socket.on('chat-message-received', onChatMessageReceived);
+    socket.on('leaderboard-update', onLeaderboardUpdate);
+    socket.on('maintenance-status', onMaintenanceStatus);
+    socket.on('kicked-to-lobby', onKickedToLobby);
+
+    if (socket.connected) onConnect();
 
     return () => {
+      clearTimeout(loadTimeout);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('nickname-set', onNicknameSet);
       socket.off('nickname-error', onNicknameError);
       socket.off('room-list-update', onRoomListUpdate);
       socket.off('global-stats-update', onGlobalStatsUpdate);
+      socket.off('global-chat-update', onGlobalChatUpdate);
       socket.off('room-joined', onRoomJoined);
       socket.off('player-joined', onRoomUpdate);
       socket.off('player-left', onRoomUpdate);
@@ -218,54 +226,55 @@ function App() {
       socket.off('score-updated', onScoreUpdated);
       socket.off('turn-updated', onTurnUpdated);
       socket.off('dice-rolled', onDiceRolled);
+      socket.off('selection-updated');
       socket.off('game-over', onGameOver);
       socket.off('reaction-received', onReactionReceived);
       socket.off('chat-message-received', onChatMessageReceived);
+      socket.off('leaderboard-update', onLeaderboardUpdate);
+      socket.off('maintenance-status', onMaintenanceStatus);
+      socket.off('kicked-to-lobby', onKickedToLobby);
     };
   }, []);
 
   const burstEmojis = (emoji) => {
-    // 1. Launch a rocket first
     const rocket = document.createElement('span');
     rocket.className = 'firework-rocket';
-    rocket.innerText = emoji; // Or maybe a 🚀 emoji
+    rocket.innerText = '🎆';
     document.body.appendChild(rocket);
-    
-    // 2. Explode at peak
-    setTimeout(() => {
-        rocket.remove();
-        
-        const count = 6 + Math.floor(Math.random() * 4);
-        const x = window.innerWidth / 2;
-        const y = window.innerHeight / 2;
 
-        for (let i = 0; i < count; i++) {
-            const span = document.createElement('span');
-            span.className = 'floating-emoji';
-            span.innerText = emoji;
-            
-            const angle = Math.random() * Math.PI * 2;
-            const dist = 60 + Math.random() * 180;
-            const tx = Math.cos(angle) * dist;
-            const ty = Math.sin(angle) * dist;
-            const tr = Math.random() * 180;
-            
-            span.style.left = `${x}px`;
-            span.style.top = `${y}px`;
-            span.style.setProperty('--tx', `${tx}px`);
-            span.style.setProperty('--ty', `${ty}px`);
-            span.style.setProperty('--tr', `${tr}deg`);
-            
-            span.style.animation = `explode ${1.5 + Math.random() * 0.5}s forwards cubic-bezier(0.1, 0.6, 0.2, 1)`;
-            
-            document.body.appendChild(span);
-            setTimeout(() => span.remove(), 2000);
-        }
-    }, 800); // 800ms is the duration of rocketLaunch
+    // 2. Explode after 1 second (matches CSS animation)
+    setTimeout(() => {
+      const rocketRect = rocket.getBoundingClientRect();
+      const x = rocketRect.left + rocketRect.width / 2;
+      const y = rocketRect.top;
+
+      // Create Particles
+      for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.innerText = emoji;
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        
+        // Random trajectory
+        const tx = (Math.random() - 0.5) * 400;
+        const ty = (Math.random() - 0.5) * 400;
+        p.style.setProperty('--tx', `${tx}px`);
+        p.style.setProperty('--ty', `${ty}px`);
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1000);
+      }
+      rocket.remove();
+    }, 1000);
   };
 
   const handleSendReaction = (emoji) => {
     socket.emit('send-reaction', emoji);
+  };
+
+  const handleSendGlobalMessage = (text) => {
+    socket.emit('send-global-chat', text);
   };
 
   const handleSendMessage = (text) => {
@@ -277,8 +286,58 @@ function App() {
     setScreen('lobby');
   };
 
-  const handleJoinNickname = (name) => {
-    socket.emit('set-nickname', name);
+  const handleLeaveRoom = () => {
+    socket.emit('leave-room');
+  };
+
+  const handleJoinNickname = async (name) => {
+    try {
+      // First try to create anonymous session
+      const existing = await account.get().catch(() => null);
+      if (!existing) {
+        await account.createAnonymousSession();
+      }
+      
+      // Update nickname in Appwrite
+      await account.updateName(name);
+      
+      // Notify socket
+      socket.emit('set-nickname', name);
+    } catch (err) {
+      setError('Chyba při přihlašování do Appwrite: ' + err.message);
+    }
+  };
+
+  const handleLogin = async (email, password) => {
+    try {
+      await account.createEmailPasswordSession(email, password);
+      const user = await account.get();
+      socket.emit('set-nickname', user.name);
+    } catch (err) {
+      setError('Chyba při přihlášení: ' + err.message);
+    }
+  };
+
+  const handleRegister = async (email, password, nickname) => {
+    try {
+      await account.create(ID.unique(), email, password, nickname);
+      await account.createEmailPasswordSession(email, password);
+      socket.emit('set-nickname', nickname);
+    } catch (err) {
+      setError('Chyba při registraci: ' + err.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await account.deleteSession('current');
+      setNickname('');
+      localStorage.removeItem('kostky-nickname');
+      setScreen('nickname');
+      window.location.reload();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   const handleCreateRoom = (roomName) => {
@@ -287,10 +346,6 @@ function App() {
 
   const handleJoinRoom = (roomId) => {
     socket.emit('join-room', roomId);
-  };
-
-  const handleLeaveRoom = () => {
-    socket.emit('leave-room');
   };
 
   const handleStartGame = () => {
@@ -320,8 +375,46 @@ function App() {
     socket.emit('dohodit');
   };
 
+  const soundEnabledVal = soundEnabled;
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    audio.setEnabled(next);
+    localStorage.setItem('kostky-sound', next);
+    setSoundEnabled(next);
+  };
+
   return (
     <div className="app-container fade-in">
+      {nickname && (
+        <Navbar 
+          nickname={nickname}
+          onlineCount={onlineStats.onlineCount}
+          soundEnabled={soundEnabledVal}
+          onToggleSound={toggleSound}
+          onLogout={handleLogout}
+          onChangeNickname={handleChangeNickname}
+          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+          onOpenAdmin={() => setIsAdminOpen(true)}
+          isAdmin={nickname?.toLowerCase() === 'zakladatel'}
+        />
+      )}
+
+      {maintenanceMode && nickname?.toLowerCase() !== 'zakladatel' && (
+        <MaintenanceOverlay />
+      )}
+
+      {isAdminOpen && (
+        <AdminMenu 
+          maintenanceMode={maintenanceMode} 
+          onToggleMaintenance={(status) => socket.emit('toggle-maintenance', status)}
+          onClose={() => setIsAdminOpen(false)} 
+        />
+      )}
+
+      {isLeaderboardOpen && (
+        <Leaderboard list={leaderboard} onClose={() => setIsLeaderboardOpen(false)} />
+      )}
+
       {winnerData && (
         <VictoryModal 
           winner={winnerData.winner} 
@@ -329,41 +422,20 @@ function App() {
           onBack={handleBackToLobby}
         />
       )}
-      {screen !== 'room' && (
-        <header className="neon-header">
-          <h1 className="neon-text-cyan">KOSTKY</h1>
-          <div className="header-controls">
-            {nickname && (
-              <div className="user-info">
-                <span className="nickname-display">{nickname}</span>
-                <button className="neon-button btn-mini" onClick={handleChangeNickname}>Změnit</button>
-              </div>
-            )}
-            <button 
-              id="sound-toggle-btn"
-              className={`sound-toggle ${soundEnabled ? 'active' : ''}`}
-              onClick={() => {
-                const next = !soundEnabled;
-                audio.setEnabled(next);
-                localStorage.setItem('kostky-sound', next);
-                setSoundEnabled(next);
-              }}
-            >
-              {soundEnabled ? '🔊' : '🔇'}
-            </button>
-            <div className={`status-badge ${isConnected ? 'online' : 'offline'}`}>
-              {isConnected ? 'ONLINE' : '...'}
-            </div>
-          </div>
-        </header>
-      )}
       
       {screen === 'loading' && <div className="loading">Pripojovani...</div>}
 
       {error && <div className="global-error-toast glass neon-card">{error}</div>}
 
       {screen === 'nickname' && (
-        <NicknameScreen onJoin={handleJoinNickname} error={error} />
+        <div className="auth-wrapper fade-in">
+          <NicknameScreen 
+            onJoin={handleJoinNickname} 
+            onLogin={handleLogin}
+            onRegister={handleRegister}
+            error={error} 
+          />
+        </div>
       )}
 
       {screen === 'lobby' && (
@@ -371,9 +443,13 @@ function App() {
           rooms={rooms} 
           nickname={nickname} 
           onlineStats={onlineStats} 
+          globalChat={globalChat}
           onCreateRoom={handleCreateRoom} 
           onJoinRoom={handleJoinRoom} 
           onChangeNickname={handleChangeNickname}
+          onSendMessage={handleSendGlobalMessage}
+          onReaction={handleSendReaction}
+          leaderboard={leaderboard}
         />
       )}
 
@@ -389,6 +465,7 @@ function App() {
           onDohodit={handleDohodit}
           onSendMessage={handleSendMessage}
           onReaction={handleSendReaction}
+          onLeave={handleLeaveRoom}
           onUpdateSelection={(indices) => socket.emit('update-selection', indices)}
           isConnected={isConnected}
         />

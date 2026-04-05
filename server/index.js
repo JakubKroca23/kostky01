@@ -5,11 +5,26 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import dotenv from 'dotenv';
+import { Client, Databases, Query } from 'node-appwrite';
 import { calculateScore } from '../shared/scoring.js';
+import { initAppwrite } from './init-appwrite.js';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const STATE_FILE = path.join(__dirname, 'state.json');
+
+// Initialize Appwrite Server SDK
+const client = new Client()
+    .setEndpoint(process.env.APPWRITE_ENDPOINT)
+    .setProject(process.env.APPWRITE_PROJECT_ID)
+    .setKey(process.env.APPWRITE_API_KEY);
+
+const databases = new Databases(client);
+const DB_ID = process.env.APPWRITE_DB_ID;
+const COLL_ID = process.env.APPWRITE_COLLECTION_ID;
 
 const app = express();
 app.use(cors());
@@ -29,12 +44,15 @@ const io = new Server(server, {
 
 const players = new Map(); // socket.id -> { nickname, roomId }
 const rooms = new Map(); // roomId -> { id, name, players: [{id, nickname}] }
+let globalChat = [];
+let maintenanceMode = false;
 
 function saveState() {
   try {
     const data = {
       rooms: Array.from(rooms.entries()),
-      players: Array.from(players.entries())
+      players: Array.from(players.entries()),
+      maintenanceMode
     };
     fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
   } catch (err) {
@@ -48,7 +66,8 @@ function loadState() {
       const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
       if (data.rooms) data.rooms.forEach(([id, room]) => rooms.set(id, room));
       if (data.players) data.players.forEach(([id, player]) => players.set(id, player));
-      console.log(`State loaded: ${rooms.size} rooms, ${players.size} players.`);
+      if (data.maintenanceMode !== undefined) maintenanceMode = data.maintenanceMode;
+      console.log(`State loaded: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}`);
     } catch (e) {
       console.error('Error loading state:', e);
     }
@@ -56,6 +75,7 @@ function loadState() {
 }
 
 loadState();
+await initAppwrite();
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -71,11 +91,35 @@ function getRoomList() {
   }));
 }
 
+function broadcastLeaderboard() {
+  (async () => {
+    try {
+      const result = await databases.listDocuments(DB_ID, COLL_ID, [
+        Query.orderDesc('wins'),
+        Query.limit(10)
+      ]);
+      const list = result.documents.map(d => ({
+        nickname: d.nickname,
+        wins: d.wins || 0,
+        total_points: d.total_points || 0,
+        games_played: d.games_played || 0
+      }));
+      io.emit('leaderboard-update', list);
+    } catch (e) {
+      console.error("Leaderboard Sync Error:", e.message);
+    }
+  })();
+}
+
 function broadcastGlobalStats() {
-  const allPlayers = Array.from(players.values()).map(p => p.nickname);
+  const onlinePlayers = Array.from(players.values())
+    .filter(p => p.online)
+    .map(p => p.nickname);
+    
   io.emit('global-stats-update', {
-    onlineCount: players.size,
-    players: allPlayers
+    onlineCount: onlinePlayers.length,
+    players: onlinePlayers,
+    maintenanceMode
   });
 }
 
@@ -83,7 +127,6 @@ function nextTurn(room, bust = false) {
   const activeId = room.turnInfo.currentTurnId;
   
   if (bust) {
-    // Rule 9: Increment strikes on zero score
     room.turnInfo.strikes[activeId] = (room.turnInfo.strikes[activeId] || 0) + 1;
     if (room.turnInfo.strikes[activeId] >= 3) {
       room.turnInfo.scores[activeId] = 0;
@@ -91,7 +134,6 @@ function nextTurn(room, bust = false) {
       io.to(room.id).emit('strikes-reset', { playerId: activeId });
     }
   } else if (room.turnInfo.turnPoints > 0) {
-    // Rule 9: Reset strikes on successful scoring
     room.turnInfo.strikes[activeId] = 0;
     room.turnInfo.enteredBoard[activeId] = true;
   }
@@ -103,9 +145,8 @@ function nextTurn(room, bust = false) {
   room.turnInfo.turnPoints = 0;
   room.turnInfo.rollCount = 0;
   room.turnInfo.lastRoll = [];
-  room.turnInfo.storedDice = []; // RESET
+  room.turnInfo.storedDice = [];
   room.turnInfo.diceCount = 6;
-  room.turnInfo.allowedIndexes = [];
   room.turnInfo.allowedIndexes = [];
   
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
@@ -115,12 +156,76 @@ io.on('connection', (socket) => {
   console.log('New connection:', socket.id);
 
   socket.on('set-nickname', (nickname) => {
-    if (!nickname || nickname.length < 3) {
-      return socket.emit('nickname-error', 'Jméno je příliš krátké.');
+    if (!nickname || nickname.trim().length < 3) {
+      socket.emit('nickname-error', 'Jméno musí mít aspoň 3 znaky.');
+      return;
     }
-    players.set(socket.id, { nickname, roomId: null });
+
+    const nicknameLower = nickname.toLowerCase();
+    const existingPlayerEntry = Array.from(players.entries()).find(([id, p]) => 
+      id !== socket.id && p.nickname.toLowerCase() === nicknameLower
+    );
+
+    if (existingPlayerEntry) {
+      const [oldId, oldPlayer] = existingPlayerEntry;
+      
+      if (oldPlayer.online) {
+        const oldSocket = io.sockets.sockets.get(oldId);
+        if (oldSocket) {
+          oldSocket.emit('nickname-error', 'Byl jsi odpojen, protože ses přihlásil odjinud.');
+          oldSocket.disconnect(true);
+        }
+      }
+
+      const roomId = oldPlayer.roomId;
+      players.delete(oldId);
+      players.set(socket.id, { ...oldPlayer, online: true, disconnectTime: null });
+
+      socket.emit('nickname-set', oldPlayer.nickname);
+      if (roomId) {
+        const room = rooms.get(roomId);
+        if (room) {
+          room.players = room.players.map(p => p.id === oldId ? { ...p, id: socket.id } : p);
+          if (room.turnInfo.currentTurnId === oldId) room.turnInfo.currentTurnId = socket.id;
+          const oldScore = room.turnInfo.scores[oldId];
+          delete room.turnInfo.scores[oldId];
+          room.turnInfo.scores[socket.id] = oldScore;
+          
+          socket.join(roomId);
+          socket.emit('room-joined', { room });
+          io.to(roomId).emit('player-connection-status', { id: socket.id, nickname: oldPlayer.nickname, online: true });
+        }
+      }
+      broadcastLeaderboard();
+      socket.emit('global-chat-update', globalChat);
+      broadcastGlobalStats();
+      io.emit('room-list-update', getRoomList());
+      return;
+    }
+
+    (async () => {
+      try {
+        const list = await databases.listDocuments(DB_ID, COLL_ID, [
+          Query.equal('nickname', nickname)
+        ]);
+        if (list.total === 0) {
+          await databases.createDocument(DB_ID, COLL_ID, 'unique()', {
+            nickname: nickname,
+            wins: 0,
+            total_points: 0,
+            games_played: 0,
+            highScore: 0
+          });
+        }
+      } catch (e) {
+        console.error("Appwrite Profile Ensure Error:", e.message);
+      }
+    })();
+
+    players.set(socket.id, { nickname, roomId: null, online: true });
     socket.emit('nickname-set', nickname);
     socket.emit('room-list-update', getRoomList());
+    socket.emit('global-chat-update', globalChat);
     broadcastGlobalStats();
   });
 
@@ -139,6 +244,7 @@ io.on('connection', (socket) => {
         }
       }
       broadcastGlobalStats();
+      socket.emit('global-chat-update', globalChat);
     }
   });
 
@@ -264,7 +370,6 @@ io.on('connection', (socket) => {
     const isFirstRoll = (room.turnInfo.rollCount === 1);
     const { score } = calculateScore(selectedDice, isFirstRoll);
 
-    // Ochrana: prázdná nebo neplatná kombinace
     if (score === 0) {
       socket.emit('nickname-error', 'Vybrané kostky nemají body. Vyber platné kostky.');
       return;
@@ -276,7 +381,7 @@ io.on('connection', (socket) => {
     
     const rem = room.turnInfo.diceCount - selectedIndexes.length;
     room.turnInfo.diceCount = rem === 0 ? 6 : rem;
-    if (rem === 0) room.turnInfo.storedDice = []; // Do plných (reset visuals)
+    if (rem === 0) room.turnInfo.storedDice = []; 
 
     room.turnInfo.rollCount++;
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
@@ -286,7 +391,6 @@ io.on('connection', (socket) => {
     room.turnInfo.allowedIndexes = usedIndexes;
     const totalPotential = room.turnInfo.turnPoints + nextScore;
     
-    // Rule 3: 3rd roll threshold (STRICT: Must have 350 by 3rd roll every turn)
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (nextScore === 0 || isTooLowAfter3) {
@@ -327,12 +431,43 @@ io.on('connection', (socket) => {
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
     
     if (room.turnInfo.scores[socket.id] >= 10000) {
-      // Převést skóre z socket ID na přezdívky pro přehledné zobrazení ve VictoryModal
+      const winnerName = players.get(socket.id).nickname;
       const namedScores = {};
       room.players.forEach(p => {
         namedScores[p.nickname] = room.turnInfo.scores[p.id] ?? 0;
       });
-      io.to(room.id).emit('game-over', { winner: players.get(socket.id).nickname, scores: namedScores });
+      io.to(room.id).emit('game-over', { winner: winnerName, scores: namedScores });
+
+      (async () => {
+        try {
+          const winList = await databases.listDocuments(DB_ID, COLL_ID, [Query.equal('nickname', winnerName)]);
+          if (winList.total > 0) {
+            const doc = winList.documents[0];
+            await databases.updateDocument(DB_ID, COLL_ID, doc.$id, {
+              wins: (doc.wins || 0) + 1,
+              total_points: (doc.total_points || 0) + room.turnInfo.scores[socket.id],
+              games_played: (doc.games_played || 0) + 1
+            });
+          }
+
+          for (const p of room.players) {
+            if (p.id === socket.id) continue;
+            const pList = await databases.listDocuments(DB_ID, COLL_ID, [Query.equal('nickname', p.nickname)]);
+            if (pList.total > 0) {
+              const doc = pList.documents[0];
+              await databases.updateDocument(DB_ID, COLL_ID, doc.$id, {
+                total_points: (doc.total_points || 0) + room.turnInfo.scores[p.id],
+                games_played: (doc.games_played || 0) + 1
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Appwrite Game Over Sync Error:", e.message);
+        } finally {
+          broadcastLeaderboard();
+        }
+      })();
+
       rooms.delete(room.id);
       io.emit('room-list-update', getRoomList());
     } else {
@@ -340,6 +475,21 @@ io.on('connection', (socket) => {
       nextTurn(room);
     }
     saveState();
+  });
+
+  socket.on('send-global-chat', (text) => {
+    const player = players.get(socket.id);
+    if (player && text && text.trim().length > 0) {
+      const msg = {
+        id: Date.now(),
+        sender: player.nickname,
+        text: text.trim().substring(0, 150),
+        time: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })
+      };
+      globalChat = [...globalChat, msg].slice(-50);
+      io.emit('global-chat-update', globalChat);
+      saveState();
+    }
   });
 
   socket.on('send-chat-message', (text) => {
@@ -354,6 +504,27 @@ io.on('connection', (socket) => {
       };
       room.turnInfo.chat = [...(room.turnInfo.chat || []), msg].slice(-50);
       io.to(room.id).emit('chat-message-received', msg);
+      saveState();
+    }
+  });
+
+  socket.on('leave-room', () => {
+    const player = players.get(socket.id);
+    if (player && player.roomId) {
+      const room = rooms.get(player.roomId);
+      if (room) {
+        room.players = room.players.filter(p => p.id !== socket.id);
+        if (room.players.length === 0) {
+          rooms.delete(player.roomId);
+        } else {
+          io.to(player.roomId).emit('player-left', { players: room.players });
+        }
+        player.roomId = null;
+        socket.leave(room.id);
+        socket.emit('left-room');
+        io.emit('room-list-update', getRoomList());
+        saveState();
+      }
     }
   });
 
@@ -364,24 +535,76 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('toggle-maintenance', (status) => {
+    const player = players.get(socket.id);
+    if (!player || player.nickname !== 'zakladatel') return;
+
+    maintenanceMode = !!status;
+    saveState();
+    
+    io.emit('maintenance-status', maintenanceMode);
+    broadcastGlobalStats();
+
+    if (maintenanceMode) {
+      players.forEach((p, sid) => {
+        if (p.nickname !== 'zakladatel') {
+           if (p.roomId) {
+              const room = rooms.get(p.roomId);
+              if (room) {
+                 room.players = room.players.filter(rp => rp.id !== sid);
+                 if (room.players.length === 0) rooms.delete(p.roomId);
+              }
+              p.roomId = null;
+           }
+           io.to(sid).emit('kicked-to-lobby', 'Probíhá údržba systému.');
+        }
+      });
+      io.emit('room-list-update', getRoomList());
+    }
+    console.log(`Admin 'zakladatel' changed maintenance mode to: ${maintenanceMode}`);
+  });
+
   socket.on('disconnect', () => {
     const player = players.get(socket.id);
     if (player) {
+      player.online = false;
+      player.disconnectTime = Date.now();
+      
       if (player.roomId) {
         const room = rooms.get(player.roomId);
         if (room) {
-          room.players = room.players.filter(p => p.id !== socket.id);
-          if (room.players.length === 0) rooms.delete(player.roomId);
-          else io.to(player.roomId).emit('player-left', { players: room.players });
-          io.emit('room-list-update', getRoomList());
+           io.to(player.roomId).emit('player-connection-status', { 
+             id: socket.id, 
+             nickname: player.nickname, 
+             online: false 
+           });
         }
       }
-      players.delete(socket.id);
-      saveState();
       broadcastGlobalStats();
+
+      setTimeout(() => {
+        const p = players.get(socket.id);
+        if (p && !p.online) {
+          if (p.roomId) {
+            const room = rooms.get(p.roomId);
+            if (room) {
+              room.players = room.players.filter(p_item => p_item.id !== socket.id);
+              if (room.players.length === 0) rooms.delete(p.roomId);
+              else io.to(p.roomId).emit('player-left', { players: room.players });
+              io.emit('room-list-update', getRoomList());
+            }
+          }
+          players.delete(socket.id);
+          saveState();
+          broadcastGlobalStats();
+        }
+      }, 300000); 
     }
   });
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  broadcastLeaderboard();
+});
