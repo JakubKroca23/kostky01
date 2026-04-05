@@ -36,8 +36,8 @@ body {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
-  position: fixed; /* Fixace obsahu proti "plavání" */
+  padding: 0 12px;
+  position: fixed; 
   inset: 0;
 }
 
@@ -87,8 +87,8 @@ body {
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 24px;
-  padding: 24px;
-  margin-bottom: 20px;
+  padding: 12px;
+  margin-bottom: 8px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.4);
 }
 
@@ -239,7 +239,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
+  padding: 6px 12px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: background 0.3s, opacity 0.3s;
 }
@@ -536,10 +536,10 @@ body {
 .game-room-layout {
   display: flex;
   flex-direction: column;
-  padding: 8px;
-  gap: 8px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  padding: 4px 8px;
+  gap: 4px;
+  height: 100dvh;
+  overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -621,10 +621,9 @@ body {
 .game-controls { 
   display: flex; 
   flex-direction: column; 
-  gap: 8px; 
+  gap: 6px; 
   margin-top: auto;
-  padding-top: 10px;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: 4px;
 }
 
 .global-error-toast {

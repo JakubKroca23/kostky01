@@ -207,18 +207,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 <div key={p.id} className={`score-row ${isActive ? 'active-turn' : ''} ${!hasEntered ? 'waiting-entry' : ''}`}>
                   <div className="score-main">
                     <span className="score-name">
-                      {isActive ? '🎲 ' : ''}{p.nickname}
+                      {isActive ? '🎲 ' : ''}{p.nickname.substring(0, 8)}
                     </span>
-                    {strikes > 0 && (
-                      <span className="strikes-display">
-                        {"X".repeat(strikes)}
-                      </span>
-                    )}
                   </div>
                   <div className="score-right">
-                    {pending > 0 && (
-                      <span className="score-pending">+{pending}</span>
-                    )}
+                    {pending > 0 && <span className="score-pending">+{pending}</span>}
                     <span className="score-value">{totalScore}</span>
                   </div>
                 </div>
@@ -237,13 +230,25 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
             @media (max-width: 500px) {
               .game-main-horizontal-layout {
+                padding: env(safe-area-inset-top) 8px 8px 8px;
+                gap: 4px;
+                overflow: hidden;
+                height: 100dvh;
+                justify-content: space-between;
                 flex-direction: column;
                 align-items: center;
-                gap: 10px;
               }
               
               .aside-storage {
                 width: 100% !important;
+                height: clamp(200px, 35vh, 280px);
+                background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
+                border: 1px solid var(--glass-border);
+                border-radius: 24px;
+                margin: 4px 0;
+                position: relative;
+                overflow: hidden;
+                box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
                 min-height: auto !important;
                 flex-direction: row !important;
                 padding: 8px !important;
@@ -310,19 +315,16 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             </aside>
           </div>
 
-          <div className="turn-summary neon-card">
+          <div className="turn-summary-compact neon-card">
             <div className="turn-stats">
               <div className="stat-item">
-                <span className="stat-label">HOD</span>
-                <div className="stat-value">{room.turnInfo.rollCount || 0}/3</div>
+                <span className="stat-label">HOD {room.turnInfo.rollCount || 0}/3</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">BANKOVÁNO</span>
-                <div className="stat-value neon-text-cyan">{currentTurnPoints}</div>
+                <span className="stat-label">BANK <span className="neon-text-cyan">{currentTurnPoints}</span></span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">VÝBĚR</span>
-                <div className="stat-value neon-text-pink">+{selectedPoints}</div>
+                <span className="stat-label">VÝBĚR <span className="neon-text-pink">+{selectedPoints}</span></span>
               </div>
             </div>
           </div>
