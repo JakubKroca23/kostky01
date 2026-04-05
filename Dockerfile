@@ -1,5 +1,7 @@
 # Stage 1: Build frontend
 FROM node:20-alpine AS build-stage
+WORKDIR /app
+COPY shared/ ./shared/
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
@@ -9,6 +11,7 @@ RUN npm run build
 # Stage 2: Production server
 FROM node:20-alpine
 WORKDIR /app
+COPY shared/ ./shared/
 COPY server/package*.json ./server/
 RUN cd server && npm install
 COPY server/ ./server/

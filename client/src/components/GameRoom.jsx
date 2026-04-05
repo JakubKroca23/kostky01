@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
-import { calculateScore } from '@shared/scoring';
+import { calculateScore } from '@shared/scoring.js';
 
 function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection }) {
   const [selectedDice, setSelectedDice] = useState([]);
