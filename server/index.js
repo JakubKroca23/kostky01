@@ -294,11 +294,11 @@ io.on('connection', (socket) => {
       });
     } else {
       io.to(room.id).emit('dice-rolled', { 
-        roll, 
+        roll: virtualDice, 
         isBust: true, 
-        msg: "SMŮLA, ZKUS TO PŘÍŠTĚ!",
+        msg: "DOHAZOVÁNÍ NEVYŠLO!",
         rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount,
+        diceCount: 6, // Still 6 conceptually in the failure visual
         storedDice: room.turnInfo.storedDice
       });
       setTimeout(() => nextTurn(room, true), 1500);
