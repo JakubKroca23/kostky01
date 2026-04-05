@@ -1,29 +1,36 @@
 # ROADMAP.md
 
-> **Current Phase**: -
-> **Milestone**: Next Milestone
+> **Current Milestone**: v1.1 - Evolution & Personalization
+> **Goal**: Transformovat hru na plnohodnotnou multiplayerovou platformu s perzistencí a vizuálními vylepšeními.
 
-## Must-Haves (from SPEC)
-- [x] Funkční real-time lobby (vstoupení s přezdívkou)
-- [x] Implementace pravidel hry 10 000 na serveru
-- [x] Neonový herní board s animacemi hodu kostkou
-- [x] Responsivní design pro mobilní zařízení
+## Must-Haves
+- [ ] Integrace Appwrite (DB, Auth, Leaderboards)
+- [ ] Systém skinů pro kostky a arénu
+- [ ] Globální a denní žebříčky (Leaderboards)
+- [ ] Pokročilé animace (Matter.js, částice)
+- [ ] Volitelná pravidla hry (Rules Engine)
 
 ## Phases
 
-### Phase 7: Gap Closure (Address Technical Debt)
-**Status**: ✅ Completed
-**Objective**: Fix persistence, shared logic, and error handling from the v1.0 milestone audit.
+### Phase 1: Appwrite Foundation
+**Status**: ⬜ Not Started
+**Objective**: Nastavit Appwrite a implementovat základní perzistenci dat.
 
-**Gaps to Close:**
-- [x] **State Persistence**: Prohibit data loss by implementing a simple session storage for rooms.
-- [x] **DRY Scoring**: Unify scoring logic between client and server to prevent drift.
-- [x] **Socket Resilience**: Improve client-side handling of disconnects and timeouts.
+### Phase 2: Žebříčky a Statistiky
+**Status**: ⬜ Not Started
+**Objective**: Implementovat globální tabulku nejlepších hráčů.
 
-> Previous milestone "v1.0 (Multiplayer MVP)" archived in `.gsd/milestones/v1.0-MVP/`
+### Phase 3: Skiny a Personalizace
+**Status**: ⬜ Not Started
+**Objective**: Odlišení hráčů pomocí vizuálních úprav.
 
-## Next Steps
-1. /new-milestone — Start planning the next big update (e.g. Animations, Skins, Multiplayer++ )
+### Phase 4: Pokročilé Animace & UX
+**Status**: ⬜ Not Started
+**Objective**: Plynulejší a vizuálně přitažlivější herní zážitek.
+
+### Phase 5: Volitelná pravidla
+**Status**: ⬜ Not Started
+**Objective**: Možnost nastavení variant hry v rámci místnosti.
 
 ---
-*Run `/new-milestone` to define the next set of phases.*
+> Milestone "v1.0 (Gap Closure)" archived in `.gsd/milestones/v1.0-GAP-CLOSURE/` (Simulated)

@@ -29,8 +29,10 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;
   const logicalHeight = 340;
-  const totalContentWidth = 460 + 20 + 80; // Arena + Gap + Aside
-  const scale = arenaWidth < (totalContentWidth) ? (arenaWidth / totalContentWidth) : 1;
+  // On mobile (< 500px), we don't need to account for aside width in scale
+  const isMobile = arenaWidth < 500;
+  const totalContentWidth = isMobile ? logicalWidth : (logicalWidth + 20 + 80);
+  const scale = arenaWidth < totalContentWidth ? (arenaWidth / totalContentWidth) : 1;
 
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
@@ -223,6 +225,47 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               );
             })}
           </div>
+
+          <style>{`
+            .game-main-horizontal-layout {
+              display: flex;
+              flex-direction: row;
+              justify-content: center;
+              align-items: flex-start;
+              gap: 20px;
+            }
+
+            @media (max-width: 500px) {
+              .game-main-horizontal-layout {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+              }
+              
+              .aside-storage {
+                width: 100% !important;
+                min-height: auto !important;
+                flex-direction: row !important;
+                padding: 8px !important;
+                overflow-y: hidden !important;
+                overflow-x: auto !important;
+                justify-content: center;
+              }
+              
+              .storage-grid {
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+                width: auto;
+              }
+
+              .storage-label {
+                writing-mode: tb-rl;
+                transform: rotate(180deg);
+                margin: 0 !important;
+              }
+            }
+          `}</style>
 
           <div className="game-main-horizontal-layout">
             <div className="dice-arena-wrapper" ref={arenaRef}>
