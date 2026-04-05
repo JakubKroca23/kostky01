@@ -170,9 +170,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
         </div>
-        {!room.gameStarted && canStart && (
-          <button className="neon-button start-hero" onClick={onStart}>🔥 START HRY 🔥</button>
-        )}
         
         <div className="reactions-container">
           <button 
@@ -196,16 +193,21 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       {!room.gameStarted ? (
         <div className="players-grid">
           <h3 className="section-title">Čekání na hru...</h3>
-          <div className="player-list-vertical">
-            {room.players.map((p) => (
-              <div key={p.id} className="player-badge neon-card glass">
-                <div className="status-dot online"></div>
-                <span className="player-name">{p.nickname}</span>
-                {p.id === room.players[0].id && <span className="host-tag">HOST</span>}
-              </div>
-            ))}
-          </div>
+          <div className="lobby-players">
+          {room.players.map((p, i) => (
+            <div key={p.id} className="player-joined-row fade-in">
+              <span className="player-num">{i + 1}.</span>
+              <span className="player-name">
+                {p.nickname} {i === 0 && <span className="host-tag">(HOST)</span>}
+              </span>
+            </div>
+          ))}
         </div>
+
+        {!room.gameStarted && canStart && (
+          <button className="neon-button start-hero" onClick={onStart}>🔥 START HRY 🔥</button>
+        )}
+         </div>
       ) : (
         <div className="game-area fade-in">
           <div className="scoreboard glass">
