@@ -1,5 +1,6 @@
-## Gap Closure Mode
-Addressing 3 gaps from v1.0 milestone audit (Persistence, DRY Scoring, Socket Resilience).
+- **Milestone**: v1.0 (Gap Closure) - COMPLETE
+- **Current Position**: Idle
+- **Status**: Ready for v1.1
 
 ## Next Steps
-1. /execute 7 --gaps-only — Execute phase 7 gap closure plans
+1. /new-milestone — Start planning the next big update (e.g. Animations, Skins, Multiplayer++ )

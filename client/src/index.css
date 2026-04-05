@@ -31,7 +31,7 @@ body {
 * { scrollbar-width: none; -ms-overflow-style: none; box-sizing: border-box; margin: 0; padding: 0; }
 
 .app-container {
-  max-width: 520px;
+  max-width: 600px;
   margin: 0 auto;
   height: 100dvh;
   display: flex;
@@ -135,11 +135,11 @@ body {
 
 /* Arena & Dice */
 .dice-arena {
-  height: 320px; /* Optimal pro mobil bez scrollu */
+  height: clamp(240px, 40vh, 320px);
   background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
   border: 1px solid var(--glass-border);
   border-radius: 30px;
-  margin: 10px 0;
+  margin: 5px 0;
   position: relative;
   overflow: hidden;
   box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
@@ -536,11 +536,11 @@ body {
 .game-room-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh; /* Modern viewport unit for mobile */
-  padding: 10px;
-  gap: 12px;
-  overflow-x: hidden;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  padding: 8px;
+  gap: 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .game-area {
@@ -558,18 +558,7 @@ body {
   gap: 20px;
 }
 
-.aside-storage {
-  width: 140px;
-  min-height: 200px;
-  padding: 12px;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.05);
-  flex-shrink: 0;
-}
+/* .aside-storage consolidated below */
 
 .storage-grid {
   display: flex;
@@ -580,11 +569,12 @@ body {
 }
 
 .storage-label {
-  font-size: 0.6rem;
-  letter-spacing: 2px;
-  opacity: 0.5;
+  font-size: 0.5rem;
+  letter-spacing: 1px;
+  opacity: 0.4;
   text-align: center;
   text-transform: uppercase;
+  margin-bottom: 4px;
 }
 .lobby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
@@ -631,9 +621,10 @@ body {
 .game-controls { 
   display: flex; 
   flex-direction: column; 
-  gap: 10px; 
-  margin-top: auto; 
-  padding-bottom: 2px;
+  gap: 8px; 
+  margin-top: auto;
+  padding-top: 10px;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .global-error-toast {

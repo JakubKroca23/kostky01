@@ -4,10 +4,12 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { calculateScore } from './utils/scoring.js';
+import fs from 'fs';
+import { calculateScore } from '../shared/scoring.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const STATE_FILE = path.join(__dirname, 'state.json');
 
 const app = express();
 app.use(cors());
@@ -27,6 +29,33 @@ const io = new Server(server, {
 
 const players = new Map(); // socket.id -> { nickname, roomId }
 const rooms = new Map(); // roomId -> { id, name, players: [{id, nickname}] }
+
+function saveState() {
+  try {
+    const data = {
+      rooms: Array.from(rooms.entries()),
+      players: Array.from(players.entries())
+    };
+    fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('Failed to save state:', err);
+  }
+}
+
+function loadState() {
+  if (fs.existsSync(STATE_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+      if (data.rooms) data.rooms.forEach(([id, room]) => rooms.set(id, room));
+      if (data.players) data.players.forEach(([id, player]) => players.set(id, player));
+      console.log(`State loaded: ${rooms.size} rooms, ${players.size} players.`);
+    } catch (e) {
+      console.error('Error loading state:', e);
+    }
+  }
+}
+
+loadState();
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -142,6 +171,7 @@ io.on('connection', (socket) => {
     rooms.set(roomId, room);
     p.roomId = roomId;
     socket.join(roomId);
+    saveState();
     socket.emit('room-joined', { roomId, room });
     io.emit('room-list-update', getRoomList());
   });
@@ -157,6 +187,7 @@ io.on('connection', (socket) => {
     room.turnInfo.enteredBoard[socket.id] = false;
     player.roomId = roomId;
     socket.join(roomId);
+    saveState();
     socket.emit('room-joined', { roomId, room });
     io.to(roomId).emit('player-joined', { players: room.players });
     io.emit('room-list-update', getRoomList());
@@ -167,6 +198,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(player?.roomId);
     if (room && room.players[0].id === socket.id) {
       room.gameStarted = true;
+      saveState();
       io.to(room.id).emit('game-started', { room });
       io.emit('room-list-update', getRoomList());
     }
@@ -205,6 +237,7 @@ io.on('connection', (socket) => {
       // Store the canDohodit state in turnInfo so it persists until next action
       room.turnInfo.canDohodit = room.turnInfo.rollCount === 1 ? canDohodit : false;
       
+      saveState();
       io.to(room.id).emit('dice-rolled', { 
         roll, 
         turnPoints: room.turnInfo.turnPoints, 
@@ -255,6 +288,7 @@ io.on('connection', (socket) => {
       room.turnInfo.lastRoll = virtualDice;
       room.turnInfo.diceCount = 0; // Trigger "Do plných" automatically
       room.turnInfo.canDohodit = false;
+      saveState();
       io.to(room.id).emit('dice-rolled', { 
         roll: virtualDice, 
         turnPoints: score,
@@ -320,6 +354,7 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
+      saveState();
       io.to(room.id).emit('dice-rolled', { 
         roll, 
         turnPoints: room.turnInfo.turnPoints,
@@ -363,6 +398,7 @@ io.on('connection', (socket) => {
       io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
       nextTurn(room);
     }
+    saveState();
   });
 
   socket.on('send-reaction', (emoji) => {
@@ -385,6 +421,7 @@ io.on('connection', (socket) => {
         }
       }
       players.delete(socket.id);
+      saveState();
       broadcastGlobalStats();
     }
   });

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
-import { calculateScore } from '../utils/scoring';
+import { calculateScore } from '@shared/scoring';
 
 function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection }) {
   const [selectedDice, setSelectedDice] = useState([]);
@@ -29,7 +29,8 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;
   const logicalHeight = 340;
-  const scale = arenaWidth < logicalWidth ? (arenaWidth / logicalWidth) : 1;
+  const totalContentWidth = 460 + 20 + 80; // Arena + Gap + Aside
+  const scale = arenaWidth < (totalContentWidth) ? (arenaWidth / totalContentWidth) : 1;
 
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
