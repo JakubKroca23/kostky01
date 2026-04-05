@@ -106,7 +106,7 @@ function nextTurn(room, bust = false) {
   room.turnInfo.storedDice = []; // RESET
   room.turnInfo.diceCount = 6;
   room.turnInfo.allowedIndexes = [];
-  room.turnInfo.canDohodit = false; // FIXED: Prevent bleed into next turn
+  room.turnInfo.allowedIndexes = [];
   
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
 }
@@ -164,8 +164,7 @@ io.on('connection', (socket) => {
         lastRoll: [],
         storedDice: [],
         diceCount: 6,
-        allowedIndexes: [],
-        canDohodit: false
+        allowedIndexes: []
       }
     };
     rooms.set(roomId, room);
@@ -212,14 +211,12 @@ io.on('connection', (socket) => {
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
     room.turnInfo.lastRoll = roll;
     
-    // Pass isFirstRoll flag to detect Straight/Pairs
-    const { score, usedIndexes, canDohodit } = calculateScore(roll, room.turnInfo.rollCount === 1);
+    const { score, usedIndexes } = calculateScore(roll, room.turnInfo.rollCount === 1);
     room.turnInfo.allowedIndexes = usedIndexes;
 
     const isBust = (score === 0);
     const totalPotential = room.turnInfo.turnPoints + score;
     
-    // Rule 3: 3rd roll threshold (STRICT: Must have 350 by 3rd roll every turn)
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (isBust || isTooLowAfter3) {
@@ -234,9 +231,6 @@ io.on('connection', (socket) => {
       });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
-      // Store the canDohodit state in turnInfo so it persists until next action
-      room.turnInfo.canDohodit = room.turnInfo.rollCount === 1 ? canDohodit : false;
-      
       saveState();
       io.to(room.id).emit('dice-rolled', { 
         roll, 
@@ -244,64 +238,8 @@ io.on('connection', (socket) => {
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes,
-        canDohodit: room.turnInfo.canDohodit
+        allowedIndexes: usedIndexes
       });
-    }
-  });
-
-  socket.on('dohodit', () => {
-    const room = rooms.get(players.get(socket.id)?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id || !room.turnInfo.canDohodit) return;
-
-    // Rule 13: Freeze 5, roll chybějící (1)
-    room.turnInfo.rollCount++;
-    const roll = [Math.floor(Math.random() * 6) + 1];
-    // Create virtual 6-dice set: 5 from last roll (unique ones) + 1 new
-    const lastRoll = room.turnInfo.lastRoll;
-    const counts = {}; lastRoll.forEach(v => counts[v] = (counts[v]||0)+1);
-    
-    // Extract the 5 unique/needed dice
-    let baseDice = [];
-    let comboName = "";
-    if (new Set(lastRoll).size === 5) {
-      baseDice = Array.from(new Set(lastRoll));
-      comboName = "POSTUPKU";
-    } else {
-      baseDice = lastRoll.slice(0, 5); 
-      comboName = "PÁRY";
-    }
-    
-    const virtualDice = [...baseDice, ...roll];
-    const { score, usedIndexes } = calculateScore(virtualDice, true); 
-
-    // Success if we got the full 6-dice combo (all dice used)
-    const success = (usedIndexes.length === 6);
-
-    if (success) {
-      room.turnInfo.turnPoints = score;
-      room.turnInfo.lastRoll = virtualDice;
-      room.turnInfo.diceCount = 0; // Trigger "Do plných" automatically
-      room.turnInfo.canDohodit = false;
-      saveState();
-      io.to(room.id).emit('dice-rolled', { 
-        roll: virtualDice, 
-        turnPoints: score,
-        rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount,
-        storedDice: room.turnInfo.storedDice,
-        allowedIndexes: [0,1,2,3,4,5] 
-      });
-    } else {
-      io.to(room.id).emit('dice-rolled', { 
-        roll: virtualDice, 
-        isBust: true, 
-        msg: "DOHAZOVÁNÍ NEVYŠLO!",
-        rollCount: room.turnInfo.rollCount,
-        diceCount: 6, // Still 6 conceptually in the failure visual
-        storedDice: room.turnInfo.storedDice
-      });
-      setTimeout(() => nextTurn(room, true), 1500);
     }
   });
 

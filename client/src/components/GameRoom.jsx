@@ -10,7 +10,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
   const [arenaWidth, setArenaWidth] = useState(460);
-  const [ignoredIndices, setIgnoredIndices] = useState([]);
   const arenaRef = useRef(null);
 
   useEffect(() => {
@@ -42,8 +41,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     isRolling,
     rollSeed,
     logicalWidth,
-    logicalHeight,
-    ignoredIndices
+    logicalHeight
   );
 
   const myId = room.players.find(p => p.nickname === nickname)?.id;
@@ -72,16 +70,13 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     setErrorLocal('');
     if (room.turnInfo.lastRoll.length > 0) {
       setIsRolling(true);
-      const timer = setTimeout(() => {
-        setIsRolling(false);
-        setIgnoredIndices([]);
-      }, 1200);
+      const timer = setTimeout(() => setIsRolling(false), 1200);
       return () => clearTimeout(timer);
     }
   }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll]);
 
   const handleDieClick = (index) => {
-    if (isRolling || !isMyTurn || ignoredIndices.includes(index)) return;
+    if (isRolling || !isMyTurn) return;
 
     const allowed = room.turnInfo.allowedIndexes || [];
     if (!allowed.includes(index)) return;
@@ -119,7 +114,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     return room.turnInfo.lastRoll.map((value, index) => {
       if (selectedDice.includes(index)) return null;
 
-      const canSelect = isMyTurn && (room.turnInfo.allowedIndexes || []).includes(index) && !ignoredIndices.includes(index);
+      const canSelect = isMyTurn && (room.turnInfo.allowedIndexes || []).includes(index);
       const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
 
       const style = {
@@ -133,18 +128,16 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           key={index}
           value={value}
           isSelected={false}
-          isRolling={isRolling && !ignoredIndices.includes(index)}
+          isRolling={isRolling}
           canSelect={canSelect}
           style={style}
           onClick={() => handleDieClick(index)}
-          className={ignoredIndices.includes(index) ? 'die-locked' : ''}
         />
       );
     });
   };
 
   const handleRollAgain = () => {
-    setIgnoredIndices([]);
     if (selectedDice.length === 0) {
       setErrorLocal('Musíš vybrat alespoň jednu kostku.');
       setTimeout(() => setErrorLocal(''), 2000);
@@ -153,11 +146,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     onRollAgain(selectedDice);
   };
   
-  const handleDohoditLocal = () => {
-    setIgnoredIndices([0, 1, 2, 3, 4]); // 5 dice stay, 1 rolls
-    onDohodit();
-  };
-
   const handleStop = () => {
     onStop(selectedDice);
   };
@@ -267,10 +255,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                       ? renderDice()
                       : <div className="empty-dice neon-text-cyan">PŘIPRAVENO...</div>
                     }
-                    {/* Ghost dice overlay during Dohodit decision */}
-                    {isMyTurn && room.turnInfo.canDohodit && !isRolling && room.turnInfo.lastRoll.length === 6 && (
-                       <div className="dohod-hint neon-text-pink">HLEDÁM ŠESTOU! 🎲</div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -317,15 +301,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                       BANK ({currentTurnPoints + selectedPoints})
                     </button>
                   </>
-                )}
-                {room.turnInfo.canDohodit && (
-                   <button 
-                     className="neon-button gold-border d-btn grow-1" 
-                     onClick={handleDohoditLocal} 
-                     disabled={isRolling}
-                   >
-                     🔥 DOHODIT {room.turnInfo.canDohodit}
-                   </button>
                 )}
               </div>
             ) : (
