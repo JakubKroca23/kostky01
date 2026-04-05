@@ -328,6 +328,15 @@ body {
   to   { opacity: 1; }
 }
 
+.score-name { font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+
+.score-strikes {
+  color: #ff003c;
+  text-shadow: 0 0 5px #ff003c;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
 .score-value {
   font-weight: 700;
   font-size: 1.05rem;

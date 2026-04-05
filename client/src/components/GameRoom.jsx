@@ -209,6 +209,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   <div className="score-main">
                     <span className="score-name">
                       {isActive ? '🎲 ' : ''}{p.nickname.substring(0, 8)}
+                      {strikes > 0 && <span className="score-strikes">{'X'.repeat(strikes)}</span>}
                     </span>
                   </div>
                   <div className="score-right">
