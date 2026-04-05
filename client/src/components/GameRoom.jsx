@@ -220,6 +220,20 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           </div>
 
 
+          <div className="points-display-row">
+            <div className="pts-main neon-card">
+               {room.turnInfo.rollCount > 0 ? (
+                 <>
+                   <span className="pts-label">HOD {room.turnInfo.rollCount}/3</span>
+                   <span className="pts-bank">{currentTurnPoints}</span>
+                   <span className="pts-selection">+{selectedPoints}</span>
+                 </>
+               ) : (
+                 <span className="pts-label">NA TAHU: {room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
+               )}
+            </div>
+          </div>
+
           <div className="game-main-horizontal-layout">
             <div className="dice-arena-wrapper" ref={arenaRef}>
               <div className="game-main-area">
@@ -262,57 +276,34 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             </aside>
           </div>
 
-          <div className="turn-summary-compact">
-            <div className="turn-stats">
-              <div className="stat-item">
-                <span className="stat-label">HOD {room.turnInfo.rollCount || 0}/3</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">BANK <span className="neon-text-cyan">{currentTurnPoints}</span></span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">VÝBĚR <span className="neon-text-pink">+{selectedPoints}</span></span>
-              </div>
-            </div>
-          </div>
 
-          <div className="game-controls">
+          <div className="action-stack">
             {isMyTurn ? (
-              <>
-                {room.turnInfo.canDohodit && (
-                   <button className="neon-button full-width gold-border" onClick={onDohodit} disabled={isRolling}>
-                     🔥 DOHODIT NA {room.turnInfo.canDohodit === true ? 'KOMBINACI' : room.turnInfo.canDohodit}
-                   </button>
-                )}
-
+              <div className="btn-row">
                 {room.turnInfo.rollCount === 0 ? (
-                  <button className="neon-button full-width primary" onClick={onRoll} disabled={isRolling}>
-                    HODIT KOSTKOU
+                  <button className="neon-button primary grow-2" onClick={onRoll} disabled={isRolling}>
+                    HODIT 🎲
                   </button>
                 ) : (
                   <>
-                    <button className="neon-button full-width" onClick={handleRollAgain} style={{ height: '42px', padding: '0' }} disabled={isRolling}>
-                      {isRolling ? '⏳ Hod...' : 
-                        (room.turnInfo.diceCount - selectedDice.length === 0 
-                          ? '🔥 HODIT VŠECH 6 KOSTEK' 
-                          : `HODIT ZBYTKEM (${room.turnInfo.diceCount - selectedDice.length})`)
-                      }
+                    <button className="neon-button grow-2" onClick={handleRollAgain} disabled={isRolling}>
+                      {isRolling ? '⏳ ...' : (room.turnInfo.diceCount - selectedDice.length === 0 ? 'HODIT VŠE' : 'HODIT')}
                     </button>
                     <button
-                      className="neon-button pink-border full-width"
+                      className="neon-button secondary grow-1"
                       onClick={handleStop}
-                      style={{ height: '42px', padding: '0' }}
                       disabled={isRolling || (currentTurnPoints + selectedPoints < 350) || (room.turnInfo.diceCount - selectedDice.length === 0)}
                     >
-                      ZAPSAT BODY ({currentTurnPoints + selectedPoints})
+                      BANK ({currentTurnPoints + selectedPoints})
                     </button>
                   </>
                 )}
-              </>
-            ) : (
-              <div className="wait-message neon-card glass">
-                Na tahu: <span className="neon-text-cyan">{room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
+                {room.turnInfo.canDohodit && (
+                   <button className="neon-button gold-border d-btn" onClick={onDohodit} disabled={isRolling}>🔥</button>
+                )}
               </div>
+            ) : (
+              <div className="wait-pill glass">ČEKÁM NA TAH...</div>
             )}
           </div>
         </div>
