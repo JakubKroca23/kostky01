@@ -171,7 +171,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
         </div>
         {!room.gameStarted && canStart && (
-          <button className="neon-button sm" onClick={onStart}>START</button>
+          <button className="neon-button start-hero" onClick={onStart}>🔥 START HRY 🔥</button>
         )}
         
         <div className="reactions-container">

@@ -84,9 +84,8 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
     if (!engineRef.current) return;
     const world = engineRef.current.world;
     
-    // Only remove and recreate bodies if the count changed OR it's a completely new roll (not ignoring indices)
-    // Actually, to keep them in place, we should only add the missing ones or just check which ones are there.
-    // For simplicity, we recreate but only IF count != current bodies length
+    // Only remove and recreate bodies if the count changed OR it's a completely new turn.
+    // If indicesToIgnore is active, we definitely want to preserve existing bodies.
     if (diceCount === 0) {
       bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
       bodiesRef.current = [];
@@ -94,7 +93,9 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
       return;
     }
 
-    if (bodiesRef.current.length !== diceCount) {
+    const shouldRecreate = bodiesRef.current.length !== diceCount || (indicesToIgnore.length === 0);
+
+    if (shouldRecreate) {
       bodiesRef.current.forEach(b => Matter.Composite.remove(world, b));
       const rand = createSeededRandom(seed + "init");
       const newBodies = Array.from({ length: diceCount }, (_, i) => {
@@ -113,7 +114,7 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
       Matter.Composite.add(world, newBodies);
       bodiesRef.current = newBodies;
     }
-  }, [diceCount, arenaWidth, arenaHeight, seed]);
+  }, [diceCount, arenaWidth, arenaHeight, seed, indicesToIgnore.length === 0]);
 
   useEffect(() => {
     if (!isRolling || !engineRef.current || bodiesRef.current.length === 0) return;
