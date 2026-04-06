@@ -20,8 +20,15 @@ export async function initAppwrite() {
             await databases.get(DB_ID);
             console.log(`Appwrite: Database '${DB_ID}' exists.`);
         } catch (e) {
-            console.error(`Appwrite Error: Database '${DB_ID}' not found. Please create it manually if it doesn't exist.`);
-            return;
+            console.log(`Appwrite: Database '${DB_ID}' not found. Trying to create...`);
+            try {
+                await databases.create(DB_ID, DB_ID);
+                console.log(`Appwrite: Database '${DB_ID}' created.`);
+            } catch (createErr) {
+                console.error(`Appwrite Error: Could not create database '${DB_ID}'. Error: ${createErr.message}`);
+                console.info(`Please make sure the database '${DB_ID}' exists or your API key has 'databases.write' permission.`);
+                // Pokračujeme dál, možná už existuje a jen jsme neměli práva na get? (Méně pravděpodobné)
+            }
         }
 
         // 2. Check if Collection exists

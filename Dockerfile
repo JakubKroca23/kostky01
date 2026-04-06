@@ -1,6 +1,13 @@
 # Stage 1: Build frontend
 FROM node:20-alpine AS build-stage
 WORKDIR /app
+
+# Přidání build argumentů pro Vite
+ARG VITE_APPWRITE_ENDPOINT
+ARG VITE_APPWRITE_PROJECT_ID
+ENV VITE_APPWRITE_ENDPOINT=$VITE_APPWRITE_ENDPOINT
+ENV VITE_APPWRITE_PROJECT_ID=$VITE_APPWRITE_PROJECT_ID
+
 COPY shared/ ./shared/
 WORKDIR /app/client
 COPY client/package*.json ./

@@ -1,8 +1,20 @@
 services:
   kostky-game:
-    build: .
+    build: 
+      context: .
+      args:
+        - VITE_APPWRITE_ENDPOINT=https://appwrite.propoj.app/v1
+        - VITE_APPWRITE_PROJECT_ID=kostky01
     container_name: kostky-game
     restart: always
+    environment:
+      - APPWRITE_ENDPOINT=https://appwrite.propoj.app/v1
+      - APPWRITE_PROJECT_ID=kostky01
+      - APPWRITE_API_KEY=standard_4b3657687f52a475510c64335e6eb161ba99ca81cc16db8acf3da59ef35fae7b78e9ebabe07f4ca43b931c32a9129651e2a41c1f510cf91a3046fb1d55387f4b631ab47963ccabcaf21cffe01ad6d6789bfeffcf5ab8004ccb2690aa948a8d21ffed174ee845bd34fab7f17c1004a47431d3cfae4124806fba10d3e1375def24
+      - APPWRITE_DB_ID=kostky_db
+      - APPWRITE_COLLECTION_ID=leaderboard
+      - NODE_ENV=production
+      - PORT=3001
     expose:
       - "3001"
     networks:
