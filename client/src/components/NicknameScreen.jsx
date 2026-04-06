@@ -24,6 +24,18 @@ function NicknameScreen({ onJoin, onLogin, onRegister, error }) {
         <p className="subtitle">Hra 10 000 — Kostky Multiplayer</p>
       </div>
 
+      <div className="portal-section">
+        <a 
+          href="https://arena.propoj.app" 
+          className="portal-button neon-button full-width large"
+          style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'linear-gradient(45deg, #ff00ff, #00ffff)' }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>🎮</span>
+          Přihlásit se přes Portál Arena
+        </a>
+        <div className="divider"><span>NEBO HRÁT JAKO HOST</span></div>
+      </div>
+
       <div className="auth-tabs">
         <button 
           className={`tab-btn ${mode === 'quick' ? 'active' : ''}`}

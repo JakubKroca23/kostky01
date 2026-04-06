@@ -61,6 +61,10 @@ function App() {
           setScreen('nickname');
         }
       } catch (err) {
+        const savedNick = localStorage.getItem('kostky-nickname');
+        if (savedNick) {
+          setNickname(savedNick);
+        }
         setScreen('nickname');
       }
     }
@@ -310,7 +314,7 @@ function App() {
 
   const handleLogin = async (email, password) => {
     try {
-      await account.createEmailPasswordSession(email, password);
+      await account.createEmailSession(email, password);
       const user = await account.get();
       socket.emit('set-nickname', user.name);
     } catch (err) {
@@ -321,8 +325,7 @@ function App() {
   const handleRegister = async (email, password, nickname) => {
     try {
       await account.create(ID.unique(), email, password, nickname);
-      await account.createEmailPasswordSession(email, password);
-      socket.emit('set-nickname', nickname);
+      await account.createEmailSession(email, password);
     } catch (err) {
       setError('Chyba při registraci: ' + err.message);
     }

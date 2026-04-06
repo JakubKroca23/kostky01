@@ -34,11 +34,7 @@ export async function initAppwrite() {
                 DB_ID,
                 COLL_ID,
                 COLL_ID, // Name
-                [
-                    Permission.read(Role.any()),
-                    Permission.create(Role.any()),
-                    Permission.update(Role.any()),
-                ]
+                ['read("any")', 'create("any")', 'update("any")'] // Permissions for SDK 9
             );
             console.log(`Appwrite: Collection '${COLL_ID}' created.`);
 
