@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import NicknameScreen from './components/NicknameScreen';
 import Lobby from './components/Lobby';
@@ -44,20 +44,28 @@ function App() {
     return saved;
   });
 
+  const nicknameRef = useRef(nickname);
   useEffect(() => {
-    const loadTimeout = setTimeout(() => {
-      if (screen === 'loading' && !nickname) setScreen('nickname');
-    }, 2000);
+    nicknameRef.current = nickname;
+  }, [nickname]);
 
+  useEffect(() => {
     async function initApp() {
       try {
         const session = await account.get();
         if (session) {
           const name = session.name || session.$id.substring(0, 8);
           setNickname(name);
+          // Změna: Socket by měl nickname dostat hned, i když ještě není připojen (Socket.io to odloží do fronty)
           socket.emit('set-nickname', name);
           setScreen('lobby');
         } else {
+          // Pokud není session v Appwrite, zkusíme aspoň nickname z localStorage pro hosty
+          const savedNick = localStorage.getItem('kostky-nickname');
+          if (savedNick) {
+            setNickname(savedNick);
+            // Ale i tak zůstaneme na nickname screen (nebo můžeme automaticky pustit do lobby)
+          }
           setScreen('nickname');
         }
       } catch (err) {
@@ -69,9 +77,15 @@ function App() {
       }
     }
 
+    // Inicializujeme ihned po mountu
+    initApp();
+
     function onConnect() {
       setIsConnected(true);
-      initApp();
+      // Při každém připojení/přepojení pošleme nickname, pokud ho už máme
+      if (nicknameRef.current) {
+        socket.emit('set-nickname', nicknameRef.current);
+      }
     }
 
     function onDisconnect() {
@@ -214,7 +228,6 @@ function App() {
     if (socket.connected) onConnect();
 
     return () => {
-      clearTimeout(loadTimeout);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('nickname-set', onNicknameSet);
