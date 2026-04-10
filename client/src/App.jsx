@@ -447,8 +447,6 @@ function App() {
         <div className="auth-wrapper fade-in">
           <NicknameScreen 
             onJoin={handleJoinNickname} 
-            onLogin={handleLogin}
-            onRegister={handleRegister}
             error={error} 
           />
         </div>

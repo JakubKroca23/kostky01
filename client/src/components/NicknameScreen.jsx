@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
 
-function NicknameScreen({ onJoin, onLogin, onRegister, error }) {
-  const [mode, setMode] = useState('quick'); // quick, login, register
+function NicknameScreen({ onJoin, error }) {
   const [nickname, setNickname] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (mode === 'quick' && nickname.trim().length >= 3) {
+    if (nickname.trim().length >= 3) {
       onJoin(nickname.trim());
-    } else if (mode === 'login') {
-      onLogin(email, password);
-    } else if (mode === 'register') {
-      onRegister(email, password, nickname);
     }
   };
 
@@ -36,80 +29,28 @@ function NicknameScreen({ onJoin, onLogin, onRegister, error }) {
         <div className="divider"><span>NEBO HRÁT JAKO HOST</span></div>
       </div>
 
-      <div className="auth-tabs">
-        <button 
-          className={`tab-btn ${mode === 'quick' ? 'active' : ''}`}
-          onClick={() => setMode('quick')}
-        >
-          Rychlá hra
-        </button>
-        <button 
-          className={`tab-btn ${mode === 'login' ? 'active' : ''}`}
-          onClick={() => setMode('login')}
-        >
-          Přihlásit
-        </button>
-        <button 
-          className={`tab-btn ${mode === 'register' ? 'active' : ''}`}
-          onClick={() => setMode('register')}
-        >
-          Registrovat
-        </button>
-      </div>
-
       <form className="auth-form" onSubmit={handleSubmit}>
-        {mode !== 'login' && (
-          <div className="input-group">
-            <label>Přezdívka</label>
-            <input 
-              type="text" 
-              placeholder="Zadej jméno (min. 3 znaky)" 
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              minLength={3}
-              required
-            />
-          </div>
-        )}
-
-        {mode !== 'quick' && (
-          <>
-            <div className="input-group">
-              <label>Email</label>
-              <input 
-                type="email" 
-                placeholder="tvuj@email.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label>Heslo</label>
-              <input 
-                type="password" 
-                placeholder="********" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </>
-        )}
+        <div className="input-group">
+          <label>Přezdívka</label>
+          <input 
+            type="text" 
+            placeholder="Zadej jméno (min. 3 znaky)" 
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            minLength={3}
+            required
+          />
+        </div>
 
         <button type="submit" className="neon-button full-width large">
-          {mode === 'quick' ? 'Vstoupit do lobby' : mode === 'login' ? 'Přihlásit se' : 'Vytvořit účet'}
+          Vstoupit do lobby
         </button>
       </form>
 
       {error && <div className="error-text shake">{error}</div>}
-      
+
       <div className="auth-footer">
-        {mode === 'quick' ? (
-          <p>Hraješ jako host. Tvůj postup se neuloží trvale.</p>
-        ) : (
-          <p>Používáme zabezpečené připojení Appwrite.</p>
-        )}
+        <p>Hraješ jako host. Tvůj postup se neuloží trvale.</p>
       </div>
     </div>
   );
