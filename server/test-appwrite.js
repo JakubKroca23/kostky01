@@ -3,7 +3,7 @@ import { Client, Databases } from 'node-appwrite';
 const client = new Client()
     .setEndpoint('https://appwrite.propoj.app/v1')
     .setProject('arena')
-    .setKey('standard_4b3657687f52a475510c64335e6eb161ba99ca81cc16db8acf3da59ef35fae7b78e9ebabe07f4ca43b931c32a9129651e2a41c1f510cf91a3046fb1d55387f4b631ab47963ccabcaf21cffe01ad6d6789bfeffcf5ab8004ccb2690aa948a8d21ffed174ee845bd34fab7f17c1004a47431d3cfae4124806fba10d3e1375def24');
+    .setKey('standard_20a1557879e9d059f90069651f46edcb7ef33d2efc35279a8837df4145a8f63f587f7ad6bcad1a01a04c8d347604020d2720f858e3e5643848f10e40b9608bffd616bdceefd0860789be134fc3cac64e28ee674a8806a763cf1e18bf3ebecf8e35b2d5eab8ab0bd881cf1f15949762df13ac44628292f0170acc621bc265cd75');
 
 const dbs = new Databases(client);
 
