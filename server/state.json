@@ -1,40 +1,5 @@
 {
   "rooms": [],
-  "players": [
-    [
-      "W6hcG3NhrCIZqTcYAAAH",
-      {
-        "nickname": "aaa",
-        "roomId": null,
-        "online": true
-      }
-    ],
-    [
-      "zME-Yy-ZKzJrIYolAAAB",
-      {
-        "nickname": "abc",
-        "roomId": null,
-        "online": true
-      }
-    ],
-    [
-      "NHlVXWu9LtE4YQPNAAAD",
-      {
-        "nickname": "bbb",
-        "roomId": null,
-        "online": true,
-        "disconnectTime": null
-      }
-    ],
-    [
-      "53aL6bQZDVAG9S7sAAAD",
-      {
-        "nickname": "zakladatel",
-        "roomId": null,
-        "online": true,
-        "disconnectTime": null
-      }
-    ]
-  ],
-  "maintenanceMode": true
+  "players": [],
+  "maintenanceMode": false
 }

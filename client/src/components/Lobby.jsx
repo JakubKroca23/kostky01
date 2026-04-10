@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
-function Lobby({ rooms, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
-  const [newRoomName, setNewRoomName] = useState('');
+function Lobby({ rooms, onlineStats, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
   const [chatInput, setChatInput] = useState('');
   const chatRef = React.useRef(null);
 
@@ -16,6 +15,13 @@ function Lobby({ rooms, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onR
   return (
     <main className="hero-section lobby-layout fade-in">
       <div className="online-players-card neon-card glass">
+        <h3 className="section-title">ONLINE HRÁČI ({onlineStats.onlineCount})</h3>
+        <div className="online-list-horizontal">
+          {onlineStats.players.map((p, i) => (
+            <span key={i} className="online-user-pill">{p}</span>
+          ))}
+        </div>
+
         <div className="reaction-buttons-row">
           {emojis.map(e => (
             <button key={e} className="reaction-btn" onClick={() => onReaction(e)}>
@@ -42,23 +48,23 @@ function Lobby({ rooms, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onR
               setChatInput('');
             }
           }}>
-             <input 
-               type="text" 
-               className="chat-input glass" 
-               value={chatInput} 
-               onChange={(e) => setChatInput(e.target.value)}
-               placeholder="Napiš všem..."
-               maxLength={100}
-             />
-             <button type="submit" className="neon-button sm chat-send">Poslat</button>
+            <input
+              type="text"
+              className="chat-input glass"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Napiš všem..."
+              maxLength={100}
+            />
+            <button type="submit" className="neon-button sm chat-send">Poslat</button>
           </form>
         </div>
       </div>
 
       <div className="lobby-header">
         <h2 className="neon-text-pink">Aktivní Místnosti</h2>
-        <button 
-          className="neon-button primary" 
+        <button
+          className="neon-button primary"
           onClick={() => onCreateRoom()}
         >
           NOVÁ HRA
@@ -76,7 +82,7 @@ function Lobby({ rooms, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onR
               <div className="room-info">
                 <h3>{room.name}</h3>
                 <div className="room-player-names">
-                   {room.playerNames?.join(', ') || 'Čeká se na hráče...'}
+                  {room.playerNames?.join(', ') || 'Čeká se na hráče...'}
                 </div>
                 <span className="room-id">ID: {room.id}</span>
               </div>
@@ -84,7 +90,7 @@ function Lobby({ rooms, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onR
                 <span className="player-count">
                   {room.playerCount} / {room.maxPlayers}
                 </span>
-                <button 
+                <button
                   className="neon-button sm primary"
                   disabled={room.playerCount >= room.maxPlayers}
                   onClick={() => onJoinRoom(room.id)}

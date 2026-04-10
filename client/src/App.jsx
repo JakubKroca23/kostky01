@@ -27,6 +27,7 @@ function App() {
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [remoteSelection, setRemoteSelection] = useState([]);
+  const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [globalChat, setGlobalChat] = useState([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -95,6 +96,10 @@ function App() {
 
     function onRoomListUpdate(list) {
       setRooms(list);
+    }
+
+    function onGlobalStatsUpdate(stats) {
+      setOnlineStats(stats);
     }
 
     function onGlobalChatUpdate(msgs) {
@@ -186,6 +191,7 @@ function App() {
     socket.on('nickname-set', onNicknameSet);
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
+    socket.on('global-stats-update', onGlobalStatsUpdate);
     socket.on('global-chat-update', onGlobalChatUpdate);
     socket.on('room-joined', onRoomJoined);
     socket.on('player-joined', onRoomUpdate);
@@ -212,6 +218,7 @@ function App() {
       socket.off('nickname-set', onNicknameSet);
       socket.off('nickname-error', onNicknameError);
       socket.off('room-list-update', onRoomListUpdate);
+      socket.off('global-stats-update', onGlobalStatsUpdate);
       socket.off('global-chat-update', onGlobalChatUpdate);
       socket.off('room-joined', onRoomJoined);
       socket.off('player-joined', onRoomUpdate);
@@ -398,7 +405,8 @@ function App() {
       {screen === 'lobby' && (
         <Lobby 
           rooms={rooms} 
-          nickname={nickname} 
+          nickname={nickname}
+          onlineStats={onlineStats}
           globalChat={globalChat}
           onCreateRoom={handleCreateRoom} 
           onJoinRoom={handleJoinRoom} 
