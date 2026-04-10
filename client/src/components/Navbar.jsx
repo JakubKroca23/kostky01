@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Navbar({ nickname, onlineCount, soundEnabled, onToggleSound, onLogout, onChangeNickname, onOpenLeaderboard, onOpenAdmin, isAdmin }) {
+function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickname, onOpenAdmin, isAdmin }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -9,13 +9,6 @@ function Navbar({ nickname, onlineCount, soundEnabled, onToggleSound, onLogout, 
         <div className="nav-logo">
           <span className="dice-icon">🎲</span>
           <h1 className="neon-text-cyan">KOSTKY <span className="logo-v">v1.1</span></h1>
-        </div>
-
-        <div className="nav-center hide-mobile">
-          <div className="online-badge">
-             <span className="pulse-dot"></span>
-             ONLINE: {onlineCount}
-          </div>
         </div>
 
         <div className="nav-right">
@@ -29,7 +22,6 @@ function Navbar({ nickname, onlineCount, soundEnabled, onToggleSound, onLogout, 
                 {isAdmin && (
                   <button onClick={() => { onOpenAdmin(); setIsMenuOpen(false); }}>⚙️ Admin Panel</button>
                 )}
-                <button onClick={() => { onOpenLeaderboard(); setIsMenuOpen(false); }}>🏆 Žebříček</button>
                 <button onClick={() => { onChangeNickname(); setIsMenuOpen(false); }}>✏️ Změnit jméno</button>
                 <button onClick={() => { onToggleSound(); setIsMenuOpen(false); }}>
                   {soundEnabled ? '🔊 Zvuk: Zap' : '🔇 Zvuk: Vyp'}

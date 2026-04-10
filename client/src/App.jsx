@@ -5,12 +5,10 @@ import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
 import VictoryModal from './components/VictoryModal';
 import Navbar from './components/Navbar';
-import Leaderboard from './components/Leaderboard';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
 import AdminMenu from './components/AdminMenu';
 import { audio } from './utils/audio';
-import { account, client as appClient } from './lib/appwrite';
-import { ID } from 'appwrite';
+import { account } from './lib/appwrite';
 
 const isProd = import.meta.env.PROD;
 const socket = io(isProd ? undefined : 'http://localhost:3001', {
@@ -29,16 +27,12 @@ function App() {
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [remoteSelection, setRemoteSelection] = useState([]);
-  const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [globalChat, setGlobalChat] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    // Načíst preference zvuku z localStorage, výchozí stav je zapnuto
     const saved = localStorage.getItem('kostky-sound') !== 'false';
     audio.setEnabled(saved);
     return saved;
@@ -56,15 +50,12 @@ function App() {
         if (session) {
           const name = session.name || session.$id.substring(0, 8);
           setNickname(name);
-          // Změna: Socket by měl nickname dostat hned, i když ještě není připojen (Socket.io to odloží do fronty)
           socket.emit('set-nickname', name);
           setScreen('lobby');
         } else {
-          // Pokud není session v Appwrite, zkusíme aspoň nickname z localStorage pro hosty
           const savedNick = localStorage.getItem('kostky-nickname');
           if (savedNick) {
             setNickname(savedNick);
-            // Ale i tak zůstaneme na nickname screen (nebo můžeme automaticky pustit do lobby)
           }
           setScreen('nickname');
         }
@@ -77,12 +68,10 @@ function App() {
       }
     }
 
-    // Inicializujeme ihned po mountu
     initApp();
 
     function onConnect() {
       setIsConnected(true);
-      // Při každém připojení/přepojení pošleme nickname, pokud ho už máme
       if (nicknameRef.current) {
         socket.emit('set-nickname', nicknameRef.current);
       }
@@ -108,16 +97,8 @@ function App() {
       setRooms(list);
     }
 
-    function onGlobalStatsUpdate(stats) {
-      setOnlineStats(stats);
-    }
-
     function onGlobalChatUpdate(msgs) {
       setGlobalChat(msgs);
-    }
-
-    function onLeaderboardUpdate(list) {
-      setLeaderboard(list);
     }
 
     function onMaintenanceStatus(status) {
@@ -205,7 +186,6 @@ function App() {
     socket.on('nickname-set', onNicknameSet);
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
-    socket.on('global-stats-update', onGlobalStatsUpdate);
     socket.on('global-chat-update', onGlobalChatUpdate);
     socket.on('room-joined', onRoomJoined);
     socket.on('player-joined', onRoomUpdate);
@@ -221,7 +201,6 @@ function App() {
     socket.on('game-over', onGameOver);
     socket.on('reaction-received', onReactionReceived);
     socket.on('chat-message-received', onChatMessageReceived);
-    socket.on('leaderboard-update', onLeaderboardUpdate);
     socket.on('maintenance-status', onMaintenanceStatus);
     socket.on('kicked-to-lobby', onKickedToLobby);
 
@@ -233,7 +212,6 @@ function App() {
       socket.off('nickname-set', onNicknameSet);
       socket.off('nickname-error', onNicknameError);
       socket.off('room-list-update', onRoomListUpdate);
-      socket.off('global-stats-update', onGlobalStatsUpdate);
       socket.off('global-chat-update', onGlobalChatUpdate);
       socket.off('room-joined', onRoomJoined);
       socket.off('player-joined', onRoomUpdate);
@@ -247,7 +225,6 @@ function App() {
       socket.off('game-over', onGameOver);
       socket.off('reaction-received', onReactionReceived);
       socket.off('chat-message-received', onChatMessageReceived);
-      socket.off('leaderboard-update', onLeaderboardUpdate);
       socket.off('maintenance-status', onMaintenanceStatus);
       socket.off('kicked-to-lobby', onKickedToLobby);
     };
@@ -259,13 +236,11 @@ function App() {
     rocket.innerText = '🎆';
     document.body.appendChild(rocket);
 
-    // 2. Explode after 1 second (matches CSS animation)
     setTimeout(() => {
       const rocketRect = rocket.getBoundingClientRect();
       const x = rocketRect.left + rocketRect.width / 2;
       const y = rocketRect.top;
 
-      // Create Particles
       for (let i = 0; i < 15; i++) {
         const p = document.createElement('div');
         p.className = 'firework-particle';
@@ -273,7 +248,6 @@ function App() {
         p.style.left = `${x}px`;
         p.style.top = `${y}px`;
         
-        // Random trajectory
         const tx = (Math.random() - 0.5) * 400;
         const ty = (Math.random() - 0.5) * 400;
         p.style.setProperty('--tx', `${tx}px`);
@@ -309,38 +283,14 @@ function App() {
 
   const handleJoinNickname = async (name) => {
     try {
-      // First try to create anonymous session
       const existing = await account.get().catch(() => null);
       if (!existing) {
         await account.createAnonymousSession();
       }
-      
-      // Update nickname in Appwrite
       await account.updateName(name);
-      
-      // Notify socket
       socket.emit('set-nickname', name);
     } catch (err) {
-      setError('Chyba při přihlašování do Appwrite: ' + err.message);
-    }
-  };
-
-  const handleLogin = async (email, password) => {
-    try {
-      await account.createEmailSession(email, password);
-      const user = await account.get();
-      socket.emit('set-nickname', user.name);
-    } catch (err) {
-      setError('Chyba při přihlášení: ' + err.message);
-    }
-  };
-
-  const handleRegister = async (email, password, nickname) => {
-    try {
-      await account.create(ID.unique(), email, password, nickname);
-      await account.createEmailSession(email, password);
-    } catch (err) {
-      setError('Chyba při registraci: ' + err.message);
+      setError('Chyba při přihlašování: ' + err.message);
     }
   };
 
@@ -391,7 +341,6 @@ function App() {
     socket.emit('dohodit');
   };
 
-  const soundEnabledVal = soundEnabled;
   const toggleSound = () => {
     const next = !soundEnabled;
     audio.setEnabled(next);
@@ -404,12 +353,10 @@ function App() {
       {nickname && (
         <Navbar 
           nickname={nickname}
-          onlineCount={onlineStats.onlineCount}
-          soundEnabled={soundEnabledVal}
+          soundEnabled={soundEnabled}
           onToggleSound={toggleSound}
           onLogout={handleLogout}
           onChangeNickname={handleChangeNickname}
-          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
           onOpenAdmin={() => setIsAdminOpen(true)}
           isAdmin={nickname?.toLowerCase() === 'zakladatel'}
         />
@@ -425,10 +372,6 @@ function App() {
           onToggleMaintenance={(status) => socket.emit('toggle-maintenance', status)}
           onClose={() => setIsAdminOpen(false)} 
         />
-      )}
-
-      {isLeaderboardOpen && (
-        <Leaderboard list={leaderboard} onClose={() => setIsLeaderboardOpen(false)} />
       )}
 
       {winnerData && (
@@ -456,14 +399,12 @@ function App() {
         <Lobby 
           rooms={rooms} 
           nickname={nickname} 
-          onlineStats={onlineStats} 
           globalChat={globalChat}
           onCreateRoom={handleCreateRoom} 
           onJoinRoom={handleJoinRoom} 
           onChangeNickname={handleChangeNickname}
           onSendMessage={handleSendGlobalMessage}
           onReaction={handleSendReaction}
-          leaderboard={leaderboard}
         />
       )}
 

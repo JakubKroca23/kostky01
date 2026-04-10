@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Lobby({ rooms, onlineStats, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
+function Lobby({ rooms, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
   const [newRoomName, setNewRoomName] = useState('');
   const [chatInput, setChatInput] = useState('');
   const chatRef = React.useRef(null);
@@ -15,15 +15,7 @@ function Lobby({ rooms, onlineStats, globalChat, onCreateRoom, onJoinRoom, onSen
 
   return (
     <main className="hero-section lobby-layout fade-in">
-      {/* Global Status Bar */}
       <div className="online-players-card neon-card glass">
-        <h3 className="section-title">ONLINE HRÁČI ({onlineStats.onlineCount})</h3>
-        <div className="online-list-horizontal">
-           {onlineStats.players.map((p, i) => (
-             <span key={i} className="online-user-pill">{p}</span>
-           ))}
-        </div>
-        
         <div className="reaction-buttons-row">
           {emojis.map(e => (
             <button key={e} className="reaction-btn" onClick={() => onReaction(e)}>
