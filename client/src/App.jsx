@@ -5,7 +5,6 @@ import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
 import VictoryModal from './components/VictoryModal';
 import Navbar from './components/Navbar';
-import Leaderboard from './components/Leaderboard';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
 import AdminMenu from './components/AdminMenu';
 import { audio } from './utils/audio';
@@ -31,7 +30,6 @@ function App() {
   const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [globalChat, setGlobalChat] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [error, setError] = useState('');
@@ -222,7 +220,6 @@ function App() {
     socket.on('game-over', onGameOver);
     socket.on('reaction-received', onReactionReceived);
     socket.on('chat-message-received', onChatMessageReceived);
-    socket.on('leaderboard-update', onLeaderboardUpdate);
     socket.on('maintenance-status', onMaintenanceStatus);
     socket.on('kicked-to-lobby', onKickedToLobby);
 
@@ -249,7 +246,6 @@ function App() {
       socket.off('game-over', onGameOver);
       socket.off('reaction-received', onReactionReceived);
       socket.off('chat-message-received', onChatMessageReceived);
-      socket.off('leaderboard-update', onLeaderboardUpdate);
       socket.off('maintenance-status', onMaintenanceStatus);
       socket.off('kicked-to-lobby', onKickedToLobby);
     };
@@ -382,7 +378,6 @@ function App() {
           onToggleSound={toggleSound}
           onLogout={handleLogout}
           onChangeNickname={handleChangeNickname}
-          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
           onOpenAdmin={() => setIsAdminOpen(true)}
           isAdmin={nickname?.toLowerCase() === 'zakladatel'}
         />
@@ -390,10 +385,6 @@ function App() {
 
       {maintenanceMode && nickname?.toLowerCase() !== 'zakladatel' && (
         <MaintenanceOverlay />
-      )}
-
-      {isLeaderboardOpen && (
-        <Leaderboard list={leaderboard} onClose={() => setIsLeaderboardOpen(false)} />
       )}
 
       {isAdminOpen && (
