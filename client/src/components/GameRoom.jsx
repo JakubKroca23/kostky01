@@ -232,14 +232,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
 
-      {!doubleStatus?.active && doubleEnabled && room.gameStarted && (
-        <div className="double-progress-indicator glow-text">
-          <span style={{opacity: 0.7, fontSize: '0.8rem'}}>💥 Další Double Score za: </span>
-          <strong style={{color: 'var(--neon-pink)', fontSize:'1rem'}}>
-             {doubleStatus?.remaining ?? doubleInterval} hodů
-          </strong>
-        </div>
-      )}
+
 
       <div className="room-header-neon compact">
         <div className="header-top">
