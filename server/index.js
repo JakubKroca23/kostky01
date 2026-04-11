@@ -100,15 +100,15 @@ function broadcastLeaderboard() {
   (async () => {
     try {
       const result = await databases.listDocuments(DB_ID, COLL_ID, [
-        Query.orderDesc('wins'),
         Query.limit(10)
       ]);
       const list = result.documents.map(d => ({
         nickname: d.nickname,
         wins: d.wins || 0,
         total_points: d.total_points || 0,
-        games_played: d.games_played || 0
-      }));
+        games_played: d.games_played || 0,
+        highScore: d.highScore || 0
+      })).sort((a, b) => b.highScore - a.highScore);
       io.emit('leaderboard-update', list);
     } catch (e) {
       console.error("Leaderboard Sync Error:", e.message);
@@ -227,7 +227,7 @@ io.on('connection', (socket) => {
       }
     })();
 
-    players.set(socket.id, { nickname, roomId: null, online: true });
+    players.set(socket.id, { nickname, roomId: null, online: true, maxTurnScore: 0 });
     socket.emit('nickname-set', nickname);
     socket.emit('room-list-update', getRoomList());
     socket.emit('global-chat-update', globalChat);
@@ -262,7 +262,7 @@ io.on('connection', (socket) => {
     const room = {
       id: roomId,
       name: roomName,
-      players: [{ id: socket.id, nickname: p.nickname }],
+      players: [{ id: socket.id, nickname: p.nickname, maxTurnScore: 0 }],
       maxPlayers: 6,
       gameStarted: false,
       turnInfo: {
@@ -297,7 +297,7 @@ io.on('connection', (socket) => {
     }
     if (room.players.length >= 6) return;
     
-    room.players.push({ id: socket.id, nickname: player.nickname });
+    room.players.push({ id: socket.id, nickname: player.nickname, maxTurnScore: 0 });
     room.turnInfo.scores[socket.id] = 0;
     room.turnInfo.strikes[socket.id] = 0;
     room.turnInfo.enteredBoard[socket.id] = false;
@@ -433,36 +433,31 @@ io.on('connection', (socket) => {
       room.turnInfo.turnPoints += selectedPoints;
     }
 
+    const pObj = room.players.find(p => p.id === socket.id);
+    if (pObj) {
+      pObj.maxTurnScore = Math.max(pObj.maxTurnScore || 0, room.turnInfo.turnPoints);
+    }
+
     room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
     
     if (room.turnInfo.scores[socket.id] >= 10000) {
-      const winnerName = players.get(socket.id).nickname;
-      const namedScores = {};
-      room.players.forEach(p => {
-        namedScores[p.nickname] = room.turnInfo.scores[p.id] ?? 0;
-      });
-      io.to(room.id).emit('game-over', { winner: winnerName, scores: namedScores });
+      const winnerId = socket.id;
+      const winnerName = players.get(winnerId).nickname;
+      
+      io.to(room.id).emit('game-over', { winner: winnerName, scores: room.turnInfo.scores });
 
       (async () => {
         try {
-          const winList = await databases.listDocuments(DB_ID, COLL_ID, [Query.equal('nickname', winnerName)]);
-          if (winList.total > 0) {
-            const doc = winList.documents[0];
-            await databases.updateDocument(DB_ID, COLL_ID, doc.$id, {
-              wins: (doc.wins || 0) + 1,
-              total_points: (doc.total_points || 0) + room.turnInfo.scores[socket.id],
-              games_played: (doc.games_played || 0) + 1
-            });
-          }
-
           for (const p of room.players) {
-            if (p.id === socket.id) continue;
             const pList = await databases.listDocuments(DB_ID, COLL_ID, [Query.equal('nickname', p.nickname)]);
             if (pList.total > 0) {
               const doc = pList.documents[0];
+              const isWinner = (p.id === winnerId);
               await databases.updateDocument(DB_ID, COLL_ID, doc.$id, {
+                wins: (doc.wins || 0) + (isWinner ? 1 : 0),
                 total_points: (doc.total_points || 0) + room.turnInfo.scores[p.id],
-                games_played: (doc.games_played || 0) + 1
+                games_played: (doc.games_played || 0) + 1,
+                highScore: Math.max(doc.highScore || 0, p.maxTurnScore || 0)
               });
             }
           }
