@@ -263,7 +263,10 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Násobí body 2x v pravidelných intervalech.</p>
               </div>
               <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
-                   onClick={() => onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration })}>
+                   onClick={() => {
+                     setDoubleEnabled(!doubleEnabled);
+                     onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration });
+                   }}>
                  <div className="toggle-handle"></div>
               </div>
             </div>
@@ -276,7 +279,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <input 
                       type="number" 
                       value={doubleInterval} 
-                      onChange={(e) => onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: parseInt(e.target.value) || 1, doubleDuration })}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setDoubleInterval(val);
+                        onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
+                      }}
                       min="1" max="20"
                     />
                   </div>
@@ -285,7 +292,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <input 
                       type="number" 
                       value={doubleDuration} 
-                      onChange={(e) => onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: parseInt(e.target.value) || 5 })}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 5;
+                        setDoubleDuration(val);
+                        onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
+                      }}
                       min="5" max="300"
                     />
                   </div>
