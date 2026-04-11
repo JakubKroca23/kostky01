@@ -13,6 +13,9 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [chatInput, setChatInput] = useState('');
   const [valuesVisible, setValuesVisible] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [doubleEnabled, setDoubleEnabled] = useState(room?.config?.doubleScoreEnabled || false);
+  const [doubleInterval, setDoubleInterval] = useState(room?.config?.doubleInterval || 5);
+  const [doubleDuration, setDoubleDuration] = useState(room?.config?.doubleDuration || 30);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -59,6 +62,15 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
   // CRITICAL: Guard before any room-dependent logic
   if (!room || !room.turnInfo) return null;
+
+  // Sync state if room config changes from server
+  useEffect(() => {
+    if (room.config) {
+      setDoubleEnabled(room.config.doubleScoreEnabled || false);
+      setDoubleInterval(room.config.doubleInterval || 5);
+      setDoubleDuration(room.config.doubleDuration || 30);
+    }
+  }, [room.config]);
 
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;
@@ -240,10 +252,48 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               </span>
             </div>
           ))}
-        </div>
+          </div>
 
         {!room.gameStarted && canStart && (
-          <button className="neon-button start-hero" onClick={onStart}>🔥 START HRY 🔥</button>
+          <div className="host-settings glass neon-card" style={{ marginBottom: '15px', padding: '15px' }}>
+            <h3 className="section-title" style={{ fontSize: '1rem', marginBottom: '10px' }}>NASTAVENÍ HRY</h3>
+            <div className="admin-action-row" style={{ marginBottom: '10px' }}>
+              <div className="action-info">
+                <h4 style={{ margin: 0, color: 'var(--neon-pink)' }}>Double Score Event</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Násobí body 2x v pravidelných intervalech.</p>
+              </div>
+              <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
+                   onClick={() => props.onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration })}>
+                 <div className="toggle-handle"></div>
+              </div>
+            </div>
+
+            {doubleEnabled && (
+              <div className="double-settings fade-in" style={{ padding: '10px', marginTop: 0, marginBottom: '15px' }}>
+                <div className="input-row">
+                  <div className="input-group">
+                    <label style={{ fontSize: '0.7rem' }}>INTERVAL (KOLA)</label>
+                    <input 
+                      type="number" 
+                      value={doubleInterval} 
+                      onChange={(e) => props.onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: parseInt(e.target.value) || 1, doubleDuration })}
+                      min="1" max="20"
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label style={{ fontSize: '0.7rem' }}>TRVÁNÍ (SEKUNDY)</label>
+                    <input 
+                      type="number" 
+                      value={doubleDuration} 
+                      onChange={(e) => props.onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: parseInt(e.target.value) || 5 })}
+                      min="5" max="300"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            <button className="neon-button start-hero full-width" onClick={onStart}>🔥 START HRY 🔥</button>
+          </div>
         )}
 
         <div className="room-chat glass neon-card">

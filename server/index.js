@@ -618,6 +618,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('update-room-config', (config) => {
+    const player = players.get(socket.id);
+    if (player && player.roomId) {
+      const room = rooms.get(player.roomId);
+      // Only host can update config before game starts
+      if (room && !room.gameStarted && room.players.length > 0 && room.players[0].id === socket.id) {
+        room.config = { ...room.config, ...config };
+        io.to(player.roomId).emit('room-update', { players: room.players, room: room }); 
+        saveState();
+      }
+    }
+  });
+
   socket.on('toggle-maintenance', (status) => {
     const player = players.get(socket.id);
     if (!player || player.nickname !== 'zakladatel') return;

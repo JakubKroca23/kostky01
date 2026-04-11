@@ -142,6 +142,7 @@ function App() {
     function onRoomUpdate(data) {
       setCurrentRoom(prev => {
         if (!prev) return null;
+        if (data.room) return data.room; // If server sends full room object
         return { ...prev, players: data.players };
       });
     }
@@ -383,6 +384,10 @@ function App() {
     socket.emit('dohodit');
   };
 
+  const handleUpdateConfig = (config) => {
+    socket.emit('update-room-config', config);
+  };
+
   const toggleSound = () => {
     const next = !soundEnabled;
     audio.setEnabled(next);
@@ -467,6 +472,7 @@ function App() {
           onStop={handleStopTurn} 
           onStart={handleStartGame} 
           onDohodit={handleDohodit}
+          onUpdateConfig={handleUpdateConfig}
           onSendMessage={handleSendMessage}
           onReaction={handleSendReaction}
           onLeave={handleLeaveRoom}
