@@ -128,6 +128,9 @@ function App() {
     function onRoomJoined(data) {
       setCurrentRoom(data.room);
       setScreen('room');
+      // Reset potentially stale UI states
+      setRemoteSelection([]);
+      setError('');
     }
 
     function onRoomUpdate(data) {
@@ -198,6 +201,14 @@ function App() {
       });
     }
 
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        socket.emit('request-room-sync');
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('nickname-set', onNicknameSet);
@@ -226,6 +237,7 @@ function App() {
     if (socket.connected) onConnect();
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('nickname-set', onNicknameSet);

@@ -17,13 +17,21 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
   useEffect(() => {
     if (!arenaRef.current) return;
+    let timeoutId;
     const observer = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setArenaWidth(entry.contentRect.width);
-      }
+      // Debounce resize updates for mobile stability
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        for (let entry of entries) {
+          setArenaWidth(entry.contentRect.width);
+        }
+      }, 50);
     });
     observer.observe(arenaRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {
@@ -38,12 +46,15 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;
   const logicalHeight = 340;
-  const asideWidth = arenaWidth < 600 ? 55 : 80;
-  const gapWidth = arenaWidth < 600 ? 10 : 20;
-  const horizontalPadding = 16; // App container padding (8px * 2)
-  const safetyMargin = 15; // Extra cushion
+  const asideWidth = arenaWidth < 600 ? 60 : 100; // Increased for better safe-spacing
+  const gapWidth = arenaWidth < 600 ? 5 : 20;
+  const horizontalPadding = 32; // Container padding + margins
+  const safetyMargin = 10;
+  
   const totalRequiredWidth = logicalWidth + asideWidth + gapWidth + horizontalPadding + safetyMargin;
-  const scale = arenaWidth < totalRequiredWidth ? (arenaWidth / totalRequiredWidth) : 1;
+  // Improved scale calculation with a floor to prevent tiny UI
+  const calculatedScale = arenaWidth < totalRequiredWidth ? (arenaWidth / totalRequiredWidth) : 1;
+  const scale = Math.max(calculatedScale, 0.45); 
 
   const physicsPositions = useDicePhysics(
     room?.turnInfo?.lastRoll?.length || 0,
@@ -74,19 +85,28 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
   const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
 
+  const lastRollCount = useRef(room.turnInfo.rollCount);
+  const lastRollId = useRef(rollSeed);
+
   useEffect(() => {
     if (isMyTurn) setSelectedDice([]);
     setErrorLocal('');
-    if (room.turnInfo.lastRoll.length > 0) {
+
+    // Only roll if it's a NEW roll (different seed or count)
+    const isNewRoll = lastRollId.current !== rollSeed || lastRollCount.current !== room.turnInfo.rollCount;
+    
+    if (room.turnInfo.lastRoll.length > 0 && isNewRoll) {
       setIsRolling(true);
       setValuesVisible(false);
       const timer = setTimeout(() => {
         setIsRolling(false);
         setValuesVisible(true);
       }, 1200);
+      lastRollId.current = rollSeed;
+      lastRollCount.current = room.turnInfo.rollCount;
       return () => clearTimeout(timer);
     }
-  }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll]);
+  }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll, rollSeed]);
 
   const handleDieClick = (index) => {
     if (isRolling || !isMyTurn) return;
@@ -251,7 +271,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   </div>
                   <div className="score-right">
                     {pending > 0 && <span className="score-pending">+{pending}</span>}
-                    <span className="score-value">{totalScore}</span>
+                    <span className="score-value">{totalScore || 0}</span>
                   </div>
                 </div>
               );

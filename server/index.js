@@ -116,6 +116,13 @@ function broadcastLeaderboard() {
   })();
 }
 
+function sendRoomState(socket, roomId) {
+  const room = rooms.get(roomId);
+  if (room) {
+    socket.emit('room-joined', { room });
+  }
+}
+
 function broadcastGlobalStats() {
   const onlinePlayers = Array.from(players.values())
     .filter(p => p.online)
@@ -160,6 +167,14 @@ function nextTurn(room, bust = false) {
 io.on('connection', (socket) => {
   console.log('New connection:', socket.id);
 
+  socket.on('request-room-sync', () => {
+    const player = players.get(socket.id);
+    if (player && player.roomId) {
+      sendRoomState(socket, player.roomId);
+      console.log(`Sync sent to ${player.nickname} (${socket.id})`);
+    }
+  });
+
   socket.on('set-nickname', (nickname) => {
     if (!nickname || nickname.trim().length < 3) {
       socket.emit('nickname-error', 'Jméno musí mít aspoň 3 znaky.');
@@ -192,12 +207,23 @@ io.on('connection', (socket) => {
         if (room) {
           room.players = room.players.map(p => p.id === oldId ? { ...p, id: socket.id } : p);
           if (room.turnInfo.currentTurnId === oldId) room.turnInfo.currentTurnId = socket.id;
-          const oldScore = room.turnInfo.scores[oldId];
-          delete room.turnInfo.scores[oldId];
-          room.turnInfo.scores[socket.id] = oldScore;
+          
+          // Re-map scores and strikes keys to new socket ID
+          if (room.turnInfo.scores[oldId] !== undefined) {
+             room.turnInfo.scores[socket.id] = room.turnInfo.scores[oldId];
+             delete room.turnInfo.scores[oldId];
+          }
+          if (room.turnInfo.strikes[oldId] !== undefined) {
+             room.turnInfo.strikes[socket.id] = room.turnInfo.strikes[oldId];
+             delete room.turnInfo.strikes[oldId];
+          }
+          if (room.turnInfo.enteredBoard[oldId] !== undefined) {
+             room.turnInfo.enteredBoard[socket.id] = room.turnInfo.enteredBoard[oldId];
+             delete room.turnInfo.enteredBoard[oldId];
+          }
           
           socket.join(roomId);
-          socket.emit('room-joined', { room });
+          sendRoomState(socket, roomId);
           io.to(roomId).emit('player-connection-status', { id: socket.id, nickname: oldPlayer.nickname, online: true });
         }
       }
