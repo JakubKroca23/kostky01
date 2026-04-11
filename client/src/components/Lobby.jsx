@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 
 function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
   const [chatInput, setChatInput] = useState('');
+  const [showCreation, setShowCreation] = useState(false);
+  const [roomName, setRoomName] = useState('');
+  const [doubleEnabled, setDoubleEnabled] = useState(false);
+  const [doubleInterval, setDoubleInterval] = useState(5);
+  const [doubleDuration, setDoubleDuration] = useState(30);
   const chatRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -96,12 +101,80 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
       <div className="lobby-header">
         <h2 className="neon-text-pink">Aktivní Místnosti</h2>
         <button
-          className="neon-button primary"
-          onClick={() => onCreateRoom()}
+          className={`neon-button ${showCreation ? 'secondary' : 'primary'}`}
+          onClick={() => setShowCreation(!showCreation)}
         >
-          NOVÁ HRA
+          {showCreation ? 'ZRUŠIT' : 'NOVÁ HRA'}
         </button>
       </div>
+
+      {showCreation && (
+        <div className="creation-pane neon-card glass fade-in">
+          <div className="input-group">
+            <label>NÁZEV MÍSTNOSTI</label>
+            <input 
+              type="text" 
+              placeholder="Hra – ...." 
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+              className="chat-input"
+            />
+          </div>
+
+          <div className="admin-action-row">
+            <div className="action-info">
+              <h3>Double Score Event</h3>
+              <p>Násobí body 2x v pravidelných intervalech.</p>
+            </div>
+            <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
+                 onClick={() => setDoubleEnabled(!doubleEnabled)}>
+               <div className="toggle-handle"></div>
+            </div>
+          </div>
+
+          {doubleEnabled && (
+            <div className="double-settings fade-in">
+              <div className="input-row">
+                <div className="input-group">
+                  <label>INTERVAL (KOLA)</label>
+                  <input 
+                    type="number" 
+                    value={doubleInterval} 
+                    onChange={(e) => setDoubleInterval(e.target.value)}
+                    min="1" max="20"
+                  />
+                </div>
+                <div className="input-group">
+                  <label>TRVÁNÍ (SEKUNDY)</label>
+                  <input 
+                    type="number" 
+                    value={doubleDuration} 
+                    onChange={(e) => setDoubleDuration(e.target.value)}
+                    min="5" max="300"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button 
+            className="neon-button primary full-width"
+            onClick={() => {
+              onCreateRoom({
+                name: roomName,
+                config: {
+                  doubleScoreEnabled: doubleEnabled,
+                  doubleInterval,
+                  doubleDuration
+                }
+              });
+              setShowCreation(false);
+            }}
+          >
+            VYTVOŘIT MÍSTNOST
+          </button>
+        </div>
+      )}
 
       <div className="room-list">
         {rooms.length === 0 ? (

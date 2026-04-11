@@ -32,6 +32,7 @@ function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [doubleStatus, setDoubleStatus] = useState({ active: false, endsAt: 0 });
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -125,6 +126,11 @@ function App() {
       setError(msg);
     }
 
+    function onDoubleStatusUpdate(data) {
+       setDoubleStatus(data);
+       if (data.active) audio.playVictory(); // Use victory sound for hype
+    }
+
     function onRoomJoined(data) {
       setCurrentRoom(data.room);
       setScreen('room');
@@ -177,8 +183,10 @@ function App() {
           allowedIndexes: data.allowedIndexes || []
         }
       }));
-      if (data.isBust) audio.playBust();
-      else audio.playRoll();
+      audio.playRoll();
+      if (data.isBust) {
+        setTimeout(() => audio.playBust(), 1200);
+      }
     }
 
     function onGameOver(data) {
@@ -233,6 +241,7 @@ function App() {
     socket.on('chat-message-received', onChatMessageReceived);
     socket.on('maintenance-status', onMaintenanceStatus);
     socket.on('kicked-to-lobby', onKickedToLobby);
+    socket.on('double-status-update', onDoubleStatusUpdate);
 
     if (socket.connected) onConnect();
 
@@ -339,8 +348,8 @@ function App() {
     }
   };
 
-  const handleCreateRoom = (roomName) => {
-    socket.emit('create-room', roomName);
+  const handleCreateRoom = (data) => {
+    socket.emit('create-room', data);
   };
 
   const handleJoinRoom = (roomId) => {
@@ -463,6 +472,7 @@ function App() {
           onLeave={handleLeaveRoom}
           onUpdateSelection={(indices) => socket.emit('update-selection', indices)}
           isConnected={isConnected}
+          doubleStatus={doubleStatus}
         />
       )}
     </div>

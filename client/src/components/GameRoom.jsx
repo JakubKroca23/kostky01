@@ -12,6 +12,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [arenaWidth, setArenaWidth] = useState(460);
   const [chatInput, setChatInput] = useState('');
   const [valuesVisible, setValuesVisible] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(0);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -39,6 +40,22 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [room.turnInfo.chat]);
+  
+  // Timer for Double Score
+  useEffect(() => {
+    if (!props.doubleStatus?.active || !props.doubleStatus?.endsAt) {
+      setTimeLeft(0);
+      return;
+    }
+    
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((props.doubleStatus.endsAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining === 0) clearInterval(interval);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [props.doubleStatus]);
 
   // CRITICAL: Guard before any room-dependent logic
   if (!room || !room.turnInfo) return null;
@@ -89,7 +106,8 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const lastRollId = useRef(rollSeed);
 
   useEffect(() => {
-    if (isMyTurn) setSelectedDice([]);
+    // CRITICAL: Reset selection for EVERYONE when a new roll happens or turn changes
+    setSelectedDice([]);
     setErrorLocal('');
 
     // Only roll if it's a NEW roll (different seed or count)
@@ -106,7 +124,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       lastRollCount.current = room.turnInfo.rollCount;
       return () => clearTimeout(timer);
     }
-  }, [room.turnInfo.currentTurnId, room.turnInfo.lastRoll, rollSeed]);
+  }, [room.turnInfo.currentTurnId, room.turnInfo.rollCount, rollSeed]);
 
   const handleDieClick = (index) => {
     if (isRolling || !isMyTurn) return;
@@ -187,6 +205,13 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   return (
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
+      
+      {props.doubleStatus?.active && timeLeft > 0 && (
+        <div className="double-score-banner shake">
+          <span className="x2-badge">X2</span>
+           DOUBLE SCORE! <span>({timeLeft}s)</span>
+        </div>
+      )}
 
       <div className="room-header-neon compact">
         <div className="header-top">
