@@ -147,6 +147,7 @@ function App() {
         ...prev,
         turnInfo: { ...prev.turnInfo, scores: data.scores }
       }));
+      audio.playScore();
     }
 
     function onTurnUpdated(data) {
@@ -169,15 +170,17 @@ function App() {
           allowedIndexes: data.allowedIndexes || []
         }
       }));
-      audio.playRoll();
+      if (data.isBust) audio.playBust();
+      else audio.playRoll();
     }
 
     function onGameOver(data) {
       setWinnerData(data);
+      audio.playVictory();
     }
 
-    function onReactionReceived(emoji) {
-      burstEmojis(emoji);
+    function onReactionReceived(data) {
+      burstEmojis(data.emoji);
     }
 
     function onChatMessageReceived(msg) {

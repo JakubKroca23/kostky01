@@ -255,7 +255,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 <div key={p.id} className={`score-row ${isActive ? 'active-turn' : ''} ${!hasEntered ? 'waiting-entry' : ''}`}>
                   <div className="score-main">
                     <span className="score-name">
-                      {isActive ? '🎲 ' : ''}{p.nickname.substring(0, 8)}
+                      {isActive ? '🎲 ' : ''}{p.nickname}
                       {strikes > 0 && <span className="score-strikes">{'X'.repeat(strikes)}</span>}
                     </span>
                   </div>
@@ -298,7 +298,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   <div className="dice-container">
                     {room.turnInfo.lastRoll.length > 0
                       ? renderDice()
-                      : <div className="empty-dice neon-text-cyan">PŘIPRAVENO...</div>
+                      : <div className="empty-dice-centered neon-text-cyan">PŘIPRAVENO...</div>
                     }
                   </div>
                 </div>

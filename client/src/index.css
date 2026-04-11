@@ -1625,3 +1625,36 @@ body {
 .leaderboard-mini-table .wins { color: var(--neon-pink); font-weight: bold; text-align: center; }
 .leaderboard-mini-table .pts { color: var(--neon-gold); text-align: right; opacity: 0.9; }
 
+
+/* Arena UI Improvements */
+.empty-dice-centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  letter-spacing: 4px;
+  font-weight: 800;
+  opacity: 0.4;
+  pointer-events: none;
+  width: 100%;
+  text-align: center;
+}
+
+.dice-arena-wrapper {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.game-main-area {
+  background: transparent !important;
+  border: none !important;
+}
+
+.dice-arena {
+  margin: 0 auto;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.9);
+}
+

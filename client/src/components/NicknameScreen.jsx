@@ -50,7 +50,7 @@ function NicknameScreen({ onJoin, error }) {
       {error && <div className="error-text shake">{error}</div>}
 
       <div className="auth-footer">
-        <p>Hraješ jako host. Tvůj postup se neuloží trvale.</p>
+        <p>Hraješ v Aréně. I jako host se započítáváš do globálního žebříčku!</p>
       </div>
     </div>
   );

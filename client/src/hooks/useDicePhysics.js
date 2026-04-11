@@ -132,7 +132,7 @@ export function useDicePhysics(diceCount, isRolling, seed = '', arenaWidth = 460
       Matter.Body.setAngularVelocity(body, 0);
       Matter.Body.setAngle(body, rand() * Math.PI * 2);
 
-      const forceMagnitude = 0.4 + rand() * 0.4;
+      const forceMagnitude = 1.0 + rand() * 1.5;
       const forceAngle = rand() * Math.PI * 2;
       
       Matter.Body.applyForce(body, body.position, {
