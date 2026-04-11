@@ -232,20 +232,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
 
-      {activationCountdown > 0 && (
-        <div className="double-score-overlay fade-in">
-          <h2 className="neon-text-pink shake">DOUBLE SCORE ZAČÍNÁ!</h2>
-          <div className="countdown-massive pulse">{activationCountdown}</div>
-        </div>
-      )}
-      
-      {doubleStatus?.active && timeLeft > 0 && activationCountdown === 0 && (
-        <div className="double-score-banner shake">
-          <span className="x2-badge">X2</span>
-           DOUBLE SCORE! <span>({timeLeft}s)</span>
-        </div>
-      )}
-
       {!doubleStatus?.active && doubleEnabled && room.gameStarted && (
         <div className="double-progress-indicator glow-text">
           <span style={{opacity: 0.7, fontSize: '0.8rem'}}>💥 Další Double Score za: </span>
@@ -429,6 +415,17 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     transformOrigin: 'top center',
                   }}
                 >
+                  {activationCountdown > 0 && (
+                    <div className="arena-background-timer pulse" style={{ color: 'rgba(0, 255, 255, 0.4)' }}>
+                      {activationCountdown}
+                    </div>
+                  )}
+                  {doubleStatus?.active && timeLeft > 0 && activationCountdown === 0 && (
+                    <div className="arena-background-timer fade-in" style={{ color: 'rgba(255, 0, 150, 0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '-20px', display: 'block' }}>2X BODY</span>
+                      <span>{timeLeft}</span>
+                    </div>
+                  )}
                   <div className="dice-container">
                     {room.turnInfo.lastRoll.length > 0
                       ? renderDice()

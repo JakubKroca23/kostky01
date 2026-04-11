@@ -97,7 +97,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
         <h2 className="neon-text-pink">Aktivní Místnosti</h2>
         <button
           className="neon-button primary"
-          onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 5, doubleDuration: 30 } })}
+          onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
         >
           NOVÁ HRA
         </button>
