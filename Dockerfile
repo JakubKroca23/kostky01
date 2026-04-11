@@ -11,7 +11,7 @@ ENV VITE_APPWRITE_PROJECT_ID=$VITE_APPWRITE_PROJECT_ID
 COPY shared/ ./shared/
 WORKDIR /app/client
 COPY client/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY client/ ./
 RUN npm run build
 
@@ -20,7 +20,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY shared/ ./shared/
 COPY server/package*.json ./server/
-RUN cd server && npm install
+RUN cd server && npm install --legacy-peer-deps
 COPY server/ ./server/
 COPY --from=build-stage /app/client/dist ./client/dist
 
