@@ -272,33 +272,41 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             </div>
 
             {doubleEnabled && (
-              <div className="double-settings fade-in" style={{ padding: '10px', marginTop: 0, marginBottom: '15px' }}>
-                <div className="input-row">
-                  <div className="input-group">
-                    <label style={{ fontSize: '0.7rem' }}>INTERVAL (KOLA)</label>
-                    <input 
-                      type="number" 
+              <div className="double-settings fade-in" style={{ padding: '15px', marginTop: 0, marginBottom: '15px', background: 'rgba(157, 0, 255, 0.05)', border: '1px dashed var(--neon-purple)', borderRadius: '12px' }}>
+                <div className="input-row" style={{ display: 'flex', gap: '15px' }}>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>INTERVAL (KOLA)</label>
+                    <select 
                       value={doubleInterval} 
                       onChange={(e) => {
-                        const val = parseInt(e.target.value) || 1;
+                        const val = parseInt(e.target.value) || 10;
                         setDoubleInterval(val);
                         onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
                       }}
-                      min="1" max="20"
-                    />
+                      className="chat-input glass"
+                      style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
+                    >
+                      <option value="10" style={{background: '#0e0e1a'}}>Každých 10 hodů</option>
+                      <option value="20" style={{background: '#0e0e1a'}}>Každých 20 hodů</option>
+                      <option value="30" style={{background: '#0e0e1a'}}>Každých 30 hodů</option>
+                    </select>
                   </div>
-                  <div className="input-group">
-                    <label style={{ fontSize: '0.7rem' }}>TRVÁNÍ (SEKUNDY)</label>
-                    <input 
-                      type="number" 
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>TRVÁNÍ (SEKUNDY)</label>
+                    <select 
                       value={doubleDuration} 
                       onChange={(e) => {
-                        const val = parseInt(e.target.value) || 5;
+                        const val = parseInt(e.target.value) || 30;
                         setDoubleDuration(val);
                         onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
                       }}
-                      min="5" max="300"
-                    />
+                      className="chat-input glass"
+                      style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
+                    >
+                      <option value="30" style={{background: '#0e0e1a'}}>30 sekund</option>
+                      <option value="60" style={{background: '#0e0e1a'}}>60 sekund</option>
+                      <option value="90" style={{background: '#0e0e1a'}}>90 sekund</option>
+                    </select>
                   </div>
                 </div>
               </div>
