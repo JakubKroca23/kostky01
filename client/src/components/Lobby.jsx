@@ -39,6 +39,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
                   <tr>
                     <th>#</th>
                     <th>Jméno</th>
+                    <th title="Max body v tahu">Max tah</th>
                     <th title="Celkové body">Body</th>
                     <th title="Výhry">Výhry</th>
                     <th title="Odehrané hry">Hry</th>
@@ -49,8 +50,9 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
                     <tr key={i}>
                       <td>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
                       <td className="nick">{p.nickname}</td>
+                      <td className="wins">{(p.highScore ?? 0).toLocaleString()}</td>
                       <td className="pts">{(p.total_points ?? 0).toLocaleString()}</td>
-                      <td className="wins">{p.wins}</td>
+                      <td>{p.wins}</td>
                       <td>{p.games_played}</td>
                     </tr>
                   ))}
