@@ -16,7 +16,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [doubleEnabled, setDoubleEnabled] = useState(room?.config?.doubleScoreEnabled || false);
   const [doubleInterval, setDoubleInterval] = useState(room?.config?.doubleInterval || 10);
   const [doubleDuration, setDoubleDuration] = useState(room?.config?.doubleDuration || 30);
-  const [activationCountdown, setActivationCountdown] = useState(0);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -47,19 +46,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   
   // Timer for Double Score
   useEffect(() => {
-    if (doubleStatus?.justTriggered && doubleStatus?.active) {
-       setActivationCountdown(3);
-       const triggerInt = setInterval(() => {
-         setActivationCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(triggerInt);
-              return 0;
-            }
-            return prev - 1;
-         });
-       }, 1000);
-    }
-
     if (!doubleStatus?.active || !doubleStatus?.endsAt) {
       setTimeLeft(0);
       return;
@@ -232,8 +218,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
 
-
-
       <div className="room-header-neon compact">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
@@ -396,6 +380,12 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             </div>
           </div>
 
+          {doubleStatus?.active && timeLeft > 0 && (
+            <div className="double-active-indicator shake glow-text" style={{ textAlign: 'center', marginTop: '-5px', marginBottom: '10px' }}>
+               <span className="x2-badge" style={{ verticalAlign: 'middle', fontSize: '1.5rem', padding: '5px 15px' }}>X2</span>
+            </div>
+          )}
+
           <div className="game-main-horizontal-layout">
             <div className="dice-arena-wrapper" ref={arenaRef}>
               <div className="game-main-area">
@@ -408,14 +398,8 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     transformOrigin: 'top center',
                   }}
                 >
-                  {activationCountdown > 0 && (
-                    <div className="arena-background-timer pulse" style={{ color: 'rgba(0, 255, 255, 0.4)' }}>
-                      {activationCountdown}
-                    </div>
-                  )}
-                  {doubleStatus?.active && timeLeft > 0 && activationCountdown === 0 && (
-                    <div className="arena-background-timer fade-in" style={{ color: 'rgba(255, 0, 150, 0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '-20px', display: 'block' }}>2X BODY</span>
+                  {doubleStatus?.active && timeLeft > 0 && (
+                    <div className="arena-background-timer fade-in" style={{ color: 'rgba(255, 0, 150, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                       <span>{timeLeft}</span>
                     </div>
                   )}
