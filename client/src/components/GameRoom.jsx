@@ -174,22 +174,12 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti">Odejít</button>
         </div>
         
-        <div className="reactions-container">
-          <button 
-            className={`reaction-trigger-sm ${isReactionsOpen ? 'active' : ''}`}
-            onClick={() => setIsReactionsOpen(!isReactionsOpen)}
-          >
-            🎭
-          </button>
-          {isReactionsOpen && (
-            <div className="reactions-flyout glass fade-in">
-              {emojis.map(e => (
-                <button key={e} className="reaction-btn-mini" onClick={() => { onReaction(e); setIsReactionsOpen(false); }}>
-                  {e}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="reactions-row-horizontal">
+          {emojis.map(e => (
+            <button key={e} className="reaction-btn-mini" onClick={() => onReaction(e)}>
+              {e}
+            </button>
+          ))}
         </div>
       </div>
 
