@@ -4,7 +4,7 @@ import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 import { calculateScore } from '@shared/scoring.js';
 
-function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats, onLeave }) {
+function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats, onLeave, doubleStatus, onUpdateConfig }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
@@ -46,19 +46,19 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   
   // Timer for Double Score
   useEffect(() => {
-    if (!props.doubleStatus?.active || !props.doubleStatus?.endsAt) {
+    if (!doubleStatus?.active || !doubleStatus?.endsAt) {
       setTimeLeft(0);
       return;
     }
     
     const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.floor((props.doubleStatus.endsAt - Date.now()) / 1000));
+      const remaining = Math.max(0, Math.floor((doubleStatus.endsAt - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining === 0) clearInterval(interval);
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [props.doubleStatus]);
+  }, [doubleStatus]);
 
   // CRITICAL: Guard before any room-dependent logic
   if (!room || !room.turnInfo) return null;
@@ -218,7 +218,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
       
-      {props.doubleStatus?.active && timeLeft > 0 && (
+      {doubleStatus?.active && timeLeft > 0 && (
         <div className="double-score-banner shake">
           <span className="x2-badge">X2</span>
            DOUBLE SCORE! <span>({timeLeft}s)</span>
@@ -263,7 +263,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Násobí body 2x v pravidelných intervalech.</p>
               </div>
               <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
-                   onClick={() => props.onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration })}>
+                   onClick={() => onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration })}>
                  <div className="toggle-handle"></div>
               </div>
             </div>
@@ -276,7 +276,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <input 
                       type="number" 
                       value={doubleInterval} 
-                      onChange={(e) => props.onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: parseInt(e.target.value) || 1, doubleDuration })}
+                      onChange={(e) => onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: parseInt(e.target.value) || 1, doubleDuration })}
                       min="1" max="20"
                     />
                   </div>
@@ -285,7 +285,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <input 
                       type="number" 
                       value={doubleDuration} 
-                      onChange={(e) => props.onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: parseInt(e.target.value) || 5 })}
+                      onChange={(e) => onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: parseInt(e.target.value) || 5 })}
                       min="5" max="300"
                     />
                   </div>
