@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
   const [chatInput, setChatInput] = useState('');
   const [showCreation, setShowCreation] = useState(false);
-  const [roomName, setRoomName] = useState('');
   const [doubleEnabled, setDoubleEnabled] = useState(false);
   const [doubleInterval, setDoubleInterval] = useState(5);
   const [doubleDuration, setDoubleDuration] = useState(30);
@@ -110,17 +109,6 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
 
       {showCreation && (
         <div className="creation-pane neon-card glass fade-in">
-          <div className="input-group">
-            <label>NÁZEV MÍSTNOSTI</label>
-            <input 
-              type="text" 
-              placeholder="Hra – ...." 
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              className="chat-input"
-            />
-          </div>
-
           <div className="admin-action-row">
             <div className="action-info">
               <h3>Double Score Event</h3>
@@ -161,7 +149,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
             className="neon-button primary full-width"
             onClick={() => {
               onCreateRoom({
-                name: roomName,
+                name: null,
                 config: {
                   doubleScoreEnabled: doubleEnabled,
                   doubleInterval,
