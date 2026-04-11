@@ -65,7 +65,12 @@ function loadState() {
     try {
       const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
       if (data.rooms) data.rooms.forEach(([id, room]) => rooms.set(id, room));
-      if (data.players) data.players.forEach(([id, player]) => players.set(id, player));
+      if (data.players) {
+        data.players.forEach(([id, player]) => {
+          // Reset online status and roomId on boot to prevent ghost players
+          players.set(id, { ...player, online: false, roomId: null, disconnectTime: null });
+        });
+      }
       if (data.maintenanceMode !== undefined) maintenanceMode = data.maintenanceMode;
       console.log(`State loaded: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}`);
     } catch (e) {
@@ -562,6 +567,52 @@ io.on('connection', (socket) => {
       io.emit('room-list-update', getRoomList());
     }
     console.log(`Admin 'zakladatel' changed maintenance mode to: ${maintenanceMode}`);
+  });
+
+  socket.on('admin-kick-player', (targetNickname) => {
+    const admin = players.get(socket.id);
+    if (!admin || admin.nickname !== 'zakladatel') return;
+
+    const targetEntry = Array.from(players.entries()).find(([id, p]) => p.nickname === targetNickname && p.online);
+    if (targetEntry) {
+      const [targetId, targetPlayer] = targetEntry;
+      const targetSocket = io.sockets.sockets.get(targetId);
+      if (targetSocket) {
+        targetSocket.emit('kicked-to-lobby', 'Byl jsi vyhozen zakladatelem.');
+        targetSocket.disconnect(true);
+      }
+      console.log(`Admin 'zakladatel' kicked player: ${targetNickname}`);
+    }
+  });
+
+  socket.on('admin-delete-room', (roomId) => {
+    const admin = players.get(socket.id);
+    if (!admin || admin.nickname !== 'zakladatel') return;
+
+    const room = rooms.get(roomId);
+    if (room) {
+      io.to(roomId).emit('kicked-to-lobby', 'Místnost byla zrušena zakladatelem.');
+      room.players.forEach(p => {
+        const playerObj = players.get(p.id);
+        if (playerObj) playerObj.roomId = null;
+        const s = io.sockets.sockets.get(p.id);
+        if (s) s.leave(roomId);
+      });
+      rooms.delete(roomId);
+      saveState();
+      io.emit('room-list-update', getRoomList());
+      console.log(`Admin 'zakladatel' deleted room: ${roomId}`);
+    }
+  });
+
+  socket.on('admin-clear-chat', () => {
+    const admin = players.get(socket.id);
+    if (!admin || admin.nickname !== 'zakladatel') return;
+
+    globalChat = [];
+    io.emit('global-chat-update', globalChat);
+    saveState();
+    console.log(`Admin 'zakladatel' cleared global chat`);
   });
 
   socket.on('disconnect', () => {

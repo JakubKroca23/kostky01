@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Lobby({ rooms, onlineStats, globalChat, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
+function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
   const [chatInput, setChatInput] = useState('');
   const chatRef = React.useRef(null);
 
@@ -29,6 +29,34 @@ function Lobby({ rooms, onlineStats, globalChat, onCreateRoom, onJoinRoom, onSen
             </button>
           ))}
         </div>
+
+        {leaderboard && leaderboard.length > 0 && (
+          <div className="lobby-leaderboard-section">
+            <h4 className="mini-title">ŽEBŘÍČEK</h4>
+            <div className="leaderboard-mini-wrapper glass">
+              <table className="leaderboard-mini-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Jméno</th>
+                    <th>W</th>
+                    <th>Body</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaderboard.slice(0, 10).map((p, i) => (
+                    <tr key={i}>
+                      <td>{i + 1}</td>
+                      <td className="nick">{p.nickname}</td>
+                      <td className="wins">{p.wins}</td>
+                      <td className="pts">{p.total_points.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className="lobby-global-chat glass neon-card">
           <div className="global-chat-messages" ref={chatRef}>

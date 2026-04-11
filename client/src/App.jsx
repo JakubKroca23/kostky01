@@ -29,6 +29,7 @@ function App() {
   const [remoteSelection, setRemoteSelection] = useState([]);
   const [onlineStats, setOnlineStats] = useState({ onlineCount: 0, players: [] });
   const [globalChat, setGlobalChat] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [error, setError] = useState('');
@@ -100,6 +101,10 @@ function App() {
 
     function onGlobalStatsUpdate(stats) {
       setOnlineStats(stats);
+    }
+
+    function onLeaderboardUpdate(list) {
+      setLeaderboard(list);
     }
 
     function onGlobalChatUpdate(msgs) {
@@ -192,6 +197,7 @@ function App() {
     socket.on('nickname-error', onNicknameError);
     socket.on('room-list-update', onRoomListUpdate);
     socket.on('global-stats-update', onGlobalStatsUpdate);
+    socket.on('leaderboard-update', onLeaderboardUpdate);
     socket.on('global-chat-update', onGlobalChatUpdate);
     socket.on('room-joined', onRoomJoined);
     socket.on('player-joined', onRoomUpdate);
@@ -219,6 +225,7 @@ function App() {
       socket.off('nickname-error', onNicknameError);
       socket.off('room-list-update', onRoomListUpdate);
       socket.off('global-stats-update', onGlobalStatsUpdate);
+      socket.off('leaderboard-update', onLeaderboardUpdate);
       socket.off('global-chat-update', onGlobalChatUpdate);
       socket.off('room-joined', onRoomJoined);
       socket.off('player-joined', onRoomUpdate);
@@ -378,6 +385,11 @@ function App() {
           maintenanceMode={maintenanceMode} 
           onToggleMaintenance={(status) => socket.emit('toggle-maintenance', status)}
           onClose={() => setIsAdminOpen(false)} 
+          players={onlineStats.players}
+          rooms={rooms}
+          onKickPlayer={(nick) => socket.emit('admin-kick-player', nick)}
+          onDeleteRoom={(id) => socket.emit('admin-delete-room', id)}
+          onClearChat={() => socket.emit('admin-clear-chat')}
         />
       )}
 
@@ -408,6 +420,7 @@ function App() {
           nickname={nickname}
           onlineStats={onlineStats}
           globalChat={globalChat}
+          leaderboard={leaderboard}
           onCreateRoom={handleCreateRoom} 
           onJoinRoom={handleJoinRoom} 
           onChangeNickname={handleChangeNickname}
