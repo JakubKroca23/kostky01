@@ -166,22 +166,10 @@ function nextTurn(room, bust = false) {
   const currentIndex = room.players.findIndex(p => p.id === room.turnInfo.currentTurnId);
   const nextIndex = (currentIndex + 1) % room.players.length;
   
-  // Track rounds
   room.status.turnsInRound++;
   if (room.status.turnsInRound >= room.players.length) {
     room.status.turnsInRound = 0;
     room.status.roundCount++;
-    
-    // Trigger double score
-    if (room.config.doubleScoreEnabled && room.status.roundCount % room.config.doubleInterval === 0 && room.status.roundCount > 0) {
-      room.status.doubleScoreActive = true;
-      room.status.doubleEndsAt = Date.now() + (room.config.doubleDuration * 1000);
-      io.to(room.id).emit('double-status-update', { 
-        active: true, 
-        endsAt: room.status.doubleEndsAt,
-        duration: room.config.doubleDuration
-      });
-    }
   }
 
   room.turnInfo.currentTurnId = room.players[nextIndex].id;
@@ -193,6 +181,31 @@ function nextTurn(room, bust = false) {
   room.turnInfo.allowedIndexes = [];
   
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
+}
+
+function processDoubleScoreLogic(room) {
+  if (!room.config?.doubleScoreEnabled) return;
+  if (!room.status.doubleScoreActive) {
+    room.status.totalRolls = (room.status.totalRolls || 0) + 1;
+    const interval = room.config.doubleInterval || 10;
+    const remaining = interval - (room.status.totalRolls % interval);
+    
+    if (room.status.totalRolls > 0 && remaining === interval) {
+      // Trigger it!
+      room.status.doubleScoreActive = true;
+      room.status.doubleEndsAt = Date.now() + (room.config.doubleDuration * 1000);
+      io.to(room.id).emit('double-status-update', { 
+        active: true, 
+        endsAt: room.status.doubleEndsAt,
+        duration: room.config.doubleDuration,
+        justTriggered: true,
+        remaining: 0
+      });
+      // Delay processing scores slightly maybe?
+    } else {
+      io.to(room.id).emit('double-status-update', { active: false, remaining });
+    }
+  }
 }
 
 io.on('connection', (socket) => {
@@ -335,7 +348,8 @@ io.on('connection', (socket) => {
         doubleScoreActive: false,
         doubleEndsAt: 0,
         roundCount: 0,
-        turnsInRound: 0
+        turnsInRound: 0,
+        totalRolls: 0
       },
       turnInfo: {
         currentTurnId: socket.id,
@@ -392,9 +406,54 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('dohodit', () => {
+    const room = rooms.get(players.get(socket.id)?.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+
+    processDoubleScoreLogic(room);
+
+    room.turnInfo.rollCount++;
+    const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
+    room.turnInfo.lastRoll = roll;
+    
+    let { score, usedIndexes } = calculateScore(roll, room.turnInfo.rollCount === 1);
+    if (checkDoubleScore(room)) score *= 2;
+    room.turnInfo.allowedIndexes = usedIndexes;
+
+    const isBust = (score === 0);
+    const totalPotential = room.turnInfo.turnPoints + score;
+    
+    const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
+
+    if (isBust || isTooLowAfter3) {
+      const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        isBust: true, 
+        msg,
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice
+      });
+      setTimeout(() => nextTurn(room, true), 1500);
+    } else {
+      saveState();
+      io.to(room.id).emit('dice-rolled', { 
+        roll, 
+        turnPoints: room.turnInfo.turnPoints, 
+        rollCount: room.turnInfo.rollCount,
+        diceCount: room.turnInfo.diceCount,
+        storedDice: room.turnInfo.storedDice,
+        allowedIndexes: usedIndexes
+      });
+    }
+  });
+
   socket.on('roll-dice', () => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+    
+    processDoubleScoreLogic(room);
 
     room.turnInfo.rollCount++;
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
@@ -443,6 +502,8 @@ io.on('connection', (socket) => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room || room.turnInfo.currentTurnId !== socket.id) return;
     if (!selectedIndexes || selectedIndexes.length === 0) return;
+    
+    processDoubleScoreLogic(room);
 
     const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
     const isFirstRoll = (room.turnInfo.rollCount === 1);

@@ -14,8 +14,9 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [valuesVisible, setValuesVisible] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
   const [doubleEnabled, setDoubleEnabled] = useState(room?.config?.doubleScoreEnabled || false);
-  const [doubleInterval, setDoubleInterval] = useState(room?.config?.doubleInterval || 5);
+  const [doubleInterval, setDoubleInterval] = useState(room?.config?.doubleInterval || 10);
   const [doubleDuration, setDoubleDuration] = useState(room?.config?.doubleDuration || 30);
+  const [activationCountdown, setActivationCountdown] = useState(0);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -46,6 +47,19 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   
   // Timer for Double Score
   useEffect(() => {
+    if (doubleStatus?.justTriggered && doubleStatus?.active) {
+       setActivationCountdown(3);
+       const triggerInt = setInterval(() => {
+         setActivationCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(triggerInt);
+              return 0;
+            }
+            return prev - 1;
+         });
+       }, 1000);
+    }
+
     if (!doubleStatus?.active || !doubleStatus?.endsAt) {
       setTimeLeft(0);
       return;
@@ -217,11 +231,27 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   return (
     <main className="hero-section game-room-layout">
       {errorLocal && <div className="global-error-toast glass neon-card">{errorLocal}</div>}
+
+      {activationCountdown > 0 && (
+        <div className="double-score-overlay fade-in">
+          <h2 className="neon-text-pink shake">DOUBLE SCORE ZAČÍNÁ!</h2>
+          <div className="countdown-massive pulse">{activationCountdown}</div>
+        </div>
+      )}
       
-      {doubleStatus?.active && timeLeft > 0 && (
+      {doubleStatus?.active && timeLeft > 0 && activationCountdown === 0 && (
         <div className="double-score-banner shake">
           <span className="x2-badge">X2</span>
            DOUBLE SCORE! <span>({timeLeft}s)</span>
+        </div>
+      )}
+
+      {!doubleStatus?.active && doubleEnabled && room.gameStarted && (
+        <div className="double-progress-indicator glow-text">
+          <span style={{opacity: 0.7, fontSize: '0.8rem'}}>💥 Další Double Score za: </span>
+          <strong style={{color: 'var(--neon-pink)', fontSize:'1rem'}}>
+             {doubleStatus?.remaining ?? doubleInterval} hodů
+          </strong>
         </div>
       )}
 

@@ -1772,3 +1772,37 @@ body {
   }
 }
 
+.double-score-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+}
+
+.countdown-massive {
+  font-size: 8rem;
+  font-weight: 900;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+}
+
+.double-progress-indicator {
+  text-align: center;
+  margin: -10px 0 10px;
+  background: rgba(255, 0, 150, 0.1);
+  border: 1px solid rgba(255, 0, 150, 0.3);
+  padding: 5px 15px;
+  border-radius: 20px;
+  display: inline-block;
+  align-self: center;
+}
