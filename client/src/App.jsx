@@ -4,6 +4,7 @@ import NicknameScreen from './components/NicknameScreen';
 import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
 import VictoryModal from './components/VictoryModal';
+import NotFound from './components/NotFound';
 import Navbar from './components/Navbar';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
 import AdminMenu from './components/AdminMenu';
@@ -166,6 +167,11 @@ function App() {
       audio.playScore();
     }
 
+    function onRoomError(msg) {
+      setError(msg);
+      setScreen('not-found');
+    }
+
     function onTurnUpdated(data) {
       setCurrentRoom(prev => ({
         ...prev,
@@ -241,6 +247,7 @@ function App() {
     socket.on('leaderboard-update', onLeaderboardUpdate);
     socket.on('global-chat-update', onGlobalChatUpdate);
     socket.on('room-joined', onRoomJoined);
+    socket.on('room-error', onRoomError);
     socket.on('player-joined', onRoomUpdate);
     socket.on('player-left', onRoomUpdate);
     socket.on('room-update', onRoomUpdate);
@@ -275,6 +282,7 @@ function App() {
       socket.off('leaderboard-update', onLeaderboardUpdate);
       socket.off('global-chat-update', onGlobalChatUpdate);
       socket.off('room-joined', onRoomJoined);
+      socket.off('room-error', onRoomError);
       socket.off('player-joined', onRoomUpdate);
       socket.off('player-left', onRoomUpdate);
       socket.off('room-update', onRoomUpdate);
@@ -445,6 +453,10 @@ function App() {
           onClearChat={() => socket.emit('admin-clear-chat')}
           onResetScoreboard={() => socket.emit('admin-reset-scoreboard')}
         />
+      )}
+
+      {screen === 'not-found' && (
+        <NotFound onReturn={handleBackToLobby} />
       )}
 
       {winnerData && (

@@ -378,7 +378,11 @@ io.on('connection', (socket) => {
   socket.on('join-room', (roomId) => {
     const player = players.get(socket.id);
     const room = rooms.get(roomId);
-    if (!player || !room) return;
+    if (!player) return;
+    if (!room) {
+      socket.emit('room-error', 'Místnost nebyla nalezena.');
+      return;
+    }
     if (room.gameStarted) {
       socket.emit('nickname-error', 'Tato hra již začala. Nelze se připojit.');
       return;
