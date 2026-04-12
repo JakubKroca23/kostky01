@@ -540,6 +540,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     </span>
                   </div>
                   <div className="score-right">
+                    {isOnFire && <span className="fire-icon-inline">🔥</span>}
                     {pending > 0 && <span className="score-pending">+{pending}</span>}
                     <span className="score-value">{totalScore || 0}</span>
                   </div>
@@ -713,7 +714,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
         <div className="bowling-overlay fade-in">
            <div className="stove-container">
               <div className="stove-text">SPORÁK! 🔥</div>
-              <img src="/stove_egg.png" alt="Sporák" className="stove-img" />
+              <img src="/202604120723.gif" alt="Sporák" className="stove-img" />
               <div style={{ color: 'white', marginTop: '20px', fontSize: '1.2rem', textAlign: 'center', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '10px' }}>
                  Už se vaří! 🍳
               </div>
