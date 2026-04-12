@@ -500,6 +500,36 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('force-straight', () => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player?.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id || player.nickname.toLowerCase() !== 'zakladatel') return;
+    
+    // Reset to first roll for best test
+    room.turnInfo.rollCount = 1;
+    room.turnInfo.diceCount = 6;
+    room.turnInfo.storedDice = [];
+    
+    const roll = [1, 2, 3, 4, 5, 6]; // FORCE STRAIGHT
+    room.turnInfo.lastRoll = roll;
+    
+    let { score, usedIndexes, isStraight } = calculateScore(roll, true);
+    if (checkDoubleScore(room)) score *= 2;
+    room.turnInfo.allowedIndexes = usedIndexes;
+    room.turnInfo.isStraight = isStraight;
+    
+    saveState();
+    io.to(room.id).emit('dice-rolled', { 
+      roll, 
+      turnPoints: room.turnInfo.turnPoints, 
+      rollCount: room.turnInfo.rollCount,
+      diceCount: room.turnInfo.diceCount,
+      storedDice: room.turnInfo.storedDice,
+      allowedIndexes: usedIndexes,
+      isStraight: room.turnInfo.isStraight
+    });
+  });
+
   socket.on('update-selection', (indices) => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room) return;

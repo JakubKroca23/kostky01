@@ -562,6 +562,15 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
 
           <div className="action-stack">
+            {nickname.toLowerCase() === 'zakladatel' && isMyTurn && !isRolling && room.turnInfo.rollCount === 0 && (
+              <button 
+                onClick={() => socket.emit('force-straight')} 
+                className="neon-button sm" 
+                style={{ marginBottom: '10px', width: '100%', borderColor: 'var(--neon-yellow)', color: 'var(--neon-yellow)', background: 'rgba(255, 230, 0, 0.05)' }}
+              >
+                🛠️ [DEV] HODIT POSTUPKU (DEBUG)
+              </button>
+            )}
             {isMyTurn ? (
               <div className="btn-row">
                 {room.turnInfo.rollCount === 0 ? (
