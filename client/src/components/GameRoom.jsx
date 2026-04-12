@@ -294,11 +294,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           
         {isReactionsOpen && (
           <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
-            position: 'absolute', top: '100%', left: '0', zIndex: 1000, marginTop: '8px',
-            padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px',
-            boxShadow: '0 15px 40px rgba(0,0,0,0.7)', width: '300px',
+            position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, marginTop: '8px',
+            padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px',
+            boxShadow: '0 15px 40px rgba(0,0,0,0.7)', width: '280px', maxWidth: '90vw',
             background: 'rgba(10, 10, 20, 0.98)', border: '1px solid var(--neon-cyan)',
-            maxHeight: '200px', overflowY: 'auto'
+            maxHeight: '250px', overflowY: 'auto'
           }}>
                {emojis.map(e => (
                  <button 
