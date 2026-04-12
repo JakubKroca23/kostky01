@@ -300,40 +300,44 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
              </button>
           </div>
           
-        {isReactionsOpen && (
-          <>
-            <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 9999 }} onClick={() => setIsReactionsOpen(false)} />
-            <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
-              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000,
-              padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.9)', width: '300px', maxWidth: '90vw',
-              background: 'rgba(10, 10, 20, 0.98)', border: '2px solid var(--neon-cyan)',
-              maxHeight: '400px', overflowY: 'auto', borderRadius: '20px'
-            }}>
-               <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontSize: '0.8rem', opacity: 0.6, marginBottom: '10px', letterSpacing: '2px' }}>VYBER SI VIBE</div>
-               {emojis.map(e => (
-                 <button 
-                   key={e} 
-                   className={`reaction-picker-btn ${myEmoji === e ? 'active' : ''}`}
-                   onClick={(ev) => {
-                     ev.stopPropagation();
-                     setMyEmoji(e);
-                     localStorage.setItem('kostky-my-emoji', e);
-                     setIsReactionsOpen(false);
-                   }}
-                   style={{ 
-                     background: 'rgba(255,255,255,0.03)', border: '1px solid transparent', 
-                     cursor: 'pointer', fontSize: '1.4rem', borderRadius: '6px',
-                     opacity: myEmoji === e ? 1 : 0.6, transition: '0.2s', padding: '8px',
-                     display: 'flex', alignItems: 'center', justifyContent: 'center'
-                   }}
-                 >
-                   {e}
-                 </button>
-               ))}
-             </div>
-          </>
-        )}
+          {isReactionsOpen && (
+            <React.Fragment>
+              <div 
+                className="modal-overlay" 
+                style={{ background: 'rgba(0,0,0,0.6)', zIndex: 9999 }} 
+                onClick={() => setIsReactionsOpen(false)} 
+              />
+              <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
+                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000,
+                padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.9)', width: '300px', maxWidth: '90vw',
+                background: 'rgba(10, 10, 20, 0.98)', border: '2px solid var(--neon-cyan)',
+                maxHeight: '400px', overflowY: 'auto', borderRadius: '20px'
+              }}>
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontSize: '0.8rem', opacity: 0.6, marginBottom: '10px', letterSpacing: '2px' }}>VYBER SI VIBE</div>
+                {emojis.map(e => (
+                  <button 
+                    key={e} 
+                    className={`reaction-picker-btn ${myEmoji === e ? 'active' : ''}`}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      setMyEmoji(e);
+                      localStorage.setItem('kostky-my-emoji', e);
+                      setIsReactionsOpen(false);
+                    }}
+                    style={{ 
+                      background: 'rgba(255,255,255,0.03)', border: '1px solid transparent', 
+                      cursor: 'pointer', fontSize: '1.4rem', borderRadius: '6px',
+                      opacity: myEmoji === e ? 1 : 0.6, transition: '0.2s', padding: '8px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </React.Fragment>
+          )}
         </div>
       </div>
 

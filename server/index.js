@@ -30,10 +30,22 @@ const app = express();
 app.use(cors());
 
 if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, '../client/dist');
+  const distPath = path.resolve(__dirname, '../client/dist');
+  console.log(`[SERVER] Production mode. Serving static files from: ${distPath}`);
+  
+  if (!fs.existsSync(distPath)) {
+    console.error(`[SERVER] ERROR: Static folder not found at ${distPath}`);
+  }
+
   app.use(express.static(distPath));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+    const indexPath = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error(`[SERVER] ERROR: index.html not found at ${indexPath}`);
+      res.status(404).send('404: Frontend build missing. Please run build.');
+    }
   });
 }
 
