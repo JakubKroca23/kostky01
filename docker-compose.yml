@@ -5,6 +5,7 @@ services:
       args:
         - VITE_APPWRITE_ENDPOINT=https://appwrite.propoj.app/v1
         - VITE_APPWRITE_PROJECT_ID=arena
+        - VITE_TURN_HOST=kostky.propoj.app
     container_name: kostky-game
     restart: always
     environment:
@@ -21,15 +22,31 @@ services:
       - appwrite
     labels:
       - "traefik.enable=true"
-      # Klíčové: Musí tu být doména, na které to opravdu hledáš
       - "traefik.http.routers.kostky.rule=Host(`kostky.propoj.app`)"
       - "traefik.http.routers.kostky.entrypoints=websecure"
       - "traefik.http.routers.kostky.tls=true"
-      # Resolver v Appwrite je 'letsencrypt', to víme z tvého logu
       - "traefik.http.routers.kostky.tls.certresolver=letsencrypt"
       - "traefik.http.services.kostky.loadbalancer.server.port=3001"
 
+  coturn:
+    image: coturn/coturn:latest
+    container_name: kostky-coturn
+    restart: always
+    network_mode: host
+    command: >
+      -n
+      --log-file=stdout
+      --min-port=49152
+      --max-port=65535
+      --fingerprint
+      --no-multicast-peers
+      --no-cli
+      --no-tlsv1
+      --no-tlsv1_1
+      --realm=kostky.propoj.app
+      --user=kostky:VoiceChatTurnSecret2024
+      --lt-cred-mech
+
 networks:
   appwrite:
-    # Síť se v Appwrite jmenuje 'appwrite' (pokud by to nešlo, zkus 'appwrite_appwrite')
     external: true

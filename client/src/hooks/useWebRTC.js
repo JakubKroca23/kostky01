@@ -84,33 +84,19 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
       cleanupPeer(targetId);
     }
 
+    const turnHost = import.meta.env.VITE_TURN_HOST || 'kostky.propoj.app';
     const peer = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
         {
-          urls: [
-            'turn:openrelay.metered.ca:80',
-            'turn:openrelay.metered.ca:443',
-            'turn:openrelay.metered.ca:443?transport=tcp'
-          ],
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
+          urls: `turn:${turnHost}:3478`,
+          username: 'kostky',
+          credential: 'VoiceChatTurnSecret2024'
         },
         {
-          urls: 'turn:relay.metered.ca:80',
-          username: 'e8dd65f021a43de7c459b4f5',
-          credential: 'VKUHNFSbIgUzCkXx'
-        },
-        {
-          urls: 'turn:relay.metered.ca:443',
-          username: 'e8dd65f021a43de7c459b4f5',
-          credential: 'VKUHNFSbIgUzCkXx'
-        },
-        {
-          urls: 'turn:relay.metered.ca:443?transport=tcp',
-          username: 'e8dd65f021a43de7c459b4f5',
-          credential: 'VKUHNFSbIgUzCkXx'
+          urls: `turn:${turnHost}:3478?transport=tcp`,
+          username: 'kostky',
+          credential: 'VoiceChatTurnSecret2024'
         }
       ],
       iceCandidatePoolSize: 10
