@@ -294,21 +294,30 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           ))}
           </div>
 
-        {!room.gameStarted && canStart && (
+        {!room.gameStarted && (
           <div className="host-settings glass neon-card" style={{ marginBottom: '15px', padding: '15px' }}>
-            <h3 className="section-title" style={{ fontSize: '1rem', marginBottom: '10px' }}>NASTAVENÍ HRY</h3>
-            <div className="admin-action-row" style={{ marginBottom: '10px' }}>
+            <h3 className="section-title" style={{ fontSize: '1rem', marginBottom: '10px' }}>
+              {canStart ? 'NASTAVENÍ HRY' : 'PRAVIDLA MÍSTNOSTI'}
+            </h3>
+            
+            <div className="admin-action-row" style={{ marginBottom: '10px', opacity: !canStart ? 0.8 : 1 }}>
               <div className="action-info">
                 <h4 style={{ margin: 0, color: 'var(--neon-pink)' }}>Double Score Event</h4>
                 <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Násobí body 2x v pravidelných intervalech.</p>
               </div>
-              <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
-                   onClick={() => {
-                     setDoubleEnabled(!doubleEnabled);
-                     onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration });
-                   }}>
-                 <div className="toggle-handle"></div>
-              </div>
+              {canStart ? (
+                <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
+                     onClick={() => {
+                       setDoubleEnabled(!doubleEnabled);
+                       onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration });
+                     }}>
+                   <div className="toggle-handle"></div>
+                </div>
+              ) : (
+                <div className={`rule-status-badge ${doubleEnabled ? 'active' : ''}`}>
+                  {doubleEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
+                </div>
+              )}
             </div>
 
             {doubleEnabled && (
@@ -316,57 +325,77 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 <div className="input-row" style={{ display: 'flex', gap: '15px' }}>
                   <div className="input-group" style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>INTERVAL (KOLA)</label>
-                    <select 
-                      value={doubleInterval} 
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 10;
-                        setDoubleInterval(val);
-                        onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
-                      }}
-                      className="chat-input glass"
-                      style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
-                    >
-                      <option value="10" style={{background: '#0e0e1a'}}>Každých 10 hodů</option>
-                      <option value="20" style={{background: '#0e0e1a'}}>Každých 20 hodů</option>
-                      <option value="30" style={{background: '#0e0e1a'}}>Každých 30 hodů</option>
-                    </select>
+                    {canStart ? (
+                      <select 
+                        value={doubleInterval} 
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 10;
+                          setDoubleInterval(val);
+                          onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
+                        }}
+                        className="chat-input glass"
+                        style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
+                      >
+                        <option value="10" style={{background: '#0e0e1a'}}>Každých 10 hodů</option>
+                        <option value="20" style={{background: '#0e0e1a'}}>Každých 20 hodů</option>
+                        <option value="30" style={{background: '#0e0e1a'}}>Každých 30 hodů</option>
+                      </select>
+                    ) : (
+                      <div className="rule-value-box">{doubleInterval} hodů</div>
+                    )}
                   </div>
                   <div className="input-group" style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>TRVÁNÍ (SEKUNDY)</label>
-                    <select 
-                      value={doubleDuration} 
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 30;
-                        setDoubleDuration(val);
-                        onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
-                      }}
-                      className="chat-input glass"
-                      style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
-                    >
-                      <option value="30" style={{background: '#0e0e1a'}}>30 sekund</option>
-                      <option value="60" style={{background: '#0e0e1a'}}>60 sekund</option>
-                      <option value="90" style={{background: '#0e0e1a'}}>90 sekund</option>
-                    </select>
+                    {canStart ? (
+                      <select 
+                        value={doubleDuration} 
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 30;
+                          setDoubleDuration(val);
+                          onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
+                        }}
+                        className="chat-input glass"
+                        style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
+                      >
+                        <option value="30" style={{background: '#0e0e1a'}}>30 sekund</option>
+                        <option value="60" style={{background: '#0e0e1a'}}>60 sekund</option>
+                        <option value="90" style={{background: '#0e0e1a'}}>90 sekund</option>
+                      </select>
+                    ) : (
+                      <div className="rule-value-box">{doubleDuration}s</div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="admin-action-row" style={{ marginBottom: '15px' }}>
+            <div className="admin-action-row" style={{ marginBottom: '15px', opacity: !canStart ? 0.8 : 1 }}>
               <div className="action-info">
                 <h4 style={{ margin: 0, color: 'var(--neon-cyan)' }}>Zloděj bodů</h4>
                 <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Po hození postupky (1-6) v 1. hodu můžeš soupeři ukrást 1000 bodů.</p>
               </div>
-              <div className={`admin-toggle ${thiefEnabled ? 'active' : ''}`} 
-                   onClick={() => {
-                     setThiefEnabled(!thiefEnabled);
-                     onUpdateConfig?.({ thiefModeEnabled: !thiefEnabled });
-                   }}>
-                 <div className="toggle-handle"></div>
-              </div>
+              {canStart ? (
+                <div className={`admin-toggle ${thiefEnabled ? 'active' : ''}`} 
+                     onClick={() => {
+                       setThiefEnabled(!thiefEnabled);
+                       onUpdateConfig?.({ thiefModeEnabled: !thiefEnabled });
+                     }}>
+                   <div className="toggle-handle"></div>
+                </div>
+              ) : (
+                <div className={`rule-status-badge ${thiefEnabled ? 'active' : ''}`} style={{ borderColor: thiefEnabled ? 'var(--neon-cyan)' : 'var(--glass-border)', color: thiefEnabled ? 'var(--neon-cyan)' : '#888' }}>
+                  {thiefEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
+                </div>
+              )}
             </div>
 
-            <button className="neon-button start-hero full-width" onClick={onStart}>🔥 START HRY 🔥</button>
+            {canStart ? (
+              <button className="neon-button start-hero full-width" onClick={onStart}>🔥 START HRY 🔥 (HOST)</button>
+            ) : (
+              <div className="wait-pill glass full-width" style={{ textAlign: 'center', padding: '15px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--neon-pink)' }}>
+                ⌛ ČEKÁ SE NA START (HOST)...
+              </div>
+            )}
           </div>
         )}
 

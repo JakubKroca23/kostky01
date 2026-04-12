@@ -2049,3 +2049,28 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+.rule-status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #888;
+  background: rgba(255,255,255,0.02);
+}
+
+.rule-status-badge.active {
+  color: var(--neon-pink);
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.2);
+}
+
+.rule-value-box {
+  background: rgba(255,255,255,0.05);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #fff;
+  border: 1px solid var(--glass-border);
+}
