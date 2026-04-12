@@ -77,18 +77,18 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     return () => clearInterval(interval);
   }, [doubleStatus]);
 
-  // CRITICAL: Guard before any room-dependent logic
-  if (!room || !room.turnInfo) return null;
-
   // Sync state if room config changes from server
   useEffect(() => {
-    if (room.config) {
+    if (room && room.config) {
       setDoubleEnabled(room.config.doubleScoreEnabled || false);
       setDoubleInterval(room.config.doubleInterval || 5);
       setDoubleDuration(room.config.doubleDuration || 30);
       setThiefEnabled(room.config.thiefModeEnabled || false);
     }
   }, [room.config]);
+
+  // CRITICAL: Guard before any room-dependent logic
+  if (!room || !room.turnInfo) return null;
 
   const rollSeed = `${room.turnInfo.rollCount}-${room.turnInfo.lastRoll?.join('') || ''}`;
   const logicalWidth = 460;

@@ -229,6 +229,7 @@ function App() {
     socket.on('room-joined', onRoomJoined);
     socket.on('player-joined', onRoomUpdate);
     socket.on('player-left', onRoomUpdate);
+    socket.on('room-update', onRoomUpdate);
     socket.on('left-room', onLeftRoom);
     socket.on('game-started', onGameStarted);
     socket.on('score-updated', onScoreUpdated);
@@ -262,6 +263,7 @@ function App() {
       socket.off('room-joined', onRoomJoined);
       socket.off('player-joined', onRoomUpdate);
       socket.off('player-left', onRoomUpdate);
+      socket.off('room-update', onRoomUpdate);
       socket.off('left-room', onLeftRoom);
       socket.off('game-started', onGameStarted);
       socket.off('score-updated', onScoreUpdated);
