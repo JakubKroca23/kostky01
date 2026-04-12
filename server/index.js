@@ -636,6 +636,32 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('admin-reset-scoreboard', async () => {
+    const player = players.get(socket.id);
+    if (!player || player.nickname.toLowerCase() !== 'zakladatel') return;
+
+    try {
+      let offset = 0;
+      let deleted = 0;
+      while (true) {
+        const list = await databases.listDocuments(DB_ID, COLL_ID, [Query.limit(100), Query.offset(offset)]);
+        if (list.documents.length === 0) break;
+        for (const doc of list.documents) {
+          await databases.deleteDocument(DB_ID, COLL_ID, doc.$id);
+          deleted++;
+        }
+        if (list.documents.length < 100) break;
+        offset += 100;
+      }
+      console.log(`[ADMIN] Scoreboard reset: ${deleted} záznamů smazáno.`);
+      socket.emit('admin-action-result', { ok: true, message: `Scoreboard byl resetován. Smazáno ${deleted} záznamů.` });
+      broadcastLeaderboard();
+    } catch (e) {
+      console.error('[ADMIN] Reset scoreboard error:', e.message);
+      socket.emit('admin-action-result', { ok: false, message: 'Chyba při resetování: ' + e.message });
+    }
+  });
+
   // --- WebRTC Signaling ---
   socket.on('webrtc-voice-status', (isOn) => {
     const room = rooms.get(players.get(socket.id)?.roomId);

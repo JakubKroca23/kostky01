@@ -243,6 +243,9 @@ function App() {
     socket.on('maintenance-status', onMaintenanceStatus);
     socket.on('kicked-to-lobby', onKickedToLobby);
     socket.on('double-status-update', onDoubleStatusUpdate);
+    socket.on('admin-action-result', ({ ok, message }) => {
+      alert((ok ? '✅ ' : '❌ ') + message);
+    });
 
     if (socket.connected) onConnect();
 
@@ -270,6 +273,7 @@ function App() {
       socket.off('chat-message-received', onChatMessageReceived);
       socket.off('maintenance-status', onMaintenanceStatus);
       socket.off('kicked-to-lobby', onKickedToLobby);
+      socket.off('admin-action-result');
     };
   }, []);
 
@@ -423,6 +427,7 @@ function App() {
           onKickPlayer={(nick) => socket.emit('admin-kick-player', nick)}
           onDeleteRoom={(id) => socket.emit('admin-delete-room', id)}
           onClearChat={() => socket.emit('admin-clear-chat')}
+          onResetScoreboard={() => socket.emit('admin-reset-scoreboard')}
         />
       )}
 

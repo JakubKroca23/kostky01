@@ -1,6 +1,6 @@
 import React from 'react';
 
-function AdminMenu({ maintenanceMode, onToggleMaintenance, onClose, players, rooms, onKickPlayer, onDeleteRoom, onClearChat }) {
+function AdminMenu({ maintenanceMode, onToggleMaintenance, onClose, players, rooms, onKickPlayer, onDeleteRoom, onClearChat, onResetScoreboard }) {
   return (
     <div className="modal-overlay">
       <div className="admin-modal glass neon-card">
@@ -24,6 +24,16 @@ function AdminMenu({ maintenanceMode, onToggleMaintenance, onClose, players, roo
            <div className="admin-section">
               <h3>Globální Chat</h3>
               <button className="neon-button sm danger" onClick={onClearChat}>Vymazat chat</button>
+           </div>
+
+           <div className="admin-section">
+              <h3>Skóre tabulka</h3>
+              <p style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '8px' }}>Smaže všechny záznamy v leaderboardu. Nelze vrátit!</p>
+              <button className="neon-button sm danger" onClick={() => {
+                if (window.confirm('Opravdu chceš resetovat celý scoreboard? Tato akce je nevratná!')) {
+                  onResetScoreboard();
+                }
+              }}>🗑️ Reset Scoreboard</button>
            </div>
 
            <div className="admin-section">

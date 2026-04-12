@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
 
+const FOUNDER_PASSWORD = 'Admin1234';
+
 function NicknameScreen({ onJoin, error }) {
   const [nickname, setNickname] = useState('');
+  const [password, setPassword] = useState('');
+  const [localError, setLocalError] = useState('');
+
+  const isFounder = nickname.trim().toLowerCase() === 'zakladatel';
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (nickname.trim().length >= 3) {
-      onJoin(nickname.trim());
+    setLocalError('');
+    if (nickname.trim().length < 3) return;
+
+    if (isFounder) {
+      if (password !== FOUNDER_PASSWORD) {
+        setLocalError('Špatné heslo pro účet zakladatele.');
+        return;
+      }
     }
+
+    onJoin(nickname.trim());
   };
 
   return (
@@ -24,18 +38,32 @@ function NicknameScreen({ onJoin, error }) {
             type="text"
             placeholder="Zadej jméno (min. 3 znaky)"
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => { setNickname(e.target.value); setLocalError(''); }}
             minLength={3}
             required
           />
         </div>
 
-        <button type="submit" className="neon-button full-width large">
+        {isFounder && (
+          <div className="input-group" style={{ marginTop: '12px' }}>
+            <label style={{ color: 'var(--neon-cyan)' }}>🔐 Heslo zakladatele</label>
+            <input
+              type="password"
+              placeholder="Zadej heslo"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </div>
+        )}
+
+        <button type="submit" className="neon-button full-width large" style={{ marginTop: '16px' }}>
           Vstoupit do lobby
         </button>
       </form>
 
-      {error && <div className="error-text shake">{error}</div>}
+      {(error || localError) && <div className="error-text shake">{localError || error}</div>}
     </div>
   );
 }
