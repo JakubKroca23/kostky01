@@ -455,7 +455,7 @@ io.on('connection', (socket) => {
         storedDice: room.turnInfo.storedDice,
         isStraight: false
       });
-      setTimeout(() => nextTurn(room, true), 1500);
+      setTimeout(() => nextTurn(room, true), 4000);
     } else {
       saveState();
       io.to(room.id).emit('dice-rolled', { 
@@ -501,7 +501,7 @@ io.on('connection', (socket) => {
         storedDice: room.turnInfo.storedDice,
         isStraight: false
       });
-      setTimeout(() => nextTurn(room, true), 1500);
+      setTimeout(() => nextTurn(room, true), 4000);
     } else {
       saveState();
       io.to(room.id).emit('dice-rolled', { 
@@ -662,7 +662,7 @@ io.on('connection', (socket) => {
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice
       });
-      setTimeout(() => nextTurn(room, true), 1500);
+      setTimeout(() => nextTurn(room, true), 4000);
     } else {
       saveState();
       io.to(room.id).emit('dice-rolled', { 

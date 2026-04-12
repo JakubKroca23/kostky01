@@ -32,7 +32,7 @@ function Die({ value, isSelected, onClick, isRolling, canSelect, style, showValu
       {isBust ? (
         // Bust: zobrazíme fakáče místo teček
         <div className="bust-skull">
-          <img src="/facepalm.png" alt="Bust!" className="bust-facepalm-img" />
+          <img src="/bust.png" alt="Bust!" className="bust-facepalm-img" />
         </div>
       ) : (
         <div className="dots-grid">
