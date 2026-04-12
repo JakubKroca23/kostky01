@@ -636,6 +636,26 @@ io.on('connection', (socket) => {
     }
   });
 
+  // --- WebRTC Signaling ---
+  socket.on('webrtc-voice-status', (isOn) => {
+    const room = rooms.get(players.get(socket.id)?.roomId);
+    if (!room) return;
+    socket.to(room.id).emit('webrtc-voice-status', { userId: socket.id, isOn });
+  });
+
+  socket.on('webrtc-offer', ({ targetId, offer }) => {
+    io.to(targetId).emit('webrtc-offer', { senderId: socket.id, offer });
+  });
+
+  socket.on('webrtc-answer', ({ targetId, answer }) => {
+    io.to(targetId).emit('webrtc-answer', { senderId: socket.id, answer });
+  });
+
+  socket.on('webrtc-ice-candidate', ({ targetId, candidate }) => {
+    io.to(targetId).emit('webrtc-ice-candidate', { senderId: socket.id, candidate });
+  });
+  // ------------------------
+
   socket.on('send-chat-message', (text) => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);

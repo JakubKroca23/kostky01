@@ -478,7 +478,9 @@ function App() {
           onLeave={handleLeaveRoom}
           onUpdateSelection={(indices) => socket.emit('update-selection', indices)}
           isConnected={isConnected}
+          onlineStats={onlineStats}
           doubleStatus={doubleStatus}
+          socket={socket}
         />
       )}
     </div>

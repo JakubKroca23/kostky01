@@ -3,6 +3,17 @@ import Die from './Die';
 import { audio } from '../utils/audio';
 import { useDicePhysics } from '../hooks/useDicePhysics';
 import { calculateScore } from '@shared/scoring.js';
+import { useWebRTC } from '../hooks/useWebRTC';
+
+function RemoteAudioPlayer({ stream }) {
+  const audioRef = useRef(null);
+  useEffect(() => {
+    if (audioRef.current && stream) {
+      audioRef.current.srcObject = stream;
+    }
+  }, [stream]);
+  return <audio ref={audioRef} autoPlay playsInline />;
+}
 
 function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats, onLeave, doubleStatus, onUpdateConfig }) {
   const [selectedDice, setSelectedDice] = useState([]);
@@ -16,8 +27,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [doubleEnabled, setDoubleEnabled] = useState(room?.config?.doubleScoreEnabled || false);
   const [doubleInterval, setDoubleInterval] = useState(room?.config?.doubleInterval || 10);
   const [doubleDuration, setDoubleDuration] = useState(room?.config?.doubleDuration || 30);
+  const [voiceChatEnabled, setVoiceChatEnabled] = useState(false);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
+
+  const { remoteStreams } = useWebRTC(socket, room?.id, socket?.id, voiceChatEnabled);
 
   useEffect(() => {
     if (!arenaRef.current) return;
@@ -223,7 +237,22 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       <div className="room-header-neon compact">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
-          <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti">Odejít</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              className={`neon-button sm ${voiceChatEnabled ? 'primary' : ''}`} 
+              onClick={() => setVoiceChatEnabled(!voiceChatEnabled)}
+              title={voiceChatEnabled ? "Vypnout hlasový chat" : "Zapnout hlasový chat"}
+              style={{
+                 padding: '5px 12px', fontSize: '1.2rem', 
+                 borderColor: voiceChatEnabled ? 'var(--neon-green)' : 'var(--glass-border)',
+                 textShadow: voiceChatEnabled ? '0 0 10px var(--neon-green)' : 'none',
+                 boxShadow: voiceChatEnabled ? '0 0 15px rgba(0, 255, 100, 0.4)' : 'none'
+              }}
+            >
+              {voiceChatEnabled ? '🎙️' : '🔇'}
+            </button>
+            <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti">Odejít</button>
+          </div>
         </div>
         
         <div className="reactions-row-horizontal">
@@ -242,8 +271,9 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           {room.players.map((p, i) => (
             <div key={p.id} className="player-joined-row fade-in">
               <span className="player-num">{i + 1}.</span>
-              <span className="player-name">
+              <span className="player-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 {p.nickname} {i === 0 && <span className="host-tag">(HOST)</span>}
+                {remoteStreams[p.id] && <span title="Mluví" style={{ fontSize: '1.1rem', color: 'var(--neon-cyan)', textShadow: '0 0 10px var(--neon-cyan)' }}>🔊</span>}
               </span>
             </div>
           ))}
@@ -464,6 +494,13 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           </div>
         </div>
       )}
+
+      {/* Skryté audio elementy pro Voice Chat */}
+      <div style={{ display: 'none' }}>
+         {Object.entries(remoteStreams).map(([peerId, stream]) => (
+            <RemoteAudioPlayer key={peerId} stream={stream} />
+         ))}
+      </div>
     </main>
   );
 }
