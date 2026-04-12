@@ -31,6 +31,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [thiefEnabled, setThiefEnabled] = useState(room?.config?.thiefModeEnabled || false);
   const [voiceChatEnabled, setVoiceChatEnabled] = useState(false);
   const [showStealPrompt, setShowStealPrompt] = useState(false);
+  const [showStoveAnim, setShowStoveAnim] = useState(false);
   const [myEmoji, setMyEmoji] = useState(localStorage.getItem('kostky-my-emoji') || '🔥');
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
@@ -164,6 +165,13 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
         setTimeout(() => setShowStealPrompt(true), 1300); // Wait for dice animation
       } else {
         setShowStealPrompt(false);
+      }
+
+      // Bowling Easter Egg: 4+ fours
+      const foursCount = room.turnInfo.lastRoll.filter(d => d === 4).length;
+      if (foursCount >= 4) {
+        setTimeout(() => setShowStoveAnim(true), 1500);
+        setTimeout(() => setShowStoveAnim(false), 5500);
       }
 
       return () => clearTimeout(timer);
@@ -323,8 +331,9 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                    {e}
                  </button>
                ))}
-            </div>
-          )}
+             </div>
+          </>
+        )}
         </div>
       </div>
 
@@ -595,13 +604,22 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
           <div className="action-stack">
             {nickname.toLowerCase() === 'zakladatel' && isMyTurn && !isRolling && room.turnInfo.rollCount === 0 && (
-              <button 
-                onClick={() => socket.emit('force-straight')} 
-                className="neon-button sm" 
-                style={{ marginBottom: '10px', width: '100%', borderColor: 'var(--neon-yellow)', color: 'var(--neon-yellow)', background: 'rgba(255, 230, 0, 0.05)' }}
-              >
-                🛠️ [DEV] HODIT POSTUPKU (DEBUG)
-              </button>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <button 
+                  onClick={() => socket.emit('force-straight')} 
+                  className="neon-button sm" 
+                  style={{ flex: 1, borderColor: 'var(--neon-yellow)', color: 'var(--neon-yellow)', background: 'rgba(255, 230, 0, 0.05)', fontSize: '0.7rem' }}
+                >
+                  🛠️ [DEV] POSTUPKA
+                </button>
+                <button 
+                  onClick={() => socket.emit('force-fours')} 
+                  className="neon-button sm" 
+                  style={{ flex: 1, borderColor: 'var(--neon-cyan)', color: 'var(--neon-cyan)', background: 'rgba(0, 255, 255, 0.05)', fontSize: '0.7rem' }}
+                >
+                  🛠️ [DEV] 4x ČTYŘKA
+                </button>
+              </div>
             )}
             {isMyTurn ? (
               <div className="btn-row">
@@ -665,6 +683,19 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                        })}
                     </div>
                  </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Easter Egg Animace: Sporák */}
+      {showStoveAnim && (
+        <div className="bowling-overlay fade-in">
+           <div className="stove-container">
+              <div className="stove-text">SPORÁK! 🔥</div>
+              <img src="/stove_egg.png" alt="Sporák" className="stove-img" />
+              <div style={{ color: 'white', marginTop: '20px', fontSize: '1.2rem', textAlign: 'center', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '10px' }}>
+                 Už se vaří! 🍳
               </div>
            </div>
         </div>

@@ -2160,19 +2160,55 @@ body {
   100% { transform: translateY(-50%) scale(1.2) rotate(5deg); opacity: 1; }
 }
 
-/* Emoji Selector */
-.reaction-picker-btn:hover {
-  opacity: 1 !important;
-  transform: scale(1.3);
+/* BOWLING STYLE EASTER EGG */
+.bowling-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
-.reaction-picker-btn.active {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  transform: scale(1.2);
+.stove-container {
+  position: relative;
+  width: 90vw;
+  max-width: 500px;
+  animation: stove-entry 4s ease-in-out forwards;
 }
 
-.reaction-btn-mini.current:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 15px white;
+.stove-img {
+  width: 100%;
+  border-radius: 30px;
+  box-shadow: 0 0 50px var(--neon-cyan), 0 0 100px var(--neon-pink);
+  border: 4px solid white;
+}
+
+.stove-text {
+  position: absolute;
+  top: -60px;
+  width: 100%;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 3rem;
+  color: white;
+  text-shadow: 0 0 20px var(--neon-pink), 0 0 40px red;
+  animation: text-pulse 0.5s infinite alternate;
+}
+
+@keyframes stove-entry {
+  0% { transform: scale(0) rotate(-720deg); opacity: 0; }
+  15% { transform: scale(1.1) rotate(10deg); opacity: 1; }
+  25% { transform: scale(1) rotate(0); }
+  75% { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(1.5) translateY(-100vh); opacity: 0; }
+}
+
+@keyframes text-pulse {
+  from { transform: scale(1); filter: brightness(1); }
+  to { transform: scale(1.1); filter: brightness(1.5); }
 }

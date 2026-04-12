@@ -528,6 +528,30 @@ io.on('connection', (socket) => {
       allowedIndexes: usedIndexes,
       isStraight: room.turnInfo.isStraight
     });
+  socket.on('force-fours', () => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player?.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id || player.nickname.toLowerCase() !== 'zakladatel') return;
+    
+    room.turnInfo.rollCount++;
+    const roll = [4, 4, 4, 4, 1, 5]; 
+    room.turnInfo.lastRoll = roll;
+    
+    let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
+    if (checkDoubleScore(room)) score *= 2;
+    room.turnInfo.allowedIndexes = usedIndexes;
+    room.turnInfo.isStraight = isStraight || false;
+    
+    saveState();
+    io.to(room.id).emit('dice-rolled', { 
+      roll, 
+      turnPoints: room.turnInfo.turnPoints, 
+      rollCount: room.turnInfo.rollCount,
+      diceCount: room.turnInfo.diceCount,
+      storedDice: room.turnInfo.storedDice,
+      allowedIndexes: usedIndexes,
+      isStraight: room.turnInfo.isStraight
+    });
   });
 
   socket.on('update-selection', (indices) => {
