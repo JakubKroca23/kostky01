@@ -228,6 +228,14 @@ body {
 }
 .sound-toggle.active { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
 
+.hero-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+
 /* Common UI */
 .neon-card {
   background: var(--card-bg);
@@ -1253,9 +1261,34 @@ body {
   text-transform: uppercase;
   margin-bottom: 4px;
 }
-.lobby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.lobby-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
 
-.room-list { display: flex; flex-direction: column; gap: 12px; }
+.lobby-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 15px; 
+  flex-shrink: 0;
+}
+
+.room-list { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+  overflow-y: auto; 
+  flex: 1; 
+  min-height: 0;
+  padding-bottom: 40px;
+}
+.room-list::-webkit-scrollbar { display: block; width: 6px; }
+.room-list::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
 .room-item {
   display: flex;
   justify-content: space-between;
@@ -1285,7 +1318,7 @@ body {
 }
 
 /* Global Stats Panel */
-.online-players-card { padding: 16px !important; margin-bottom: 15px; }
+.online-players-card { padding: 16px !important; margin-bottom: 15px; flex-shrink: 0; }
 .online-list-horizontal {
   display: flex;
   gap: 8px;
