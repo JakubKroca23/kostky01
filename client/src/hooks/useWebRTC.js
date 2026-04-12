@@ -31,7 +31,9 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
   useEffect(() => {
     if (!voiceChatEnabled) {
       cleanupAll();
-      socket?.emit('webrtc-voice-status', false);
+      if (socket?.connected) {
+        socket.emit('webrtc-voice-status', false);
+      }
       return;
     }
 
@@ -44,7 +46,9 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
             return;
         }
         localStreamRef.current = stream;
-        socket?.emit('webrtc-voice-status', true);
+        if (socket?.connected) {
+          socket.emit('webrtc-voice-status', true);
+        }
       })
       .catch(err => {
         console.error("Microphone access denied or error:", err);
@@ -58,15 +62,16 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
 
   // Create a new RTCPeerConnection
   const createPeer = useCallback((targetId) => {
-    // If peer already exists, clean it up before recreating
     if (peersRef.current[targetId]) {
+      // Don't recreate if it's already in connecting/connected state unless needed
+      // Actually, safest is to recreate if we are re-initiating
       cleanupPeer(targetId);
     }
 
     const peer = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' }
+        { urls: 'stun:stun1.l.google.com:19302' }
       ]
     });
 
@@ -98,8 +103,8 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
       if (!isOn) {
         cleanupPeer(userId);
       } else {
-        // Only one side should create the offer to avoid collision.
-        // We use myId > userId to deterministically pick who initiates.
+        socket.emit('webrtc-discover-reply', { targetId: userId });
+        
         if (myId > userId) {
           try {
             const peer = createPeer(userId);
@@ -111,6 +116,20 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
           }
         }
       }
+    };
+
+    const handleDiscoverReply = async ({ senderId }) => {
+        if (myId > senderId) {
+          // If myId > senderId, we take charge of calling
+          try {
+            const peer = createPeer(senderId);
+            const offer = await peer.createOffer();
+            await peer.setLocalDescription(offer);
+            socket.emit('webrtc-offer', { targetId: senderId, offer });
+          } catch(e) {
+            console.error("Error creating offer:", e);
+          }
+        }
     };
 
     const handleOffer = async ({ senderId, offer }) => {
@@ -148,12 +167,14 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
     };
 
     socket.on('webrtc-voice-status', handleVoiceStatus);
+    socket.on('webrtc-discover-reply', handleDiscoverReply);
     socket.on('webrtc-offer', handleOffer);
     socket.on('webrtc-answer', handleAnswer);
     socket.on('webrtc-ice-candidate', handleIceCandidate);
 
     return () => {
       socket.off('webrtc-voice-status', handleVoiceStatus);
+      socket.off('webrtc-discover-reply', handleDiscoverReply);
       socket.off('webrtc-offer', handleOffer);
       socket.off('webrtc-answer', handleAnswer);
       socket.off('webrtc-ice-candidate', handleIceCandidate);

@@ -643,6 +643,10 @@ io.on('connection', (socket) => {
     socket.to(room.id).emit('webrtc-voice-status', { userId: socket.id, isOn });
   });
 
+  socket.on('webrtc-discover-reply', ({ targetId }) => {
+    io.to(targetId).emit('webrtc-discover-reply', { senderId: socket.id });
+  });
+
   socket.on('webrtc-offer', ({ targetId, offer }) => {
     io.to(targetId).emit('webrtc-offer', { senderId: socket.id, offer });
   });

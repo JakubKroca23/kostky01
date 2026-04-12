@@ -10,6 +10,7 @@ function RemoteAudioPlayer({ stream }) {
   useEffect(() => {
     if (audioRef.current && stream) {
       audioRef.current.srcObject = stream;
+      audioRef.current.play().catch(e => console.warn("Audio autoplay blocked by browser:", e));
     }
   }, [stream]);
   return <audio ref={audioRef} autoPlay playsInline />;
@@ -496,7 +497,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       )}
 
       {/* Skryté audio elementy pro Voice Chat */}
-      <div style={{ display: 'none' }}>
+      <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
          {Object.entries(remoteStreams).map(([peerId, stream]) => (
             <RemoteAudioPlayer key={peerId} stream={stream} />
          ))}
