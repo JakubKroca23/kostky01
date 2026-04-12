@@ -20,7 +20,7 @@ const SCORING_FIXED_TABLE = {
  * @returns {{ score: number, usedIndexes: number[], canDohodit: boolean }} Result.
  */
 export function calculateScore(dice, isFirstRoll = false) {
-  if (!dice || dice.length === 0) return { score: 0, usedIndexes: [], canDohodit: false };
+  if (!dice || dice.length === 0) return { score: 0, usedIndexes: [], canDohodit: false, isStraight: false };
 
   const counts = {};
   dice.forEach((val) => {
@@ -45,13 +45,13 @@ export function calculateScore(dice, isFirstRoll = false) {
   if (isFirstRoll && dice.length === 6) {
     // 1A. Straight 1-2-3-4-5-6 = 2000b
     if (Object.keys(counts).length === 6) {
-       return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false };
+       return { score: 2000, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false, isStraight: true };
     }
 
     // 1B. Three pairs (e.g. 2,2,4,4,6,6) = 700b
     const pairs = Object.entries(counts).filter(([, count]) => count === 2);
     if (pairs.length === 3) {
-      return { score: 700, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false };
+      return { score: 700, usedIndexes: [0, 1, 2, 3, 4, 5], canDohodit: false, isStraight: false };
     }
   }
 
@@ -92,6 +92,7 @@ export function calculateScore(dice, isFirstRoll = false) {
   return {
     score: totalScore,
     usedIndexes: Array.from(usedIndexes),
-    canDohodit: canDohodit // String or false
+    canDohodit: canDohodit, // String or false
+    isStraight: false
   };
 }

@@ -342,7 +342,8 @@ io.on('connection', (socket) => {
       config: {
         doubleScoreEnabled: config?.doubleScoreEnabled || false,
         doubleInterval: parseInt(config?.doubleInterval) || 5, // rounds
-        doubleDuration: parseInt(config?.doubleDuration) || 30 // seconds
+        doubleDuration: parseInt(config?.doubleDuration) || 30, // seconds
+        thiefModeEnabled: config?.thiefModeEnabled || false
       },
       status: {
         doubleScoreActive: false,
@@ -362,7 +363,8 @@ io.on('connection', (socket) => {
         storedDice: [],
         diceCount: 6,
         allowedIndexes: [],
-        chat: []
+        chat: [],
+        isStraight: false
       }
     };
     rooms.set(roomId, room);
@@ -416,9 +418,10 @@ io.on('connection', (socket) => {
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
     room.turnInfo.lastRoll = roll;
     
-    let { score, usedIndexes } = calculateScore(roll, room.turnInfo.rollCount === 1);
+    let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
     if (checkDoubleScore(room)) score *= 2;
     room.turnInfo.allowedIndexes = usedIndexes;
+    room.turnInfo.isStraight = isStraight || false;
 
     const isBust = (score === 0);
     const totalPotential = room.turnInfo.turnPoints + score;
@@ -433,7 +436,8 @@ io.on('connection', (socket) => {
         msg,
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
-        storedDice: room.turnInfo.storedDice
+        storedDice: room.turnInfo.storedDice,
+        isStraight: false
       });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
@@ -444,7 +448,8 @@ io.on('connection', (socket) => {
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes
+        allowedIndexes: usedIndexes,
+        isStraight: room.turnInfo.isStraight
       });
     }
   });
@@ -459,9 +464,10 @@ io.on('connection', (socket) => {
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
     room.turnInfo.lastRoll = roll;
     
-    let { score, usedIndexes } = calculateScore(roll, room.turnInfo.rollCount === 1);
+    let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
     if (checkDoubleScore(room)) score *= 2;
     room.turnInfo.allowedIndexes = usedIndexes;
+    room.turnInfo.isStraight = isStraight || false;
 
     const isBust = (score === 0);
     const totalPotential = room.turnInfo.turnPoints + score;
@@ -476,7 +482,8 @@ io.on('connection', (socket) => {
         msg,
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
-        storedDice: room.turnInfo.storedDice
+        storedDice: room.turnInfo.storedDice,
+        isStraight: false
       });
       setTimeout(() => nextTurn(room, true), 1500);
     } else {
@@ -487,7 +494,8 @@ io.on('connection', (socket) => {
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes
+        allowedIndexes: usedIndexes,
+        isStraight: room.turnInfo.isStraight
       });
     }
   });
@@ -496,6 +504,43 @@ io.on('connection', (socket) => {
     const room = rooms.get(players.get(socket.id)?.roomId);
     if (!room) return;
     socket.to(room.id).emit('selection-updated', { playerId: socket.id, indices });
+  });
+
+  socket.on('steal-points', ({ targetId }) => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player?.roomId);
+    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
+    if (!room.config.thiefModeEnabled) return;
+    if (!room.turnInfo.isStraight) {
+       socket.emit('nickname-error', 'Nemáš postupku na ukradení bodů!');
+       return;
+    }
+
+    const target = room.players.find(p => p.id === targetId);
+    if (!target || target.id === socket.id) return;
+
+    // Steal 1000 points
+    const amount = 1000;
+    room.turnInfo.scores[targetId] = Math.max(0, (room.turnInfo.scores[targetId] || 0) - amount);
+    room.turnInfo.scores[socket.id] = (room.turnInfo.scores[socket.id] || 0) + amount;
+
+    // Log to chat
+    const msg = {
+      id: Date.now(),
+      sender: 'SYSTEM',
+      text: `${player.nickname} ukradl 1000 bodů hráči ${target.nickname}!`,
+      time: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })
+    };
+    room.turnInfo.chat = [...(room.turnInfo.chat || []), msg].slice(-50);
+    io.to(room.id).emit('chat-message-received', msg);
+    
+    io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
+    
+    // Clear turn points (as they chose theft over points)
+    room.turnInfo.turnPoints = 0; 
+    
+    saveState();
+    nextTurn(room);
   });
 
   socket.on('roll-again', (selectedIndexes) => {
@@ -527,9 +572,10 @@ io.on('connection', (socket) => {
     const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
     room.turnInfo.lastRoll = roll;
 
-    let { score: nextScore, usedIndexes } = calculateScore(roll, room.turnInfo.rollCount === 1);
+    let { score: nextScore, usedIndexes, isStraight: nextIsStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
     if (checkDoubleScore(room)) nextScore *= 2;
     room.turnInfo.allowedIndexes = usedIndexes;
+    room.turnInfo.isStraight = nextIsStraight || false;
     const totalPotential = room.turnInfo.turnPoints + nextScore;
     
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
@@ -553,7 +599,8 @@ io.on('connection', (socket) => {
         rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount,
         storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes 
+        allowedIndexes: usedIndexes,
+        isStraight: room.turnInfo.isStraight
       });
     }
   });

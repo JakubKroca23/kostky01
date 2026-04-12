@@ -28,7 +28,9 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [doubleEnabled, setDoubleEnabled] = useState(room?.config?.doubleScoreEnabled || false);
   const [doubleInterval, setDoubleInterval] = useState(room?.config?.doubleInterval || 10);
   const [doubleDuration, setDoubleDuration] = useState(room?.config?.doubleDuration || 30);
+  const [thiefEnabled, setThiefEnabled] = useState(room?.config?.thiefModeEnabled || false);
   const [voiceChatEnabled, setVoiceChatEnabled] = useState(false);
+  const [showStealPrompt, setShowStealPrompt] = useState(false);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -84,6 +86,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       setDoubleEnabled(room.config.doubleScoreEnabled || false);
       setDoubleInterval(room.config.doubleInterval || 5);
       setDoubleDuration(room.config.doubleDuration || 30);
+      setThiefEnabled(room.config.thiefModeEnabled || false);
     }
   }, [room.config]);
 
@@ -149,11 +152,18 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
         setIsRolling(false);
         setValuesVisible(true);
       }, 1200);
-      lastRollId.current = rollSeed;
       lastRollCount.current = room.turnInfo.rollCount;
+
+      // Show steal prompt if it's a straight and thief mode is on
+      if (isMyTurn && room.turnInfo.isStraight && room.config.thiefModeEnabled) {
+        setTimeout(() => setShowStealPrompt(true), 1300); // Wait for dice animation
+      } else {
+        setShowStealPrompt(false);
+      }
+
       return () => clearTimeout(timer);
     }
-  }, [room.turnInfo.currentTurnId, room.turnInfo.rollCount, rollSeed]);
+  }, [room.turnInfo.currentTurnId, room.turnInfo.rollCount, rollSeed, isMyTurn, room.turnInfo.isStraight, room.config.thiefModeEnabled]);
 
   const handleDieClick = (index) => {
     if (isRolling || !isMyTurn) return;
@@ -341,6 +351,21 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 </div>
               </div>
             )}
+
+            <div className="admin-action-row" style={{ marginBottom: '15px' }}>
+              <div className="action-info">
+                <h4 style={{ margin: 0, color: 'var(--neon-cyan)' }}>Zloděj bodů</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Po hození postupky (1-6) v 1. hodu můžeš soupeři ukrást 1000 bodů.</p>
+              </div>
+              <div className={`admin-toggle ${thiefEnabled ? 'active' : ''}`} 
+                   onClick={() => {
+                     setThiefEnabled(!thiefEnabled);
+                     onUpdateConfig?.({ thiefModeEnabled: !thiefEnabled });
+                   }}>
+                 <div className="toggle-handle"></div>
+              </div>
+            </div>
+
             <button className="neon-button start-hero full-width" onClick={onStart}>🔥 START HRY 🔥</button>
           </div>
         )}
@@ -497,6 +522,44 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               <div className="wait-pill glass">ČEKÁM NA TAH...</div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Modal pro krádež bodů */}
+      {showStealPrompt && (
+        <div className="modal-overlay fade-in">
+           <div className="glass neon-card steal-modal" style={{ maxWidth: '400px', width: '90%', padding: '30px', textAlign: 'center' }}>
+              <h2 className="neon-text-pink" style={{ fontSize: '2rem', marginBottom: '10px' }}>🔥 POSTUPKA! 🔥</h2>
+              <p style={{ marginBottom: '25px', opacity: 0.9 }}>Máš čistou postupku! Co uděláš?</p>
+              
+              <div style={{ display: 'grid', gap: '15px' }}>
+                 <button className="neon-button primary" onClick={() => setShowStealPrompt(false)}>
+                    PONECHAT SI 2000 BODŮ
+                 </button>
+                 
+                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px', marginTop: '10px' }}>
+                    <p style={{ fontSize: '0.8rem', marginBottom: '15px', color: 'var(--neon-cyan)' }}>NEBO UKRÁST 1000 BODŮ SOUPEŘI:</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                       {room.players.map(p => {
+                         if (p.id === myId) return null;
+                         return (
+                           <button 
+                             key={p.id} 
+                             className="neon-button sm" 
+                             style={{ padding: '8px' }}
+                             onClick={() => {
+                               socket.emit('steal-points', { targetId: p.id });
+                               setShowStealPrompt(false);
+                             }}
+                           >
+                             {p.nickname}
+                           </button>
+                         );
+                       })}
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
       )}
 
