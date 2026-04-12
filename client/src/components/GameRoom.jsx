@@ -133,7 +133,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   // Okamžité vizuální znásobení pro právě vybírané kostky
   const selectedPoints = (doubleStatus?.active && timeLeft > 0) ? baseSelectedPoints * 2 : baseSelectedPoints;
 
-  const emojis = ['🔥', '😂', '😭', '🎲', '👑', '😎', '💀', '💩', '🍀', '💸'];
+  const emojis = [
+    '🔥', '😂', '😭', '🎲', '👑', '😎', '💀', '💩', '🍀', '💸', '⭐', '💣', '🌈', '💎', '🍄',
+    '❤️', '👍', '👎', '🎉', '😡', '🤔', '😱', '👀', '🤐', '👻', '👾', '🚀', '🥊', '🎮', '🔔',
+    '🦄', '🥑', '🍕', '🍺', '⚡', '💡', '💯', '✅', '❌', '⚠️'
+  ];
 
   const lastRollCount = useRef(room.turnInfo.rollCount);
   const lastRollId = useRef(rollSeed);
@@ -267,13 +271,13 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           </div>
         </div>
         
-        <div className="reactions-row-horizontal" style={{ gap: '15px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="reactions-row-horizontal" style={{ gap: '15px', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
              <button 
                className="reaction-btn-mini current pulse-hover" 
                onClick={() => onReaction(myEmoji)}
                title="Poslat reakci"
-               style={{ fontSize: '1.8rem', background: 'rgba(255,255,255,0.08)', padding: '8px', borderRadius: '12px', border: '1px solid var(--neon-cyan)' }}
+               style={{ fontSize: '1.3rem', background: 'rgba(255,255,255,0.08)', padding: '6px 10px', borderRadius: '10px', border: '1px solid var(--neon-cyan)' }}
              >
                {myEmoji}
              </button>
@@ -281,31 +285,36 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
              <button 
                className={`neon-button sm ${isReactionsOpen ? 'active' : ''}`}
                onClick={() => setIsReactionsOpen(!isReactionsOpen)}
-               style={{ padding: '8px 12px', borderRadius: '10px' }}
-               title="Změnit emoji"
+               style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '0.9rem' }}
+               title="Nastavení emoji"
              >
                ⚙️
              </button>
           </div>
           
-          {isReactionsOpen && (
-            <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
-              position: 'absolute', top: '100%', left: '0', zIndex: 1000, marginTop: '10px',
-              padding: '10px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-            }}>
+        {isReactionsOpen && (
+          <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
+            position: 'absolute', top: '100%', left: '0', zIndex: 1000, marginTop: '8px',
+            padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px',
+            boxShadow: '0 15px 40px rgba(0,0,0,0.7)', width: '300px',
+            background: 'rgba(10, 10, 20, 0.98)', border: '1px solid var(--neon-cyan)',
+            maxHeight: '200px', overflowY: 'auto'
+          }}>
                {emojis.map(e => (
                  <button 
                    key={e} 
                    className={`reaction-picker-btn ${myEmoji === e ? 'active' : ''}`}
-                   onClick={() => {
+                   onClick={(ev) => {
+                     ev.stopPropagation();
                      setMyEmoji(e);
                      localStorage.setItem('kostky-my-emoji', e);
                      setIsReactionsOpen(false);
                    }}
                    style={{ 
-                     background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', 
-                     opacity: myEmoji === e ? 1 : 0.5, transition: '0.2s', padding: '5px'
+                     background: 'rgba(255,255,255,0.03)', border: '1px solid transparent', 
+                     cursor: 'pointer', fontSize: '1.4rem', borderRadius: '6px',
+                     opacity: myEmoji === e ? 1 : 0.6, transition: '0.2s', padding: '8px',
+                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                    }}
                  >
                    {e}
@@ -362,46 +371,46 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             </div>
 
             {doubleEnabled && (
-              <div className="double-settings fade-in" style={{ padding: '15px', marginTop: 0, marginBottom: '15px', background: 'rgba(157, 0, 255, 0.05)', border: '1px dashed var(--neon-purple)', borderRadius: '12px' }}>
-                <div className="input-row" style={{ display: 'flex', gap: '15px' }}>
+              <div className="double-settings fade-in" style={{ padding: '10px', marginTop: 0, marginBottom: '10px', background: 'rgba(157, 0, 255, 0.05)', border: '1px dashed var(--neon-purple)', borderRadius: '12px' }}>
+                <div className="input-row" style={{ display: 'flex', gap: '10px' }}>
                   <div className="input-group" style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>INTERVAL (KOLA)</label>
+                    <label style={{ fontSize: '0.65rem', display: 'block', marginBottom: '3px', color: '#888' }}>INTERVAL (KOLA)</label>
                     {canStart ? (
-                      <input 
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={doubleInterval} 
-                        onChange={(e) => {
-                          const val = Math.max(1, parseInt(e.target.value) || 1);
-                          setDoubleInterval(val);
-                          onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
-                        }}
-                        className="chat-input glass"
-                        style={{ width: '100%', padding: '10px' }}
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
+                           const val = Math.max(1, doubleInterval - 1);
+                           setDoubleInterval(val);
+                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
+                         }}>-</button>
+                         <div className="rule-value-box" style={{ flex: 1, textAlign: 'center', padding: '5px' }}>{doubleInterval}</div>
+                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
+                           const val = Math.min(100, doubleInterval + 1);
+                           setDoubleInterval(val);
+                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
+                         }}>+</button>
+                      </div>
                     ) : (
-                      <div className="rule-value-box">{doubleInterval} hodů</div>
+                      <div className="rule-value-box" style={{ padding: '5px' }}>{doubleInterval} hodů</div>
                     )}
                   </div>
                   <div className="input-group" style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>TRVÁNÍ (SEKUNDY)</label>
+                    <label style={{ fontSize: '0.65rem', display: 'block', marginBottom: '3px', color: '#888' }}>TRVÁNÍ (SEK)</label>
                     {canStart ? (
-                      <input 
-                        type="number"
-                        min="5"
-                        max="300"
-                        value={doubleDuration} 
-                        onChange={(e) => {
-                          const val = Math.max(5, parseInt(e.target.value) || 5);
-                          setDoubleDuration(val);
-                          onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
-                        }}
-                        className="chat-input glass"
-                        style={{ width: '100%', padding: '10px' }}
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
+                           const val = Math.max(5, doubleDuration - 5);
+                           setDoubleDuration(val);
+                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
+                         }}>-</button>
+                         <div className="rule-value-box" style={{ flex: 1, textAlign: 'center', padding: '5px' }}>{doubleDuration}s</div>
+                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
+                           const val = Math.min(300, doubleDuration + 5);
+                           setDoubleDuration(val);
+                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
+                         }}>+</button>
+                      </div>
                     ) : (
-                      <div className="rule-value-box">{doubleDuration}s</div>
+                      <div className="rule-value-box" style={{ padding: '5px' }}>{doubleDuration}s</div>
                     )}
                   </div>
                 </div>
@@ -626,17 +635,18 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                        {room.players.map(p => {
                          if (p.id === socket.id) return null;
+                         const pScore = (room.turnInfo.scores && room.turnInfo.scores[p.id]) || 0;
                          return (
                            <button 
                              key={p.id} 
                              className="neon-button sm" 
-                             style={{ padding: '8px' }}
+                             style={{ padding: '8px', fontSize: '0.8rem' }}
                              onClick={() => {
                                socket.emit('steal-points', { targetId: p.id });
                                setShowStealPrompt(false);
                              }}
                            >
-                             {p.nickname}
+                             {p.nickname} ({pScore})
                            </button>
                          );
                        })}
