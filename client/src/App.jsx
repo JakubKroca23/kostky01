@@ -183,7 +183,8 @@ function App() {
           rollCount: data.rollCount,
           diceCount: data.diceCount,
           storedDice: data.storedDice,
-          allowedIndexes: data.allowedIndexes || []
+          allowedIndexes: data.allowedIndexes || [],
+          isStraight: data.isStraight || false
         }
       }));
       if (data.isStraight) {

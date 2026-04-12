@@ -88,22 +88,35 @@ class AudioManager {
   playBust() {
     if (!this.enabled) return;
     this.init();
-    const duration = 0.5;
-    const osc = this.context.createOscillator();
-    const gain = this.context.createGain();
-
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(110, this.context.currentTime);
-    osc.frequency.linearRampToValueAtTime(55, this.context.currentTime + duration);
-
-    gain.gain.setValueAtTime(0.1, this.context.currentTime);
-    gain.gain.linearRampToValueAtTime(0, this.context.currentTime + duration);
-
-    osc.connect(gain);
-    gain.connect(this.context.destination);
-
-    osc.start();
-    osc.stop(this.context.currentTime + duration);
+    const now = this.context.currentTime;
+    const duration = 0.8;
+    
+    // Aggressive buzzing failure sound
+    [110, 107, 103].forEach(freq => {
+      const osc = this.context.createOscillator();
+      const gain = this.context.createGain();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq / 2, now + duration);
+      
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0, now + duration);
+      
+      // Filter for "grit"
+      const filter = this.context.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1000, now);
+      filter.frequency.linearRampToValueAtTime(200, now + duration);
+      filter.Q.value = 10;
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.context.destination);
+      
+      osc.start();
+      osc.stop(now + duration);
+    });
   }
 
   playScore() {

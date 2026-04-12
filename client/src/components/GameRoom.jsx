@@ -268,23 +268,32 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
         </div>
         
         <div className="reactions-row-horizontal" style={{ gap: '15px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-             <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase' }}>Tvé Emoji:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
              <button 
-               className="reaction-btn-mini current" 
+               className="reaction-btn-mini current pulse-hover" 
                onClick={() => onReaction(myEmoji)}
                title="Poslat reakci"
-               style={{ fontSize: '1.6rem', background: 'rgba(255,255,255,0.05)', padding: '5px', borderRadius: '10px' }}
+               style={{ fontSize: '1.8rem', background: 'rgba(255,255,255,0.08)', padding: '8px', borderRadius: '12px', border: '1px solid var(--neon-cyan)' }}
              >
                {myEmoji}
              </button>
+             
+             <button 
+               className={`neon-button sm ${isReactionsOpen ? 'active' : ''}`}
+               onClick={() => setIsReactionsOpen(!isReactionsOpen)}
+               style={{ padding: '8px 12px', borderRadius: '10px' }}
+               title="Změnit emoji"
+             >
+               ⚙️
+             </button>
           </div>
           
-          <div className="divider-v" style={{ width: '1px', height: '20px', background: 'var(--glass-border)' }}></div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase' }}>Změnit:</span>
-            <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: '150px', padding: '5px 0' }}>
+          {isReactionsOpen && (
+            <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
+              position: 'absolute', top: '100%', left: '0', zIndex: 1000, marginTop: '10px',
+              padding: '10px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+            }}>
                {emojis.map(e => (
                  <button 
                    key={e} 
@@ -292,17 +301,18 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                    onClick={() => {
                      setMyEmoji(e);
                      localStorage.setItem('kostky-my-emoji', e);
+                     setIsReactionsOpen(false);
                    }}
                    style={{ 
-                     background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', 
-                     opacity: myEmoji === e ? 1 : 0.4, transition: '0.2s' 
+                     background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', 
+                     opacity: myEmoji === e ? 1 : 0.5, transition: '0.2s', padding: '5px'
                    }}
                  >
                    {e}
                  </button>
                ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -615,7 +625,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                     <p style={{ fontSize: '0.8rem', marginBottom: '15px', color: 'var(--neon-cyan)' }}>NEBO UKRÁST 1000 BODŮ SOUPEŘI:</p>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                        {room.players.map(p => {
-                         if (p.id === myId) return null;
+                         if (p.id === socket.id) return null;
                          return (
                            <button 
                              key={p.id} 
