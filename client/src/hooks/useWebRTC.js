@@ -115,7 +115,7 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
       } else {
         socket.emit('webrtc-discover-reply', { targetId: userId });
         
-        if (myId > userId) {
+        if (myId > userId && !peersRef.current[userId]) {
           try {
             const peer = createPeer(userId);
             const offer = await peer.createOffer();
@@ -129,8 +129,7 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
     };
 
     const handleDiscoverReply = async ({ senderId }) => {
-        if (myId > senderId) {
-          // If myId > senderId, we take charge of calling
+        if (myId > senderId && !peersRef.current[senderId]) {
           try {
             const peer = createPeer(senderId);
             const offer = await peer.createOffer();
