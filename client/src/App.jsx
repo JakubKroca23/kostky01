@@ -190,7 +190,9 @@ function App() {
           diceCount: data.diceCount,
           storedDice: data.storedDice,
           allowedIndexes: data.allowedIndexes || [],
-          isStraight: data.isStraight || false
+          isStraight: data.isStraight || false,
+          // Bust timestamp pro reaktivní detekci v GameRoom
+          bustAt: data.isBust ? Date.now() : null
         }
       }));
       if (data.isStraight) {

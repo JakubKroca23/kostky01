@@ -9,8 +9,9 @@ const DOTS_MAP = {
   6: [0, 3, 6, 2, 5, 8]
 };
 
-function Die({ value, isSelected, onClick, isRolling, canSelect, style, showValue = true }) {
-  const dots = showValue ? (DOTS_MAP[value] || []) : [];
+function Die({ value, isSelected, onClick, isRolling, canSelect, style, showValue = true, isBust = false }) {
+  // Při bustu ignorujeme tečky a zobrazíme lebku
+  const dots = (showValue && !isBust) ? (DOTS_MAP[value] || []) : [];
 
   // style obsahuje --tx, --ty, --tr z Matter.js
   // Aplikujeme transform přímo kvůli 60fps real-time updatu
@@ -24,15 +25,20 @@ function Die({ value, isSelected, onClick, isRolling, canSelect, style, showValu
 
   return (
     <div 
-      className={`dice-body ${isSelected ? 'selected' : ''} ${isRolling ? 'rolling' : ''} ${canSelect ? 'can-select' : ''}`}
+      className={`dice-body ${isSelected ? 'selected' : ''} ${isRolling ? 'rolling' : ''} ${canSelect ? 'can-select' : ''} ${isBust ? 'bust' : ''}`}
       onClick={onClick}
       style={divStyle}
     >
-      <div className="dots-grid">
-        {[...Array(9)].map((_, i) => (
-          <div key={i} className={`dot ${dots.includes(i) ? 'visible' : ''}`}></div>
-        ))}
-      </div>
+      {isBust ? (
+        // Bust: zobrazíme lebku místo teček
+        <div className="bust-skull">💀</div>
+      ) : (
+        <div className="dots-grid">
+          {[...Array(9)].map((_, i) => (
+            <div key={i} className={`dot ${dots.includes(i) ? 'visible' : ''}`}></div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

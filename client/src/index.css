@@ -789,6 +789,32 @@ body {
   50% { border-color: white; box-shadow: 0 0 18px var(--neon-cyan); }
 }
 
+/* Bust stav kostky — zobrazí lebky místo tečeček */
+.dice-body.bust {
+  border-color: #ff2244 !important;
+  box-shadow: 0 0 20px rgba(255, 34, 68, 0.8), inset 0 0 15px rgba(255, 0, 0, 0.15) !important;
+  animation: bustPulse 0.5s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes bustPulse {
+  from { border-color: #ff2244; box-shadow: 0 0 12px rgba(255, 34, 68, 0.6); }
+  to   { border-color: #ff6677; box-shadow: 0 0 28px rgba(255, 34, 68, 1), 0 0 50px rgba(255, 0, 0, 0.3); }
+}
+
+/* Lebka uvnitř kostky při bustu */
+.bust-skull {
+  font-size: 2rem;
+  line-height: 1;
+  animation: skullPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  user-select: none;
+}
+
+@keyframes skullPop {
+  from { transform: scale(0) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+
 .dot { 
   border-radius: 50%; 
   opacity: 0; /* REMOVED GHOST DOTS */

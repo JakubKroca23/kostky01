@@ -19,6 +19,7 @@ function RemoteAudioPlayer({ stream }) {
 function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats, onLeave, doubleStatus, onUpdateConfig }) {
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
+  const [isBust, setIsBust] = useState(false);
   const [isReactionsOpen, setIsReactionsOpen] = useState(false);
   const [errorLocal, setErrorLocal] = useState('');
   const [arenaWidth, setArenaWidth] = useState(460);
@@ -147,6 +148,8 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     // CRITICAL: Reset selection for EVERYONE when a new roll happens or turn changes
     setSelectedDice([]);
     setErrorLocal('');
+    // Reset bust state při každém novém tahu nebo hodu
+    setIsBust(false);
 
     // Only roll if it's a NEW roll (different seed or count)
     const isNewRoll = lastRollId.current !== rollSeed || lastRollCount.current !== room.turnInfo.rollCount;
@@ -177,6 +180,18 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       return () => clearTimeout(timer);
     }
   }, [room.turnInfo.currentTurnId, room.turnInfo.rollCount, rollSeed, isMyTurn, room.turnInfo.isStraight, room.config.thiefModeEnabled]);
+
+  // Reagování na bust signál — po skončení roll animace zobrazíme lebky
+  useEffect(() => {
+    if (!room.turnInfo.bustAt) return;
+
+    // Počkáme na konec roll animace (1.2s) a pak ukážeme bust
+    const timer = setTimeout(() => {
+      setIsBust(true);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [room.turnInfo.bustAt]);
 
   const handleDieClick = (index) => {
     if (isRolling || !isMyTurn) return;
@@ -217,7 +232,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     return room.turnInfo.lastRoll.map((value, index) => {
       if (selectedDice.includes(index)) return null;
 
-      const canSelect = isMyTurn && (room.turnInfo.allowedIndexes || []).includes(index);
+      const canSelect = !isBust && isMyTurn && (room.turnInfo.allowedIndexes || []).includes(index);
       const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
 
       const style = {
@@ -236,6 +251,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           style={style}
           onClick={() => handleDieClick(index)}
           showValue={valuesVisible}
+          isBust={isBust}
         />
       );
     });
