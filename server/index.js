@@ -544,6 +544,8 @@ io.on('connection', (socket) => {
       allowedIndexes: usedIndexes,
       isStraight: room.turnInfo.isStraight
     });
+  });
+
   socket.on('force-fours', () => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);
