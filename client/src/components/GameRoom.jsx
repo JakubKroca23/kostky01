@@ -32,7 +32,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
-  const { remoteStreams } = useWebRTC(socket, room?.id, socket?.id, voiceChatEnabled);
+  const { remoteStreams, connectionStates } = useWebRTC(socket, room?.id, socket?.id, voiceChatEnabled);
 
   useEffect(() => {
     if (!arenaRef.current) return;
@@ -274,7 +274,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               <span className="player-num">{i + 1}.</span>
               <span className="player-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 {p.nickname} {i === 0 && <span className="host-tag">(HOST)</span>}
-                {remoteStreams[p.id] && <span title="Mluví" style={{ fontSize: '1.1rem', color: 'var(--neon-cyan)', textShadow: '0 0 10px var(--neon-cyan)' }}>🔊</span>}
+                {remoteStreams[p.id] && (
+                  <span title={`Stav spojení: ${connectionStates[p.id] || 'active'}`} style={{ fontSize: '1.1rem', color: 'var(--neon-cyan)', textShadow: '0 0 10px var(--neon-cyan)' }}>
+                    🔊<span style={{ fontSize: '0.5rem', marginLeft: '2px', opacity: 0.7 }}>{connectionStates[p.id]?.substring(0, 4)}</span>
+                  </span>
+                )}
               </span>
             </div>
           ))}

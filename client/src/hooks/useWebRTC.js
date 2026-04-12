@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
   const [remoteStreams, setRemoteStreams] = useState({});
+  const [connectionStates, setConnectionStates] = useState({});
   const localStreamRef = useRef(null);
   const peersRef = useRef({}); // { [userId]: RTCPeerConnection }
   const iceCandidateQueues = useRef({}); // { [userId]: RTCIceCandidate[] }
@@ -14,6 +15,11 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
     }
     delete iceCandidateQueues.current[userId];
     setRemoteStreams(prev => {
+      const next = { ...prev };
+      delete next[userId];
+      return next;
+    });
+    setConnectionStates(prev => {
       const next = { ...prev };
       delete next[userId];
       return next;
@@ -91,8 +97,18 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
       }
     };
 
+    peer.oniceconnectionstatechange = () => {
+      setConnectionStates(prev => ({ ...prev, [targetId]: peer.iceConnectionState }));
+    };
+
     peer.ontrack = (event) => {
-      setRemoteStreams(prev => ({ ...prev, [targetId]: event.streams[0] }));
+      setRemoteStreams(prev => {
+         const stream = prev[targetId] || new MediaStream();
+         if (!stream.getTracks().includes(event.track)) {
+           stream.addTrack(event.track);
+         }
+         return { ...prev, [targetId]: stream };
+      });
     };
 
     if (localStreamRef.current) {
@@ -218,5 +234,5 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
     };
   }, [socket, voiceChatEnabled, myId, createPeer, cleanupPeer]);
 
-  return { remoteStreams };
+  return { remoteStreams, connectionStates };
 }
