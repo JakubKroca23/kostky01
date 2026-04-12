@@ -108,9 +108,11 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   // Robust guard for index out of bounds
   const validSelected = selectedDice.filter(i => i < (room.turnInfo.lastRoll?.length || 0));
   
-  const selectedPoints = validSelected.length > 0 
+  const baseSelectedPoints = validSelected.length > 0 
     ? calculateScore(validSelected.map(i => room.turnInfo.lastRoll[i]), room.turnInfo.rollCount === 1).score 
     : 0;
+  // Okamžité vizuální znásobení pro právě vybírané kostky
+  const selectedPoints = (doubleStatus?.active && timeLeft > 0) ? baseSelectedPoints * 2 : baseSelectedPoints;
 
   const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
 
@@ -367,7 +369,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
 
           <div className="points-display-row">
-            <div className="pts-main neon-card">
+            <div className={`pts-main neon-card ${doubleStatus?.active && timeLeft > 0 ? 'pulse-fast' : ''}`}>
                {room.turnInfo.rollCount > 0 ? (
                  <>
                    <span className="pts-label">HOD {room.turnInfo.rollCount}/3</span>

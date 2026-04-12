@@ -1819,3 +1819,4 @@ body {
   user-select: none;
   line-height: 0.8;
 }
+@keyframes pulseFast { 0% { box-shadow: 0 0 10px var(--neon-pink); border-color: rgba(255,0,150,0.5); } 50% { box-shadow: 0 0 30px var(--neon-pink), inset 0 0 20px rgba(255,0,150,0.3); border-color: var(--neon-pink); } 100% { box-shadow: 0 0 10px var(--neon-pink); border-color: rgba(255,0,150,0.5); } } .pulse-fast { animation: pulseFast 0.8s infinite ease-in-out; }
