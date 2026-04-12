@@ -33,20 +33,9 @@ services:
     container_name: kostky-coturn
     restart: always
     network_mode: host
-    command: >
-      -n
-      --log-file=stdout
-      --min-port=49152
-      --max-port=65535
-      --fingerprint
-      --no-multicast-peers
-      --no-cli
-      --no-tls
-      --no-dtls
-      --realm=kostky.propoj.app
-      --user=kostky:VoiceChatTurnSecret2024
-      --lt-cred-mech
-      --external-ip=92.5.8.24/10.0.0.113
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: ["-c", "/etc/coturn/turnserver.conf"]
 
 networks:
   appwrite:
