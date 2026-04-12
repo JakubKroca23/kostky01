@@ -293,13 +293,16 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           </div>
           
         {isReactionsOpen && (
-          <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
-            position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, marginTop: '8px',
-            padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px',
-            boxShadow: '0 15px 40px rgba(0,0,0,0.7)', width: '280px', maxWidth: '90vw',
-            background: 'rgba(10, 10, 20, 0.98)', border: '1px solid var(--neon-cyan)',
-            maxHeight: '250px', overflowY: 'auto'
-          }}>
+          <>
+            <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 9999 }} onClick={() => setIsReactionsOpen(false)} />
+            <div className="emoji-picker-dropdown glass neon-card-cyan fade-in" style={{ 
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000,
+              padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.9)', width: '300px', maxWidth: '90vw',
+              background: 'rgba(10, 10, 20, 0.98)', border: '2px solid var(--neon-cyan)',
+              maxHeight: '400px', overflowY: 'auto', borderRadius: '20px'
+            }}>
+               <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontSize: '0.8rem', opacity: 0.6, marginBottom: '10px', letterSpacing: '2px' }}>VYBER SI VIBE</div>
                {emojis.map(e => (
                  <button 
                    key={e} 
