@@ -444,6 +444,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   <div className="score-main">
                     <span className="score-name">
                       {isActive ? '🎲 ' : ''}{p.nickname}
+                      {isActive && <span className="on-turn-pill">NA TAHU</span>}
                       {strikes > 0 && <span className="score-strikes">{'X'.repeat(strikes)}</span>}
                     </span>
                   </div>
@@ -458,24 +459,29 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
 
           <div className="points-display-row">
-            <div className={`pts-main neon-card ${doubleStatus?.active && timeLeft > 0 ? 'pulse-fast' : ''}`}>
+            <div className={`pts-main neon-card ${doubleStatus?.active && timeLeft > 0 ? 'pulse-fast double-glow' : ''}`}>
                {room.turnInfo.rollCount > 0 ? (
                  <>
-                   <span className="pts-label">HOD {room.turnInfo.rollCount}/3</span>
-                   <span className="pts-bank">{currentTurnPoints}</span>
-                   <span className="pts-selection">+{selectedPoints}</span>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                     <div style={{ display: 'flex', flexDirection: 'column' }}>
+                       <span className="pts-label">HOD {room.turnInfo.rollCount}/3</span>
+                       <span className="pts-bank">{currentTurnPoints}</span>
+                     </div>
+                     <span className="pts-selection-wrapper">
+                        <span className="pts-selection">+{selectedPoints}</span>
+                        {doubleStatus?.active && timeLeft > 0 && (
+                          <span className="x2-badge-inline pulse-fast">X2</span>
+                        )}
+                     </span>
+                   </div>
                  </>
                ) : (
-                 <span className="pts-label">NA TAHU: {room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
+                 <span className="pts-label pulse-slow" style={{ color: 'var(--neon-cyan)' }}>
+                    NA TAHU: {room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}
+                 </span>
                )}
             </div>
           </div>
-
-          {doubleStatus?.active && timeLeft > 0 && (
-            <div className="double-active-indicator shake glow-text" style={{ textAlign: 'center', marginTop: '-5px', marginBottom: '10px' }}>
-               <span className="x2-badge" style={{ verticalAlign: 'middle', fontSize: '1.5rem', padding: '5px 15px' }}>X2</span>
-            </div>
-          )}
 
           <div className="game-main-horizontal-layout">
             <div className="dice-arena-wrapper" ref={arenaRef}>

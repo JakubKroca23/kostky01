@@ -2074,3 +2074,63 @@ body {
   color: #fff;
   border: 1px solid var(--glass-border);
 }
+
+/* New UI Effects */
+.on-turn-pill {
+  background: var(--neon-cyan);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px var(--neon-cyan);
+  animation: pulse-cyan 2s infinite;
+}
+
+@keyframes pulse-cyan {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.x2-badge-inline {
+  background: var(--neon-pink);
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.1rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px var(--neon-pink);
+  margin-left: 5px;
+}
+
+.pts-selection-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 5px 12px;
+  border-radius: 12px;
+  border-left: 2px solid var(--neon-pink);
+}
+
+.double-glow {
+  box-shadow: 0 0 40px rgba(255, 0, 150, 0.4), inset 0 0 20px rgba(255, 0, 150, 0.2) !important;
+  border-color: var(--neon-pink) !important;
+}
+
+.pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.active-turn {
+  background: rgba(0, 243, 255, 0.05) !important;
+  border-left: 3px solid var(--neon-cyan) !important;
+}
