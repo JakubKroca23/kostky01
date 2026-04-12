@@ -350,28 +350,50 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               {canStart ? 'NASTAVENÍ HRY' : 'PRAVIDLA MÍSTNOSTI'}
             </h3>
             
-            <div className="admin-action-row" style={{ marginBottom: '10px', opacity: !canStart ? 0.8 : 1 }}>
-              <div className="action-info">
-                <h4 style={{ margin: 0, color: 'var(--neon-pink)' }}>Double Score Event</h4>
-                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Násobí body 2x v pravidelných intervalech.</p>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+              <div className="admin-action-row glass" style={{ flex: 1, padding: '10px', margin: 0, opacity: !canStart ? 0.8 : 1, flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+                <div className="action-info">
+                  <h4 style={{ margin: 0, color: 'var(--neon-pink)', fontSize: '0.85rem' }}>Double Score</h4>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.65rem', opacity: 0.7 }}>2x body v intervalech.</p>
+                </div>
+                {canStart ? (
+                  <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
+                       onClick={() => {
+                         setDoubleEnabled(!doubleEnabled);
+                         onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration });
+                       }}>
+                     <div className="toggle-handle"></div>
+                  </div>
+                ) : (
+                  <div className={`rule-status-badge ${doubleEnabled ? 'active' : ''}`}>
+                    {doubleEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
+                  </div>
+                )}
               </div>
-              {canStart ? (
-                <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
-                     onClick={() => {
-                       setDoubleEnabled(!doubleEnabled);
-                       onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration });
-                     }}>
-                   <div className="toggle-handle"></div>
+
+              <div className="admin-action-row glass" style={{ flex: 1, padding: '10px', margin: 0, opacity: !canStart ? 0.8 : 1, flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+                <div className="action-info">
+                  <h4 style={{ margin: 0, color: 'var(--neon-cyan)', fontSize: '0.85rem' }}>Zloděj bodů</h4>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.65rem', opacity: 0.7 }}>Krádež 1k při postupce.</p>
                 </div>
-              ) : (
-                <div className={`rule-status-badge ${doubleEnabled ? 'active' : ''}`}>
-                  {doubleEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
-                </div>
-              )}
+                {canStart ? (
+                  <div className={`admin-toggle ${thiefEnabled ? 'active' : ''}`} 
+                       onClick={() => {
+                         setThiefEnabled(!thiefEnabled);
+                         onUpdateConfig?.({ thiefModeEnabled: !thiefEnabled });
+                       }}>
+                     <div className="toggle-handle"></div>
+                  </div>
+                ) : (
+                  <div className={`rule-status-badge ${thiefEnabled ? 'active' : ''}`} style={{ borderColor: thiefEnabled ? 'var(--neon-cyan)' : 'var(--glass-border)', color: thiefEnabled ? 'var(--neon-cyan)' : '#888' }}>
+                    {thiefEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
+                  </div>
+                )}
+              </div>
             </div>
 
             {doubleEnabled && (
-              <div className="double-settings fade-in" style={{ padding: '10px', marginTop: 0, marginBottom: '10px', background: 'rgba(157, 0, 255, 0.05)', border: '1px dashed var(--neon-purple)', borderRadius: '12px' }}>
+              <div className="double-settings fade-in" style={{ padding: '10px', marginTop: 0, marginBottom: '15px', background: 'rgba(157, 0, 255, 0.05)', border: '1px dashed var(--neon-purple)', borderRadius: '12px' }}>
                 <div className="input-row" style={{ display: 'flex', gap: '10px' }}>
                   <div className="input-group" style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.65rem', display: 'block', marginBottom: '3px', color: '#888' }}>INTERVAL (KOLA)</label>
@@ -416,26 +438,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                 </div>
               </div>
             )}
-
-            <div className="admin-action-row" style={{ marginBottom: '15px', opacity: !canStart ? 0.8 : 1 }}>
-              <div className="action-info">
-                <h4 style={{ margin: 0, color: 'var(--neon-cyan)' }}>Zloděj bodů</h4>
-                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.7 }}>Po hození postupky (1-6) v 1. hodu můžeš soupeři ukrást 1000 bodů.</p>
-              </div>
-              {canStart ? (
-                <div className={`admin-toggle ${thiefEnabled ? 'active' : ''}`} 
-                     onClick={() => {
-                       setThiefEnabled(!thiefEnabled);
-                       onUpdateConfig?.({ thiefModeEnabled: !thiefEnabled });
-                     }}>
-                   <div className="toggle-handle"></div>
-                </div>
-              ) : (
-                <div className={`rule-status-badge ${thiefEnabled ? 'active' : ''}`} style={{ borderColor: thiefEnabled ? 'var(--neon-cyan)' : 'var(--glass-border)', color: thiefEnabled ? 'var(--neon-cyan)' : '#888' }}>
-                  {thiefEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
-                </div>
-              )}
-            </div>
 
             {canStart ? (
               <button className="neon-button start-hero full-width" onClick={onStart}>🔥 START HRY 🔥 (HOST)</button>
