@@ -31,6 +31,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [thiefEnabled, setThiefEnabled] = useState(room?.config?.thiefModeEnabled || false);
   const [voiceChatEnabled, setVoiceChatEnabled] = useState(false);
   const [showStealPrompt, setShowStealPrompt] = useState(false);
+  const [myEmoji, setMyEmoji] = useState(localStorage.getItem('kostky-my-emoji') || '🔥');
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -132,7 +133,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   // Okamžité vizuální znásobení pro právě vybírané kostky
   const selectedPoints = (doubleStatus?.active && timeLeft > 0) ? baseSelectedPoints * 2 : baseSelectedPoints;
 
-  const emojis = ['🔥', '😂', '😭', '🎲', '👑'];
+  const emojis = ['🔥', '😂', '😭', '🎲', '👑', '😎', '💀', '💩', '🍀', '💸'];
 
   const lastRollCount = useRef(room.turnInfo.rollCount);
   const lastRollId = useRef(rollSeed);
@@ -266,12 +267,42 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           </div>
         </div>
         
-        <div className="reactions-row-horizontal">
-          {emojis.map(e => (
-            <button key={e} className="reaction-btn-mini" onClick={() => onReaction(e)}>
-              {e}
-            </button>
-          ))}
+        <div className="reactions-row-horizontal" style={{ gap: '15px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase' }}>Tvé Emoji:</span>
+             <button 
+               className="reaction-btn-mini current" 
+               onClick={() => onReaction(myEmoji)}
+               title="Poslat reakci"
+               style={{ fontSize: '1.6rem', background: 'rgba(255,255,255,0.05)', padding: '5px', borderRadius: '10px' }}
+             >
+               {myEmoji}
+             </button>
+          </div>
+          
+          <div className="divider-v" style={{ width: '1px', height: '20px', background: 'var(--glass-border)' }}></div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase' }}>Změnit:</span>
+            <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: '150px', padding: '5px 0' }}>
+               {emojis.map(e => (
+                 <button 
+                   key={e} 
+                   className={`reaction-picker-btn ${myEmoji === e ? 'active' : ''}`}
+                   onClick={() => {
+                     setMyEmoji(e);
+                     localStorage.setItem('kostky-my-emoji', e);
+                   }}
+                   style={{ 
+                     background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', 
+                     opacity: myEmoji === e ? 1 : 0.4, transition: '0.2s' 
+                   }}
+                 >
+                   {e}
+                 </button>
+               ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -326,20 +357,19 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   <div className="input-group" style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>INTERVAL (KOLA)</label>
                     {canStart ? (
-                      <select 
+                      <input 
+                        type="number"
+                        min="1"
+                        max="100"
                         value={doubleInterval} 
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 10;
+                          const val = Math.max(1, parseInt(e.target.value) || 1);
                           setDoubleInterval(val);
                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
                         }}
                         className="chat-input glass"
-                        style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
-                      >
-                        <option value="10" style={{background: '#0e0e1a'}}>Každých 10 hodů</option>
-                        <option value="20" style={{background: '#0e0e1a'}}>Každých 20 hodů</option>
-                        <option value="30" style={{background: '#0e0e1a'}}>Každých 30 hodů</option>
-                      </select>
+                        style={{ width: '100%', padding: '10px' }}
+                      />
                     ) : (
                       <div className="rule-value-box">{doubleInterval} hodů</div>
                     )}
@@ -347,20 +377,19 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                   <div className="input-group" style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '5px' }}>TRVÁNÍ (SEKUNDY)</label>
                     {canStart ? (
-                      <select 
+                      <input 
+                        type="number"
+                        min="5"
+                        max="300"
                         value={doubleDuration} 
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 30;
+                          const val = Math.max(5, parseInt(e.target.value) || 5);
                           setDoubleDuration(val);
                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
                         }}
                         className="chat-input glass"
-                        style={{ width: '100%', padding: '10px', appearance: 'none', cursor: 'pointer' }}
-                      >
-                        <option value="30" style={{background: '#0e0e1a'}}>30 sekund</option>
-                        <option value="60" style={{background: '#0e0e1a'}}>60 sekund</option>
-                        <option value="90" style={{background: '#0e0e1a'}}>90 sekund</option>
-                      </select>
+                        style={{ width: '100%', padding: '10px' }}
+                      />
                     ) : (
                       <div className="rule-value-box">{doubleDuration}s</div>
                     )}
@@ -438,9 +467,10 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               const hasEntered = (room.turnInfo.enteredBoard && room.turnInfo.enteredBoard[p.id]);
               const isActive = room.turnInfo.currentTurnId === p.id;
               const pending = isActive ? currentTurnPoints : 0;
+              const isOnFire = strikes >= 2;
               
               return (
-                <div key={p.id} className={`score-row ${isActive ? 'active-turn' : ''} ${!hasEntered ? 'waiting-entry' : ''}`}>
+                <div key={p.id} className={`score-row ${isActive ? 'active-turn' : ''} ${!hasEntered ? 'waiting-entry' : ''} ${isOnFire ? 'on-fire' : ''}`}>
                   <div className="score-main">
                     <span className="score-name">
                       {isActive ? '🎲 ' : ''}{p.nickname}

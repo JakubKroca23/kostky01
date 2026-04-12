@@ -128,7 +128,9 @@ function App() {
 
     function onDoubleStatusUpdate(data) {
        setDoubleStatus(data);
-       if (data.active) audio.playVictory(); // Use victory sound for hype
+       if (data.active) {
+         audio.playDoubleStart();
+       }
     }
 
     function onRoomJoined(data) {
@@ -184,9 +186,16 @@ function App() {
           allowedIndexes: data.allowedIndexes || []
         }
       }));
-      audio.playRoll();
+      if (data.isStraight) {
+        audio.playStraight();
+      } else {
+        audio.playRoll();
+      }
+
       if (data.isBust) {
-        setTimeout(() => audio.playBust(), 1200);
+        setTimeout(() => {
+          audio.playStrike();
+        }, 1200);
       }
     }
 
@@ -200,6 +209,10 @@ function App() {
     }
 
     function onChatMessageReceived(msg) {
+      if (msg.sender === 'SYSTEM' && msg.text.includes('ukradl')) {
+        audio.playSteal();
+      }
+
       setCurrentRoom(prev => {
         if (!prev) return prev;
         const newChat = [...(prev.turnInfo.chat || []), msg].slice(-50);
