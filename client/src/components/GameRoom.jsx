@@ -134,9 +134,9 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const selectedPoints = (doubleStatus?.active && timeLeft > 0) ? baseSelectedPoints * 2 : baseSelectedPoints;
 
   const emojis = [
-    '🔥', '😂', '😭', '🎲', '👑', '😎', '💀', '💩', '🍀', '💸', '⭐', '💣', '🌈', '💎', '🍄',
-    '❤️', '👍', '👎', '🎉', '😡', '🤔', '😱', '👀', '🤐', '👻', '👾', '🚀', '🥊', '🎮', '🔔',
-    '🦄', '🥑', '🍕', '🍺', '⚡', '💡', '💯', '✅', '❌', '⚠️'
+    '🥴', '🫠', '😵‍💫', '💊', '🥦', '🍄', '🚬', '💉', '🧪', '🧊', 
+    '🌿', '🌫️', '🌀', '👺', '🤡', '😈', '💀', '👻', '👁️', '🛸', 
+    '🌈', '🍭', '🍺', '🥃', '🍷', '🥂', '🍹', '🧉', '🍾', '🧺'
   ];
 
   const lastRollCount = useRef(room.turnInfo.rollCount);
@@ -327,19 +327,27 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
       {!room.gameStarted ? (
         <div className="players-grid">
-          <h3 className="section-title">ONLINE HRÁČI ({onlineStats?.onlineCount || 1})</h3>
-          <div className="lobby-players">
+          <h3 className="section-title">PŘIPOJENÍ HRÁČI ({room.players.length}/6)</h3>
+          <div className="online-list-horizontal" style={{ marginBottom: '15px', padding: '10px 0' }}>
           {room.players.map((p, i) => (
-            <div key={p.id} className="player-joined-row fade-in">
-              <span className="player-num">{i + 1}.</span>
-              <span className="player-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                {p.nickname} {i === 0 && <span className="host-tag">(HOST)</span>}
-                {remoteStreams[p.id] && (
-                  <span title={`Stav spojení: ${connectionStates[p.id] || 'active'}`} style={{ fontSize: '1.1rem', color: 'var(--neon-cyan)', textShadow: '0 0 10px var(--neon-cyan)' }}>
-                    🔊<span style={{ fontSize: '0.5rem', marginLeft: '2px', opacity: 0.7 }}>{connectionStates[p.id]?.substring(0, 4)}</span>
-                  </span>
-                )}
-              </span>
+            <div key={p.id} className="online-user-pill fade-in" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              background: i === 0 ? 'rgba(255, 0, 157, 0.1)' : 'rgba(0, 255, 255, 0.1)',
+              borderColor: i === 0 ? 'rgba(255, 0, 157, 0.3)' : 'rgba(0, 255, 255, 0.3)',
+              color: i === 0 ? 'var(--neon-pink)' : 'var(--neon-cyan)'
+            }}>
+              <span style={{ opacity: 0.6, fontSize: '0.7rem' }}>{i + 1}.</span>
+              <span style={{ fontWeight: 'bold' }}>{p.nickname}</span>
+              {i === 0 && <span style={{ fontSize: '0.7rem', filter: 'drop-shadow(0 0 5px var(--neon-pink))' }}>👑</span>}
+              {remoteStreams[p.id] && (
+                <span title={`Stav spojení: ${connectionStates[p.id] || 'active'}`} style={{ marginLeft: '2px' }}>
+                  🔊
+                </span>
+              )}
             </div>
           ))}
           </div>
