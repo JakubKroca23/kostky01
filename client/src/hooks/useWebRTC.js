@@ -4,6 +4,7 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
   const [remoteStreams, setRemoteStreams] = useState({});
   const localStreamRef = useRef(null);
   const peersRef = useRef({}); // { [userId]: RTCPeerConnection }
+  const iceCandidateQueues = useRef({}); // { [userId]: RTCIceCandidate[] }
   
   // Clean up a specific peer
   const cleanupPeer = useCallback((userId) => {
@@ -11,6 +12,7 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
       peersRef.current[userId].close();
       delete peersRef.current[userId];
     }
+    delete iceCandidateQueues.current[userId];
     setRemoteStreams(prev => {
       const next = { ...prev };
       delete next[userId];
@@ -39,6 +41,13 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
 
     let isMounted = true;
 
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (socket?.emit) {
+          socket.emit('webrtc-error', 'Tento prohlížeč nepodporuje přístup k mikrofonu nebo není použit HTTPS.');
+        }
+        return;
+    }
+
     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
       .then(stream => {
         if (!isMounted) {
@@ -52,6 +61,7 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
       })
       .catch(err => {
         console.error("Microphone access denied or error:", err);
+        alert("CHYBA MIKROFONU: " + err.message + " (Apple telefony vyžadují pro mikrofon plné HTTPS/SSL i při lokální síti, jinak mikrofon ihned zablokují!)");
       });
 
     return () => {
@@ -132,10 +142,29 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
         }
     };
 
+    const processIceQueue = async (senderId, peer) => {
+      const queue = iceCandidateQueues.current[senderId];
+      if (queue && queue.length > 0) {
+        for (const candidate of queue) {
+          try {
+            await peer.addIceCandidate(candidate);
+          } catch (e) {
+            console.error("Error adding queued ice candidate:", e);
+          }
+        }
+        iceCandidateQueues.current[senderId] = [];
+      }
+    };
+
     const handleOffer = async ({ senderId, offer }) => {
       try {
-        const peer = createPeer(senderId);
+        let peer = peersRef.current[senderId];
+        if (!peer) {
+            peer = createPeer(senderId);
+        }
         await peer.setRemoteDescription(new RTCSessionDescription(offer));
+        await processIceQueue(senderId, peer);
+        
         const answer = await peer.createAnswer();
         await peer.setLocalDescription(answer);
         socket.emit('webrtc-answer', { targetId: senderId, answer });
@@ -149,6 +178,7 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
         const peer = peersRef.current[senderId];
         if (peer) {
           await peer.setRemoteDescription(new RTCSessionDescription(answer));
+          await processIceQueue(senderId, peer);
         }
       } catch(e) {
         console.error("Error handling answer:", e);
@@ -158,8 +188,16 @@ export function useWebRTC(socket, roomId, myId, voiceChatEnabled) {
     const handleIceCandidate = async ({ senderId, candidate }) => {
       try {
         const peer = peersRef.current[senderId];
-        if (peer) {
-          await peer.addIceCandidate(new RTCIceCandidate(candidate));
+        const rtcCandidate = new RTCIceCandidate(candidate);
+        
+        if (peer && peer.remoteDescription) {
+          await peer.addIceCandidate(rtcCandidate);
+        } else {
+          // Nelze přidat, protože remoteDescription nebylo ještě nastaveno. Zařadit do fronty.
+          if (!iceCandidateQueues.current[senderId]) {
+            iceCandidateQueues.current[senderId] = [];
+          }
+          iceCandidateQueues.current[senderId].push(rtcCandidate);
         }
       } catch(e) {
         console.error("Error handling ice candidate:", e);
