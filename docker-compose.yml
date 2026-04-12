@@ -46,6 +46,7 @@ services:
       --realm=kostky.propoj.app
       --user=kostky:VoiceChatTurnSecret2024
       --lt-cred-mech
+      --external-ip=92.5.8.24/10.0.0.113
 
 networks:
   appwrite:
