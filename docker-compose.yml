@@ -41,8 +41,8 @@ services:
       --fingerprint
       --no-multicast-peers
       --no-cli
-      --no-tlsv1
-      --no-tlsv1_1
+      --no-tls
+      --no-dtls
       --realm=kostky.propoj.app
       --user=kostky:VoiceChatTurnSecret2024
       --lt-cred-mech
