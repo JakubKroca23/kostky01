@@ -8,6 +8,7 @@ import NotFound from './components/NotFound';
 import Navbar from './components/Navbar';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
 import AdminMenu from './components/AdminMenu';
+import HelpModal from './components/HelpModal';
 import { audio } from './utils/audio';
 import { account } from './lib/appwrite';
 
@@ -32,6 +33,7 @@ function App() {
   const [globalChat, setGlobalChat] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [doubleStatus, setDoubleStatus] = useState({ active: false, endsAt: 0 });
   const [error, setError] = useState('');
@@ -450,8 +452,13 @@ function App() {
           onLogout={handleLogout}
           onChangeNickname={handleChangeNickname}
           onOpenAdmin={() => setIsAdminOpen(true)}
+          onOpenHelp={() => setIsHelpOpen(true)}
           isAdmin={nickname?.toLowerCase() === 'admin'}
         />
+      )}
+
+      {isHelpOpen && (
+        <HelpModal onClose={() => setIsHelpOpen(false)} />
       )}
 
       {maintenanceMode && nickname?.toLowerCase() !== 'admin' && (

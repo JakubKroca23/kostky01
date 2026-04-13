@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickname, onOpenAdmin, isAdmin }) {
+function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickname, onOpenAdmin, onOpenHelp, isAdmin }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -22,6 +22,7 @@ function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickn
                 {isAdmin && (
                   <button onClick={() => { onOpenAdmin(); setIsMenuOpen(false); }}>⚙️ Admin Panel</button>
                 )}
+                <button onClick={() => { onOpenHelp(); setIsMenuOpen(false); }}>❓ Nápověda</button>
                 <button onClick={() => { onChangeNickname(); setIsMenuOpen(false); }}>✏️ Změnit jméno</button>
                 <button onClick={() => { onToggleSound(); setIsMenuOpen(false); }}>
                   {soundEnabled ? '🔊 Zvuk: Zap' : '🔇 Zvuk: Vyp'}
