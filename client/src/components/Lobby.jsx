@@ -104,7 +104,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
           <div className="section-header-compact">
             <span className="section-label">AKTIVNÍ MÍSTNOSTI ({rooms.length})</span>
           </div>
-          <div className="room-list-compact-grid">
+          <div className="room-list-vertical-rows">
             {rooms.length === 0 ? (
               <div className="empty-state-sm glass">Žádné aktivní hry...</div>
             ) : (
