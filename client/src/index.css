@@ -1762,6 +1762,7 @@ body {
 
 .dual-leaderboard-container {
   display: flex;
+  flex-direction: row !important;
   gap: 15px;
   margin-bottom: 30px;
   width: 100%;
@@ -1770,21 +1771,14 @@ body {
 .lobby-leaderboard-flat.mini {
   flex: 1;
   background: rgba(0, 0, 0, 0.4);
-  border-radius: 16px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: none;
+  border-bottom: 2px solid var(--glass-border);
 }
 
 .mini-lb-title {
-  padding: 8px 10px;
-  text-align: center;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 2px;
-  background: rgba(0, 243, 255, 0.05);
-  color: var(--neon-cyan);
-  border-bottom: 1px solid var(--glass-border);
+  display: none;
 }
 
 .leaderboard-mini-table {
@@ -1794,12 +1788,13 @@ body {
 
 .leaderboard-mini-table th {
   padding: 8px 10px;
-  font-size: 0.55rem;
-  color: var(--neon-cyan);
+  font-size: 0.6rem;
+  color: var(--neon-gold);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   border-bottom: 1px solid var(--glass-border);
   text-align: left;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .leaderboard-mini-table td {
@@ -1814,8 +1809,7 @@ body {
 
 .val.highlight {
   font-weight: 800;
-  color: var(--neon-gold);
-  text-shadow: 0 0 5px rgba(255, 184, 0, 0.3);
+  color: var(--neon-cyan);
 }
 
 .rank-cell {
@@ -1825,8 +1819,8 @@ body {
 }
 
 .leaderboard-mini-table .nick {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
+  color: #fff;
+  opacity: 0.8;
 }
 
 .leaderboard-mini-table tr.top-rank-1 { background: rgba(255, 184, 0, 0.05); }
@@ -1834,8 +1828,11 @@ body {
 /* Responsive leaderboard */
 @media (max-width: 600px) {
   .dual-leaderboard-container {
-    flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+  }
+  .leaderboard-mini-table td, .leaderboard-mini-table th {
+    padding: 6px 4px;
+    font-size: 0.65rem;
   }
 }
 
@@ -1845,8 +1842,8 @@ body {
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  max-width: 100%; /* Roztažení na celou šířku */
-  padding: 0 10px;
+  max-width: 100%;
+  padding: 20px 10px 0; /* Horní odsazení od navbaru */
   box-sizing: border-box;
 }
 

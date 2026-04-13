@@ -34,12 +34,11 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
           <div className="dual-leaderboard-container">
             {/* LEADERBOARD: MAX TAH */}
             <div className="lobby-leaderboard-flat mini">
-              <div className="mini-lb-title">NEJŠÍLENĚJŠÍ TAH 🔥</div>
               <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Hráč</th>
+                    <th>NEJŠÍLENĚJŠÍ TAH 🔥</th>
                     <th>Tah</th>
                   </tr>
                 </thead>
@@ -57,12 +56,11 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
 
             {/* LEADERBOARD: TOTAL POINTS */}
             <div className="lobby-leaderboard-flat mini">
-              <div className="mini-lb-title">PÁNI KOSTEK 👑</div>
               <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Hráč</th>
+                    <th>PÁNI KOSTEK 👑</th>
                     <th>Body celkem</th>
                   </tr>
                 </thead>
