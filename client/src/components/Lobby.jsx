@@ -14,11 +14,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
     <main className="hero-section lobby-layout-v2 fade-in">
       <div className="lobby-main-stack">
         {leaderboard && leaderboard.length > 0 && (
-          <section className="lobby-section lobby-leaderboard-full glass neon-card">
-            <div className="section-header-compact">
-              <span className="section-label">🏆 TOP 5 ŽEBŘÍČEK:</span>
-            </div>
-            <div className="leaderboard-table-container">
+          <div className="lobby-leaderboard-flat">
               <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
@@ -41,8 +37,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
                   ))}
                 </tbody>
               </table>
-            </div>
-          </section>
+          </div>
         )}
 
         <section className="lobby-section online-players-compact">
@@ -64,7 +59,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
               className="neon-button xs success"
               onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
             >
-              + VYTVOŘIT HERNÍ MÍSTNOST
+              + VYTVOŘIT HRU
             </button>
           </div>
           <div className="room-list-compact">
@@ -92,18 +87,18 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
       </div>
 
       <div className="lobby-side-stack">
-        <div className="lobby-global-chat glass neon-card compact-chat">
-          <header className="chat-header-compact">Globální Chat</header>
-          <div className="global-chat-messages" ref={chatRef}>
+        <div className="lobby-feedback-section glass neon-card compact-feedback">
+          <header className="feedback-header">Zpětná vazba & Bugy</header>
+          <div className="feedback-messages" ref={chatRef}>
             {(globalChat || []).map((m) => (
-              <div key={m.id} className="chat-msg">
+              <div key={m.id} className="feedback-msg">
                 <span className="msg-sender">{m.sender}:</span>
                 <span className="msg-text">{m.text}</span>
               </div>
             ))}
-            {(globalChat || []).length === 0 && <div className="chat-empty">Zatím žádné zprávy...</div>}
+            {(globalChat || []).length === 0 && <div className="feedback-empty">Zatím žádná zpětná vazba...</div>}
           </div>
-          <form className="chat-form" onSubmit={(e) => {
+          <form className="feedback-form" onSubmit={(e) => {
             e.preventDefault();
             if (chatInput.trim()) {
               onSendMessage(chatInput);
@@ -112,13 +107,13 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
           }}>
             <input
               type="text"
-              className="chat-input-sm glass"
+              className="feedback-input glass"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Zpráva..."
-              maxLength={100}
+              placeholder="Napište námět nebo chybu..."
+              maxLength={150}
             />
-            <button type="submit" className="neon-button xs chat-send">Poslat</button>
+            <button type="submit" className="neon-button xs feedback-send">Odeslat</button>
           </form>
         </div>
       </div>
