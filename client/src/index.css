@@ -1894,11 +1894,7 @@ body {
 
 .reaction-btn-tiny:hover { opacity: 1; transform: scale(1.2); }
 
-.lobby-actions-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
+.lobby-actions-row { display: none; }
 
 .rooms-compact-v3 {
   flex: 1;
@@ -2923,3 +2919,46 @@ body {
 .type-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
 .type-btn.active { background: rgba(0, 243, 255, 0.15); border-color: var(--neon-cyan); color: var(--neon-cyan); }
 .type-btn.active.bug { background: rgba(255, 0, 127, 0.15); border-color: var(--neon-pink); color: var(--neon-pink); }
+.lobby-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.feedback-row {
+  display: flex;
+  gap: 12px;
+}
+
+.create-btn-giant {
+  width: 100%;
+  padding: 18px !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  background: rgba(57, 255, 20, 0.1) !important;
+  border: 1px solid var(--neon-green) !important;
+  color: var(--neon-green) !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.create-btn-giant:hover {
+  background: var(--neon-green) !important;
+  color: #000 !important;
+  box-shadow: 0 0 20px var(--neon-green);
+}
+
+.neon-button.info {
+  background: rgba(0, 243, 255, 0.1) !important;
+  border-color: var(--neon-cyan) !important;
+  color: var(--neon-cyan) !important;
+}
+
+.neon-button.danger {
+  background: rgba(255, 0, 127, 0.1) !important;
+  border-color: var(--neon-pink) !important;
+  color: var(--neon-pink) !important;
+}

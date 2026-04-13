@@ -83,29 +83,28 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
           </div>
         </section>
 
-        <section className="lobby-actions-row">
+        <div className="lobby-actions-stack">
+          <div className="feedback-row">
+            <button
+              className="neon-button sm info feedback-toggle-btn half"
+              onClick={() => { setFeedbackType('feature'); setIsFeedbackOpen(true); }}
+            >
+              💡 NÁVRH FUNKCE
+            </button>
+            <button
+              className="neon-button sm danger feedback-toggle-btn half"
+              onClick={() => { setFeedbackType('bug'); setIsFeedbackOpen(true); }}
+            >
+              🐞 NAHLÁSIT CHYBU
+            </button>
+          </div>
           <button
-            className="neon-button sm success create-btn-main"
+            className="neon-button create-btn-giant"
             onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
-            style={{ flex: 1 }}
           >
-            + VYTVOŘIT HRU
+            + VYTVOŘIT NOVOU HRU
           </button>
-          <button
-            className="neon-button sm info feedback-toggle-btn"
-            onClick={() => { setFeedbackType('feature'); setIsFeedbackOpen(true); }}
-            style={{ width: 'auto', padding: '0 15px' }}
-          >
-            💡 NÁVRH FUNKCE
-          </button>
-          <button
-            className="neon-button sm danger feedback-toggle-btn"
-            onClick={() => { setFeedbackType('bug'); setIsFeedbackOpen(true); }}
-            style={{ width: 'auto', padding: '0 15px' }}
-          >
-            🐞 NAHLÁSIT CHYBU
-          </button>
-        </section>
+        </div>
 
         <section className="lobby-section rooms-compact-v3">
           <div className="section-header-compact">
