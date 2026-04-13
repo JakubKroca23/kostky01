@@ -6,6 +6,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
   const [changelogDraft, setChangelogDraft] = useState('');
   const [versionDraft, setVersionDraft] = useState(appVersion || '1.0');
+  const [showHistory, setShowHistory] = useState(false);
   const chatRef = React.useRef(null);
   const isAdmin = nickname?.toLowerCase() === 'admin';
 
@@ -30,29 +31,52 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
     <main className="hero-section lobby-layout-v2 fade-in">
       <div className="lobby-main-stack">
         {leaderboard && leaderboard.length > 0 && (
-          <div className="lobby-leaderboard-flat">
+          <div className="dual-leaderboard-container">
+            {/* LEADERBOARD: MAX TAH */}
+            <div className="lobby-leaderboard-flat mini">
+              <div className="mini-lb-title">NEJŠÍLENĚJŠÍ TAH 🔥</div>
               <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
                     <th>#</th>
                     <th>Hráč</th>
-                    <th title="Maximální body v jednom tahu">Tah</th>
-                    <th>Body</th>
-                    <th>Výhry</th>
+                    <th>Tah</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {leaderboard.slice(0, 5).map((p, i) => (
+                  {[...leaderboard].sort((a, b) => b.highScore - a.highScore).slice(0, 5).map((p, i) => (
                     <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
-                      <td className="rank-cell">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                      <td className="rank-cell">{i === 0 ? '🏆' : i + 1}</td>
                       <td className="nick">{p.nickname}</td>
-                      <td className="val">{(p.highScore ?? 0).toLocaleString()}</td>
-                      <td className="val pts">{(p.total_points ?? 0).toLocaleString()}</td>
-                      <td className="val wins">{p.wins}</td>
+                      <td className="val highlight">{(p.highScore ?? 0).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* LEADERBOARD: TOTAL POINTS */}
+            <div className="lobby-leaderboard-flat mini">
+              <div className="mini-lb-title">PÁNI KOSTEK 👑</div>
+              <table className="leaderboard-mini-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Hráč</th>
+                    <th>Body celkem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...leaderboard].sort((a, b) => b.total_points - a.total_points).slice(0, 5).map((p, i) => (
+                    <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
+                      <td className="rank-cell">{i === 0 ? '⭐' : i + 1}</td>
+                      <td className="nick">{p.nickname}</td>
+                      <td className="val highlight">{(p.total_points ?? 0).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -116,7 +140,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
       <div className="lobby-side-stack">
         <div className="lobby-changelog-section glass neon-card-cyan">
           <header className="changelog-header">
-            <span>CO JE NOVÉHO 🚀</span>
+            <span>NOVINKY <span style={{ opacity: 0.5, marginLeft: '5px' }}>v{appVersion}</span> 🚀</span>
             {isAdmin && !isEditingChangelog && (
               <button className="btn-edit-sm" onClick={() => setIsEditingChangelog(true)}>Upravit</button>
             )}
@@ -150,19 +174,45 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 {(!Array.isArray(changelog) || changelog.length === 0) ? (
                   <div className="changelog-empty">Zatím žádné záznamy...</div>
                 ) : (
-                  changelog.map((entry, idx) => (
-                    <div key={idx} className="changelog-entry">
+                  <>
+                    {/* Nejnovější záznam */}
+                    <div className="changelog-entry latest">
                       <div className="changelog-entry-header">
-                        <span className="changelog-version-tag">v{entry.version}</span>
-                        <span className="changelog-date">{entry.date}</span>
+                        <span className="changelog-version-tag">AKTUÁLNÍ</span>
+                        <span className="changelog-date">{changelog[0].date}</span>
                       </div>
                       <div className="changelog-text">
-                        {entry.text.split('\n').map((line, i) => (
+                        {changelog[0].text.split('\n').map((line, i) => (
                           <p key={i}>{line}</p>
                         ))}
                       </div>
                     </div>
-                  ))
+
+                    {/* Tlačítko pro historii */}
+                    {changelog.length > 1 && (
+                      <button 
+                        className="btn-history-toggle" 
+                        onClick={() => setShowHistory(!showHistory)}
+                      >
+                        {showHistory ? '↑ SKRÝT HISTORII' : '↓ STARŠÍ VERZE'}
+                      </button>
+                    )}
+
+                    {/* Předchozí záznamy */}
+                    {showHistory && changelog.slice(1).map((entry, idx) => (
+                      <div key={idx} className="changelog-entry old">
+                        <div className="changelog-entry-header">
+                          <span className="changelog-version-tag secondary">v{entry.version}</span>
+                          <span className="changelog-date">{entry.date}</span>
+                        </div>
+                        <div className="changelog-text">
+                          {entry.text.split('\n').map((line, i) => (
+                            <p key={i}>{line}</p>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </>
                 )}
               </div>
             )}

@@ -137,7 +137,7 @@ function broadcastLeaderboard(targetSocket = null) {
   (async () => {
     try {
       const result = await databases.listDocuments(DB_ID, COLL_ID, [
-        Query.limit(20) // Get more to account for filtered admin
+        Query.limit(50) 
       ]);
       const list = result.documents
         .map(d => ({
@@ -147,9 +147,7 @@ function broadcastLeaderboard(targetSocket = null) {
           games_played: d.games_played || 0,
           highScore: d.highScore || 0
         }))
-        .filter(p => p.nickname.toLowerCase() !== 'admin') // Neobrazovat admina v leaderboardu
-        .sort((a, b) => b.highScore - a.highScore)
-        .slice(0, 10);
+        .filter(p => p.nickname.toLowerCase() !== 'admin'); // Neobrazovat admina v leaderboardu
       
       if (targetSocket) {
         targetSocket.emit('leaderboard-update', list);
