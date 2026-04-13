@@ -69,10 +69,8 @@ function NicknameScreen({ onJoin, error, leaderboard }) {
       </div>
 
       {leaderboard && leaderboard.length > 0 && (
-        <div className="auth-leaderboard-container glass fade-in" style={{ marginTop: '30px', width: '100%', maxWidth: '100%' }}>
-            <h3 className="section-label" style={{ textAlign: 'center', marginBottom: '15px' }}>🏆 ŽEBŘÍČEK NEJLEPŠÍCH</h3>
-            <div className="leaderboard-mini-wrapper no-glass" style={{ maxHeight: 'none' }}>
-              <table className="leaderboard-mini-table compact">
+        <div className="lobby-leaderboard-flat" style={{ marginTop: '20px' }}>
+              <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
                     <th>#</th>
@@ -94,8 +92,7 @@ function NicknameScreen({ onJoin, error, leaderboard }) {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
+        </div>
       )}
     </div>
   );
