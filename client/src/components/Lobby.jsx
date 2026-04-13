@@ -99,7 +99,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
             </button>
           </div>
           <button
-            className="neon-button create-btn-giant"
+            className="neon-button create-btn-standard"
             onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
           >
             + VYTVOŘIT NOVOU HRU
@@ -181,11 +181,8 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                     {/* Nejnovější záznam */}
                     <div className="changelog-entry latest">
                       <div className="changelog-entry-header">
-                        <span className="changelog-version-tag">AKTUÁLNÍ</span>
+                        <span className="changelog-version-tag">AKTUÁLNÍ (v{changelog[0].version})</span>
                         <span className="changelog-date">{changelog[0].date}</span>
-                        {isAdmin && (
-                          <button className="btn-edit-inline" onClick={() => startEdit(changelog[0])}>[UPRAVIT]</button>
-                        )}
                       </div>
                       <div className="changelog-text">
                         {changelog[0].text.split('\n').map((line, i) => (
@@ -277,7 +274,6 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder={feedbackType === 'bug' ? 'Popište chybu, kterou jste našli...' : 'Napište svůj nápad na vylepšení...'}
                 maxLength={1000}
-                autoFocus
               />
               <button type="submit" className={`neon-button sm ${feedbackType === 'bug' ? 'danger' : 'info'}`}>Odeslat</button>
             </form>

@@ -2938,23 +2938,30 @@ body {
   gap: 12px;
 }
 
-.create-btn-giant {
+.create-btn-standard {
   width: 100%;
-  padding: 18px !important;
-  font-size: 1rem !important;
-  font-weight: 900 !important;
+  padding: 10px !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
   background: rgba(57, 255, 20, 0.1) !important;
   border: 1px solid var(--neon-green) !important;
   color: var(--neon-green) !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   cursor: pointer;
   transition: 0.2s;
+  text-transform: uppercase;
 }
 
-.create-btn-giant:hover {
+.create-btn-standard:hover {
   background: var(--neon-green) !important;
   color: #000 !important;
   box-shadow: 0 0 20px var(--neon-green);
+}
+
+.neon-button.sm {
+  padding: 8px 12px;
+  font-size: 0.7rem;
+  border-radius: 10px;
 }
 
 .neon-button.info {
