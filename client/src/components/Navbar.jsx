@@ -8,7 +8,7 @@ function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickn
       <div className="nav-container">
         <div className="nav-logo">
           <span className="dice-icon">🎲</span>
-          <h1 className="neon-text-cyan">KOSTKY <span className="logo-v">v1.1</span></h1>
+          <h1 className="neon-text-cyan">KOSTKY <span className="logo-v">v1.2</span></h1>
         </div>
 
         <div className="nav-right">
@@ -16,7 +16,7 @@ function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickn
             <div className="avatar">{nickname?.substring(0, 2).toUpperCase()}</div>
             <span className="nav-nickname">{nickname}</span>
             <i className={`chevron ${isMenuOpen ? 'up' : 'down'}`}>▼</i>
-            
+
             {isMenuOpen && (
               <div className="nav-dropdown glass neon-card fade-in">
                 {isAdmin && (

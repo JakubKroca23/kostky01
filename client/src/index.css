@@ -1703,51 +1703,13 @@ body {
 .expand-hint { font-size: 0.6rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 1px; }
 .expand-chevron { margin-left: auto; font-size: 0.6rem; opacity: 0.3; }
 
-.leaderboard-rotating-content {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  width: 100%;
+.leaderboard-header {
+  margin-bottom: 15px;
 }
 
-.mini-title-inline {
-  font-size: 0.65rem;
-  font-weight: 900;
-  color: var(--neon-gold);
-  letter-spacing: 2px;
-  opacity: 0.8;
-  white-space: nowrap;
-}
-
-.rotating-winner-track {
-  position: relative;
-  flex: 1;
-  height: 30px;
-}
-
-.rotating-winner-item {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  opacity: 0;
-  animation: rotateLeaderboard 9s infinite;
-  pointer-events: none;
-}
-
-.rotating-winner-item .rank-emoji {
-  font-size: 1.2rem;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
-}
-
-.rotating-winner-item .nick {
-  font-weight: 700;
-  color: #fff;
-  font-size: 0.95rem;
+.leaderboard-mini-wrapper {
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .leaderboard-mini-table {
@@ -1785,15 +1747,25 @@ body {
 /* Grid Layout */
 .lobby-bottom-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr 1fr; /* Dva sloupce vedle sebe i na mobilu */
+  gap: 15px;
   flex: 1;
   min-height: 0;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 600px) {
   .lobby-bottom-grid {
-    grid-template-columns: 1fr;
+    gap: 8px; /* Těsnější mezera na mobilu */
+  }
+  .lobby-bottom-grid .neon-card {
+    padding: 10px; /* Menší vnitřní okraj */
+  }
+  .online-nickname {
+    font-size: 0.75rem; /* Menší písmo */
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
   }
 }
 
@@ -1807,6 +1779,39 @@ body {
   flex-shrink: 0;
 }
 
+.online-list-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.online-user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--neon-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.online-nickname {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #eee;
+}
+
 .stat-pill {
   font-size: 0.7rem;
   padding: 2px 8px;
@@ -1817,14 +1822,6 @@ body {
 
 .stat-pill.wins { color: var(--neon-pink); border-color: rgba(255, 0, 127, 0.3); }
 .stat-pill.pts { color: var(--neon-gold); border-color: rgba(255, 204, 0, 0.3); }
-
-@keyframes rotateLeaderboard {
-  0% { transform: translateY(20px); opacity: 0; }
-  2% { transform: translateY(0); opacity: 1; }
-  31% { transform: translateY(0); opacity: 1; }
-  33.33% { transform: translateY(-20px); opacity: 0; }
-  100% { transform: translateY(-20px); opacity: 0; }
-}
 
 /* Arena UI Improvements */
 .empty-dice-centered {
