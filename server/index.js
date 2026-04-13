@@ -306,8 +306,18 @@ function handlePlayerLeave(socketId, roomId) {
        if (s) s.leave(roomId);
     });
     rooms.delete(roomId);
+  } else if (isGameStarted && room.players.length < 2) {
+    // Rule: Pokud v rozehrané hře zbude méně než 2 hráči, hra se ukončí
+    io.to(roomId).emit('kicked-to-lobby', 'Ve hře zbyl méně než 2 hráči. Hra byla ukončena.');
+    room.players.forEach(p => {
+       const pObj = players.get(p.id);
+       if (pObj) pObj.roomId = null;
+       const s = io.sockets.sockets.get(p.id);
+       if (s) s.leave(roomId);
+    });
+    rooms.delete(roomId);
   } else {
-    // Rule: Pokud kdokoli (včetně tvůrce) opustí rozehranou hru, zbytek může hrát dál
+    // Rule: Pokud kdokoli (včetně tvůrce) opustí rozehranou hru a zbývá 2+ hráčů
     io.to(roomId).emit('player-left', { players: room.players });
     
     // If it was the current turn, move to next
@@ -1026,20 +1036,42 @@ io.on('connection', (socket) => {
     if (player) {
       player.online = false;
       player.disconnectTime = Date.now();
-      if (player.roomId) {
-        const room = rooms.get(player.roomId);
-        if (room) io.to(player.roomId).emit('player-connection-status', { id: socket.id, nickname: player.nickname, online: false });
-      }
-      broadcastGlobalStats();
-      setTimeout(() => {
-        const p = players.get(socket.id);
-        if (p && !p.online) {
-          if (p.roomId) handlePlayerLeave(socket.id, p.roomId);
-          players.delete(socket.id);
-          saveState();
-          broadcastGlobalStats();
+      
+      const roomId = player.roomId;
+      let handledImmediately = false;
+
+      if (roomId) {
+        const room = rooms.get(roomId);
+        if (room) {
+          // Rule: Pokud zakladatel opustí lobby ještě před startem, zrušíme to hned
+          const isCreator = room.players.length > 0 && room.players[0].id === socket.id;
+          if (!room.gameStarted && isCreator) {
+            console.log(`[DISCONNECT] Creator ${player.nickname} left lobby. Deleting room ${roomId} immediately.`);
+            handlePlayerLeave(socket.id, roomId);
+            handledImmediately = true;
+          } else {
+            io.to(roomId).emit('player-connection-status', { id: socket.id, nickname: player.nickname, online: false });
+          }
         }
-      }, 300000); 
+      }
+      
+      broadcastGlobalStats();
+
+      // Pokud již nebylo vyřešeno hned (např. běžná hra nebo hráč v lobby), čekáme 5 minut na návrat
+      if (!handledImmediately) {
+        setTimeout(() => {
+          const p = players.get(socket.id);
+          if (p && !p.online) {
+            if (p.roomId) handlePlayerLeave(socket.id, p.roomId);
+            players.delete(socket.id);
+            saveState();
+            broadcastGlobalStats();
+          }
+        }, 300000); 
+      } else {
+        players.delete(socket.id);
+        saveState();
+      }
     }
   });
 });
