@@ -410,6 +410,7 @@ io.on('connection', (socket) => {
 
     const roomId = generateRoomId();
     const roomName = name || `Hra – ${p.nickname}`;
+    globalChat = []; // Vymazáno na žádost
     const room = {
       id: roomId,
       name: roomName,

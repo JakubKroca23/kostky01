@@ -20,8 +20,7 @@ body, html {
   background-color: var(--bg-dark);
   color: white;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
-  overflow-y: auto; /* Povoleno skrolování pro lobby */
+  overflow: hidden; /* Globalni scroll vypnut - refinement */
 }
 
 /* Kdyz je aktivni hra, zakazeme skrolovani na urovni HTML/Body */
@@ -60,9 +59,10 @@ body {
   z-index: 20000;
   background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Změna: start místo center pro skrolování */
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
+  overflow-y: auto; /* Povoleno skrolování pro žebříček */
 }
 
 /* Professional Navbar */
@@ -1345,6 +1345,24 @@ body {
 .creation-pane { padding: 18px !important; animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
+.auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Start from top to allow scrolling */
+  min-height: 100dvh;
+  padding: 40px 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.auth-wrapper-inner {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .points-display-row {
   display: flex;
   justify-content: center;
@@ -1461,6 +1479,18 @@ body {
   width: 100%;
   margin-top: 10px;
   animation: pulseNeonGreen 2s infinite;
+}
+
+.neon-button.success {
+  background: rgba(57, 255, 20, 0.2) !important;
+  border: 1px solid var(--neon-green) !important;
+  color: var(--neon-green) !important;
+  text-shadow: 0 0 8px var(--neon-green);
+}
+
+.neon-button.success:hover {
+  background: rgba(57, 255, 20, 0.3) !important;
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
 }
 
 @keyframes pulseNeonGreen {
@@ -1830,8 +1860,11 @@ body {
 
 .room-list-compact {
   display: grid;
-  grid-template-columns: 1fr; /* Jeden sloupec pro full width na mobilu/desktopy dle požadavku */
+  grid-template-columns: 1fr;
   gap: 8px;
+  max-height: 250px; /* Jen tato oblast je skrolovatelná */
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
 .room-item-compact {

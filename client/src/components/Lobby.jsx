@@ -60,7 +60,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
           <div className="section-header-compact">
             <span className="section-label">AKTIVNÍ MÍSTNOSTI:</span>
             <button
-              className="neon-button xs primary"
+              className="neon-button xs success"
               onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
             >
               + VYTVOŘIT HERNÍ MÍSTNOST

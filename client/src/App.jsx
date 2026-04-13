@@ -493,6 +493,7 @@ function App() {
           <NicknameScreen 
             onJoin={handleJoinNickname} 
             error={error} 
+            leaderboard={leaderboard}
           />
         </div>
       )}
