@@ -126,6 +126,7 @@ async function loadState() {
       globalChat = list.documents.map(d => ({
         id: d.$id,
         sender: d.sender,
+        title: d.title || '',
         text: d.text,
         type: d.type,
         time: d.date
@@ -801,13 +802,15 @@ io.on('connection', (socket) => {
   socket.on('send-global-chat', (data) => {
     const player = players.get(socket.id);
     const text = typeof data === 'string' ? data : data.text;
-    const type = data.type || 'Fééédback';
+    const title = data.title || '';
+    const type = data.type || 'feature';
 
     if (player && text && text.trim().length > 0) {
       const timeStr = new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
       const msg = {
         id: Date.now(),
         sender: player.nickname,
+        title: title.trim().substring(0, 200),
         text: text.trim().substring(0, 1000),
         type: type,
         time: timeStr
@@ -821,6 +824,7 @@ io.on('connection', (socket) => {
         try {
           await databases.createDocument(DB_ID, 'feedback', ID.unique(), {
             sender: player.nickname,
+            title: msg.title,
             text: msg.text,
             type: type,
             date: timeStr

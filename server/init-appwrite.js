@@ -81,8 +81,16 @@ export async function initAppwrite() {
         // 6. Check if Feedback Collection exists
         const FEEDBACK_COLL = 'feedback';
         try {
-            await databases.getCollection(DB_ID, FEEDBACK_COLL);
+            const collection = await databases.getCollection(DB_ID, FEEDBACK_COLL);
             console.log(`Appwrite: Collection '${FEEDBACK_COLL}' exists.`);
+            
+            // Kontrola/Vytvoření nového atributu 'title' pro existující kolekci
+            try {
+                await databases.getAttribute(DB_ID, FEEDBACK_COLL, 'title');
+            } catch (attrErr) {
+                console.log(`Appwrite: Attribute 'title' missing in '${FEEDBACK_COLL}'. Creating...`);
+                await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'title', 255, false);
+            }
         } catch (e) {
             console.log(`Appwrite: Collection '${FEEDBACK_COLL}' not found. Creating...`);
             await databases.createCollection(
@@ -93,6 +101,7 @@ export async function initAppwrite() {
             );
             await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'sender', 255, true);
             await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'text', 2000, true);
+            await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'title', 255, false);
             await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'type', 50, true);
             await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'date', 50, true);
             console.log(`Appwrite: Collection '${FEEDBACK_COLL}' created with attributes.`);

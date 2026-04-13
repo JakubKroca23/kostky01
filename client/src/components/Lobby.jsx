@@ -4,6 +4,9 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   const [chatInput, setChatInput] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState('feature'); // feature or bug
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [changelogDraft, setChangelogDraft] = useState('');
@@ -232,51 +235,83 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
         </a>
       </footer>
 
-      {/* Feedback Modal */}
+      {/* Feedback Modal Redesign */}
       {isFeedbackOpen && (
         <div className="modal-overlay fade-in" onClick={() => setIsFeedbackOpen(false)}>
-          <div className={`lobby-feedback-modal glass neon-card ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
+          <div className={`lobby-feedback-modal-v2 glass neon-card ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
             <header className="feedback-header">
-              <span>{feedbackType === 'bug' ? '🐞 NAHLÁSIT CHYBU' : '💡 NÁVRH FUNKCE'}</span>
+              <div className="header-labels">
+                <span className="main-title">{feedbackType === 'bug' ? '🐞 NAHLÁSIT CHYBU' : '💡 NÁVRH FUNKCE'}</span>
+                <span className="sub-title">{isViewingHistory ? 'HISTORIE PODNĚTŮ' : 'NOVÝ PODNĚT'}</span>
+              </div>
               <button className="close-btn" onClick={() => setIsFeedbackOpen(false)}>&times;</button>
             </header>
             
-            <div className="feedback-messages" ref={chatRef}>
-              {(globalChat || [])
-                .filter(m => m.type === feedbackType)
-                .map((m) => (
-                <div key={m.id} className="feedback-msg">
-                  <div className="feedback-msg-header">
-                    <span className="msg-sender">{m.sender}</span>
-                    <span className="msg-time">{m.time}</span>
+            <div className="feedback-content-area">
+              {!isViewingHistory ? (
+                /* FORM VIEW */
+                <form className="feedback-form-v2" onSubmit={(e) => {
+                  e.preventDefault();
+                  if (feedbackTitle.trim() && feedbackDescription.trim()) {
+                    onSendMessage({ title: feedbackTitle, text: feedbackDescription, type: feedbackType });
+                    setFeedbackTitle('');
+                    setFeedbackDescription('');
+                    setIsViewingHistory(true);
+                  }
+                }}>
+                  <div className="input-group-v2">
+                    <label>NÁZEV {feedbackType === 'bug' ? 'CHYBY' : 'FUNKCE'}</label>
+                    <input 
+                      type="text" 
+                      className="glass-input-v2"
+                      value={feedbackTitle}
+                      onChange={(e) => setFeedbackTitle(e.target.value)}
+                      placeholder="Stručný titulek..."
+                      required
+                    />
                   </div>
-                  <div className="msg-text">{m.text}</div>
-                </div>
-              ))}
-              {(globalChat || []).filter(m => m.type === feedbackType).length === 0 && (
-                <div className="feedback-empty">
-                  {feedbackType === 'bug' ? 'Zatím žádné nahlášené chyby...' : 'Zatím žádné nové nápady...'}
+                  <div className="input-group-v2">
+                    <label>POPIS</label>
+                    <textarea 
+                      className="glass-textarea-v2"
+                      value={feedbackDescription}
+                      onChange={(e) => setFeedbackDescription(e.target.value)}
+                      placeholder="Detailnější popis..."
+                      required
+                    />
+                  </div>
+                  <div className="form-actions-v2">
+                    <button type="submit" className={`neon-button ${feedbackType === 'bug' ? 'danger' : 'info'}`}>ODESLAT</button>
+                    <button type="button" className="text-btn" onClick={() => setIsViewingHistory(true)}>ZOBRAZIT HISTORII</button>
+                  </div>
+                </form>
+              ) : (
+                /* HISTORY VIEW */
+                <div className="feedback-history-v2">
+                  <div className="history-list">
+                    {(globalChat || [])
+                      .filter(m => m.type === feedbackType)
+                      .slice().reverse() // Nejnovější nahoře
+                      .map((m) => (
+                      <div key={m.id} className="feedback-card-v2 glass">
+                        <div className="card-header-v2">
+                          <span className="card-title-v2">{m.title || 'Bez názvu'}</span>
+                          <span className="card-time-v2">{m.time}</span>
+                        </div>
+                        <div className="card-sender-v2">Od: {m.sender}</div>
+                        <div className="card-body-v2">{m.text}</div>
+                      </div>
+                    ))}
+                    {(globalChat || []).filter(m => m.type === feedbackType).length === 0 && (
+                      <div className="feedback-empty-v2">Zatím žádné záznamy...</div>
+                    )}
+                  </div>
+                  <button className="neon-button sm width-100" style={{ marginTop: '15px' }} onClick={() => setIsViewingHistory(false)}>
+                    + PŘIDAT DALŠÍ
+                  </button>
                 </div>
               )}
             </div>
-            
-            <form className="feedback-form" onSubmit={(e) => {
-              e.preventDefault();
-              if (chatInput.trim()) {
-                onSendMessage({ text: chatInput, type: feedbackType });
-                setChatInput('');
-              }
-            }}>
-              <input
-                type="text"
-                className="feedback-input glass"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder={feedbackType === 'bug' ? 'Popište chybu, kterou jste našli...' : 'Napište svůj nápad na vylepšení...'}
-                maxLength={1000}
-              />
-              <button type="submit" className={`neon-button sm ${feedbackType === 'bug' ? 'danger' : 'info'}`}>Odeslat</button>
-            </form>
           </div>
         </div>
       )}
