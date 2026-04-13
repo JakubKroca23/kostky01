@@ -12,9 +12,10 @@ yarn-error.log*
 out/
 build/
 coverage/
-.agent/
-.agents/
-.gsd/
+# GSD directories (tracked)
+#! .agent/
+#! .agents/
+#! .gsd/
 *.local
 Broadway Bridge
 Broadway Bridge closed for roadwork and repairs until previous check out.
