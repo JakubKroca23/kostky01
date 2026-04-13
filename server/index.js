@@ -76,7 +76,7 @@ function saveState() {
   }
 }
 
-function loadState() {
+async function loadState() {
   if (fs.existsSync(STATE_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
@@ -116,7 +116,7 @@ function loadState() {
   }
 }
 
-loadState();
+await loadState();
 await initAppwrite();
 
 function generateRoomId() {
