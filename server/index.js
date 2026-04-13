@@ -104,6 +104,7 @@ async function loadState() {
     ]);
     if (list.total > 0) {
         changelogHistory = list.documents.map(d => ({
+            id: d.$id,
             version: d.version,
             text: d.text,
             date: d.date
@@ -129,7 +130,8 @@ function getRoomList() {
     name: r.name,
     playerCount: r.players.length,
     maxPlayers: 6,
-    playerNames: r.players.map(p => p.nickname)
+    playerNames: r.players.map(p => p.nickname),
+    config: r.config
   }));
 }
 
@@ -909,6 +911,7 @@ io.on('connection', (socket) => {
     
     // Nový záznam na začátek
     const newEntry = {
+      id: ID.unique(), // Dočasné ID pro lokální stav před uložením
       version: version || appVersion,
       text: text || '',
       date: new Date().toLocaleDateString('cs-CZ')
@@ -920,13 +923,45 @@ io.on('connection', (socket) => {
     // Save to Appwrite
     (async () => {
         try {
-            await databases.createDocument(DB_ID, 'changelog', ID.unique(), {
+            const doc = await databases.createDocument(DB_ID, 'changelog', ID.unique(), {
                 version: newEntry.version,
                 text: newEntry.text,
                 date: newEntry.date
             });
+            // Aktualizujeme lokální ID na to skutečné z Appwrite
+            newEntry.id = doc.$id;
         } catch (e) {
             console.error("Appwrite Changelog Save Error:", e.message);
+        }
+    })();
+
+    saveState();
+    io.emit('app-version-update', appVersion);
+    io.emit('changelog-update', changelogHistory);
+  });
+
+  socket.on('admin-edit-changelog', ({ id, version, text }) => {
+    const admin = players.get(socket.id);
+    if (!admin || admin.nickname.toLowerCase() !== 'admin') return;
+
+    const idx = changelogHistory.findIndex(e => e.id === id);
+    if (idx === -1) return;
+
+    changelogHistory[idx].version = version;
+    changelogHistory[idx].text = text;
+
+    // Pokud upravujeme nejnovější, aktualizuj appVersion
+    if (idx === 0) appVersion = version;
+
+    // Save to Appwrite
+    (async () => {
+        try {
+            await databases.updateDocument(DB_ID, 'changelog', id, {
+                version,
+                text
+            });
+        } catch (e) {
+            console.error("Appwrite Changelog Edit Error:", e.message);
         }
     })();
 

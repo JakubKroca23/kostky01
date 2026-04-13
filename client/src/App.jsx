@@ -540,6 +540,7 @@ function App() {
           onSendMessage={handleSendGlobalMessage}
           onReaction={handleSendReaction}
           onUpdateChangelog={(data) => socket.emit('admin-update-changelog', data)}
+          onEditChangelog={(data) => socket.emit('admin-edit-changelog', data)}
         />
       )}
 

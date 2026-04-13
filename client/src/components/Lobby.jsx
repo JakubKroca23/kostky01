@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction, changelog, onUpdateChangelog, appVersion }) {
+function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction, changelog, onUpdateChangelog, onEditChangelog, appVersion }) {
   const [chatInput, setChatInput] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [changelogDraft, setChangelogDraft] = useState('');
   const [versionDraft, setVersionDraft] = useState(appVersion || '1.0');
   const [showHistory, setShowHistory] = useState(false);
@@ -22,9 +23,21 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   }, [appVersion]);
 
   const handleSaveChangelog = () => {
-    onUpdateChangelog?.({ version: versionDraft, text: changelogDraft });
+    if (editingId) {
+      onEditChangelog?.({ id: editingId, version: versionDraft, text: changelogDraft });
+    } else {
+      onUpdateChangelog?.({ version: versionDraft, text: changelogDraft });
+    }
     setIsEditingChangelog(false);
+    setEditingId(null);
     setChangelogDraft('');
+  };
+
+  const startEdit = (entry) => {
+    setEditingId(entry.id);
+    setVersionDraft(entry.version);
+    setChangelogDraft(entry.text);
+    setIsEditingChangelog(true);
   };
 
   return (
@@ -38,8 +51,8 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>NEJŠÍLENĚJŠÍ TAH 🔥</th>
-                    <th>Tah</th>
+                    <th>HRÁČ</th>
+                    <th>NEJVÍC V TAHU</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -60,8 +73,8 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>PÁNI KOSTEK 👑</th>
-                    <th>Body celkem</th>
+                    <th>HRÁČ</th>
+                    <th>NEJVÍC TOKENŮ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -118,7 +131,13 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
               rooms.map((room) => (
                 <div key={room.id} className="room-card-mini glass pulse-hover-subtle">
                   <div className="room-meta-left">
-                    <span className="room-name-mini">{room.name}</span>
+                    <div className="room-title-row">
+                      <span className="room-name-mini">{room.name}</span>
+                      <div className="room-badges">
+                        {room.config?.doubleScoreEnabled && <span className="badge-double">2X</span>}
+                        {room.config?.thiefModeEnabled && <span className="badge-thief">🥷</span>}
+                      </div>
+                    </div>
                     <span className="room-count-mini">{room.playerCount}/{room.maxPlayers}</span>
                   </div>
                   <button
@@ -126,7 +145,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                     disabled={room.playerCount >= room.maxPlayers}
                     onClick={() => onJoinRoom(room.id)}
                   >
-                    VS
+                    VSTOUPIT
                   </button>
                 </div>
               ))
@@ -138,9 +157,9 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
       <div className="lobby-side-stack">
         <div className="lobby-changelog-section glass neon-card-cyan">
           <header className="changelog-header">
-            <span>NOVINKY <span style={{ opacity: 0.5, marginLeft: '5px' }}>v{appVersion}</span> 🚀</span>
+            <span>CO JE NOVÉHO 🚀</span>
             {isAdmin && !isEditingChangelog && (
-              <button className="btn-edit-sm" onClick={() => setIsEditingChangelog(true)}>Upravit</button>
+              <button className="btn-edit-sm" onClick={() => { setEditingId(null); setIsEditingChangelog(true); }}>Nový</button>
             )}
           </header>
           
@@ -178,6 +197,9 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                       <div className="changelog-entry-header">
                         <span className="changelog-version-tag">AKTUÁLNÍ</span>
                         <span className="changelog-date">{changelog[0].date}</span>
+                        {isAdmin && (
+                          <button className="btn-edit-inline" onClick={() => startEdit(changelog[0])}>[UPRAVIT]</button>
+                        )}
                       </div>
                       <div className="changelog-text">
                         {changelog[0].text.split('\n').map((line, i) => (
@@ -202,6 +224,9 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                         <div className="changelog-entry-header">
                           <span className="changelog-version-tag secondary">v{entry.version}</span>
                           <span className="changelog-date">{entry.date}</span>
+                          {isAdmin && (
+                            <button className="btn-edit-inline" onClick={() => startEdit(entry)}>[UPRAVIT]</button>
+                          )}
                         </div>
                         <div className="changelog-text">
                           {entry.text.split('\n').map((line, i) => (
