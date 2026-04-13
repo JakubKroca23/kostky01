@@ -55,9 +55,27 @@ export async function initAppwrite() {
             console.log('Appwrite: Attributes created. (Syncing may take a moment)');
             
             // 4. Create Indexes
-            console.log('Appwrite: Creating indexes...');
             await databases.createIndex(DB_ID, COLL_ID, 'idx_wins', 'key', ['wins'], ['desc']);
             console.log('Appwrite: Index created.');
+        }
+
+        // 5. Check if Changelog Collection exists
+        const CHANGELOG_COLL = 'changelog';
+        try {
+            await databases.getCollection(DB_ID, CHANGELOG_COLL);
+            console.log(`Appwrite: Collection '${CHANGELOG_COLL}' exists.`);
+        } catch (e) {
+            console.log(`Appwrite: Collection '${CHANGELOG_COLL}' not found. Creating...`);
+            await databases.createCollection(
+                DB_ID,
+                CHANGELOG_COLL,
+                'Changelog History',
+                ['read("any")'] // Read for everyone
+            );
+            await databases.createStringAttribute(DB_ID, CHANGELOG_COLL, 'version', 50, true);
+            await databases.createStringAttribute(DB_ID, CHANGELOG_COLL, 'text', 5000, true);
+            await databases.createStringAttribute(DB_ID, CHANGELOG_COLL, 'date', 50, true);
+            console.log(`Appwrite: Collection '${CHANGELOG_COLL}' created with attributes.`);
         }
 
     } catch (err) {

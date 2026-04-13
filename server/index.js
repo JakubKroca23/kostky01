@@ -90,10 +90,29 @@ function loadState() {
       if (data.maintenanceMode !== undefined) maintenanceMode = data.maintenanceMode;
       if (data.appVersion) appVersion = data.appVersion;
       if (data.changelogHistory) changelogHistory = data.changelogHistory;
-      console.log(`State loaded: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}, Version: ${appVersion}`);
+      console.log(`State loaded locally: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}, Version: ${appVersion}`);
     } catch (e) {
       console.error('Error loading state:', e);
     }
+  }
+
+  // Load Changelog from Appwrite (overwrites local if exists)
+  try {
+    const list = await databases.listDocuments(DB_ID, 'changelog', [
+        Query.orderDesc('$createdAt'),
+        Query.limit(20)
+    ]);
+    if (list.total > 0) {
+        changelogHistory = list.documents.map(d => ({
+            version: d.version,
+            text: d.text,
+            date: d.date
+        }));
+        appVersion = changelogHistory[0].version;
+        console.log(`Appwrite: Loaded ${list.total} changelog entries.`);
+    }
+  } catch (err) {
+    console.warn("Appwrite Changelog Load Warning:", err.message);
   }
 }
 
@@ -900,6 +919,19 @@ io.on('connection', (socket) => {
     changelogHistory = [newEntry, ...changelogHistory].slice(0, 20); // Limit 20 entries
     appVersion = newEntry.version;
     
+    // Save to Appwrite
+    (async () => {
+        try {
+            await databases.createDocument(DB_ID, 'changelog', ID.unique(), {
+                version: newEntry.version,
+                text: newEntry.text,
+                date: newEntry.date
+            });
+        } catch (e) {
+            console.error("Appwrite Changelog Save Error:", e.message);
+        }
+    })();
+
     saveState();
     io.emit('app-version-update', appVersion);
     io.emit('changelog-update', changelogHistory);
