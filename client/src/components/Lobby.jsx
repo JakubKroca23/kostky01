@@ -1,3 +1,5 @@
+import React, { useState, useEffect, useRef } from 'react';
+
 function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction, changelog, onUpdateChangelog }) {
   const [chatInput, setChatInput] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
