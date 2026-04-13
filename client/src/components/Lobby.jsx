@@ -93,10 +93,17 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
           </button>
           <button
             className="neon-button sm info feedback-toggle-btn"
-            onClick={() => setIsFeedbackOpen(true)}
+            onClick={() => { setFeedbackType('feature'); setIsFeedbackOpen(true); }}
             style={{ width: 'auto', padding: '0 15px' }}
           >
-            💬 Zpětná vazba
+            💡 NÁVRH FUNKCE
+          </button>
+          <button
+            className="neon-button sm danger feedback-toggle-btn"
+            onClick={() => { setFeedbackType('bug'); setIsFeedbackOpen(true); }}
+            style={{ width: 'auto', padding: '0 15px' }}
+          >
+            🐞 NAHLÁSIT CHYBU
           </button>
         </section>
 
