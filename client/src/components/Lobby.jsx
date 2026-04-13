@@ -4,7 +4,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   const [chatInput, setChatInput] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState('feature'); // feature or bug
-  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [isViewingHistory, setIsViewingHistory] = useState(true);
   const [feedbackTitle, setFeedbackTitle] = useState('');
   const [feedbackDescription, setFeedbackDescription] = useState('');
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
