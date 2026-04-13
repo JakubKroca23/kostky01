@@ -199,9 +199,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                       </div>
                     ))}
                   </>
-                )}
               </div>
-            )}
           </div>
         </div>
       </div>

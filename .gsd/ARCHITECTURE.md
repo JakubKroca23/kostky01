@@ -6,7 +6,7 @@
 
 A multiplayer online dice game (Kostky 10000) built with a React frontend and a Node.js/Express backend. It uses Appwrite for authentication and database persistence, and Socket.io for real-time multiplayer synchronization and game state updates.
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │              [Client (React)]           │
 │        (Vite, Socket.io-Client)         │
@@ -38,10 +38,16 @@ A multiplayer online dice game (Kostky 10000) built with a React frontend and a 
   - `init-appwrite.js`: Database and collection initialization.
 
 ### Shared Logic
+
 - **Purpose:** Shared game rules (scoring).
 - **Location:** `shared/`
 - **Key Modules:**
   - `scoring.js`: The "Kostky 10000" scoring engine.
+
+## Core Features
+
+- **6-Dice Gameplay**: Standard "Kostky 10000" rules.
+- **Multiplayer**: Real-time sync via Appwrite.
 
 ## Data Flow
 
@@ -51,6 +57,11 @@ A multiplayer online dice game (Kostky 10000) built with a React frontend and a 
 4. **Server Logic:** Server validates action using `shared/scoring.js` and updates room state.
 5. **Persistence:** Server syncs critical state to Appwrite database.
 6. **Broadcasting:** Server broadcasts updated state to all participants in the room.
+
+## Development Workflows
+
+- **Architecture Mapping**: Update `ARCHITECTURE.md` and `STACK.md`.
+- **Roadmap Planning**: Maintain `ROADMAP.md`.
 
 ## Technical Debt
 
