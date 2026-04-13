@@ -2440,3 +2440,21 @@ body {
   from { transform: scale(1); filter: brightness(1); }
   to { transform: scale(1.1); filter: brightness(1.5); }
 }
+
+/* Fix global chat form */
+.compact-chat .chat-form {
+  display: flex !important;
+  gap: 8px !important;
+  padding: 8px !important;
+  background: rgba(0,0,0,0.2) !important;
+  border-top: 1px solid var(--glass-border) !important;
+}
+
+.compact-chat .chat-input-sm {
+  flex: 1 !important;
+  margin: 0 !important;
+}
+
+.chat-send {
+  white-space: nowrap !important;
+}

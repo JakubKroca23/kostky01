@@ -63,7 +63,8 @@ function App() {
         if (session) {
           const name = session.name || session.$id.substring(0, 8);
           setNickname(name);
-          socket.emit('set-nickname', name);
+          const password = (name.toLowerCase() === 'admin') ? localStorage.getItem('kostky-admin-password') : null;
+          socket.emit('set-nickname', { nickname: name, password });
           setScreen('lobby');
         } else {
           const savedNick = localStorage.getItem('kostky-nickname');
@@ -86,7 +87,8 @@ function App() {
     function onConnect() {
       setIsConnected(true);
       if (nicknameRef.current) {
-        socket.emit('set-nickname', nicknameRef.current);
+        const password = (nicknameRef.current.toLowerCase() === 'admin') ? localStorage.getItem('kostky-admin-password') : null;
+        socket.emit('set-nickname', { nickname: nicknameRef.current, password });
       }
     }
 
@@ -103,7 +105,7 @@ function App() {
 
     function onNicknameError(msg) {
       setError(msg);
-      if (screen === 'loading') setScreen('nickname');
+      setScreen('nickname');
     }
 
     function onRoomListUpdate(list) {
@@ -370,6 +372,9 @@ function App() {
         await account.createAnonymousSession();
       }
       await account.updateName(name);
+      if (name.toLowerCase() === 'admin') {
+        localStorage.setItem('kostky-admin-password', password);
+      }
       socket.emit('set-nickname', { nickname: name, password });
     } catch (err) {
       setError('Chyba při přihlašování: ' + err.message);
@@ -381,6 +386,7 @@ function App() {
       await account.deleteSession('current');
       setNickname('');
       localStorage.removeItem('kostky-nickname');
+      localStorage.removeItem('kostky-admin-password');
       setScreen('nickname');
       window.location.reload();
     } catch (err) {

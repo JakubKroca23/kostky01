@@ -117,6 +117,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
               placeholder="Zpráva..."
               maxLength={100}
             />
+            <button type="submit" className="neon-button xs chat-send">Poslat</button>
           </form>
         </div>
       </div>
