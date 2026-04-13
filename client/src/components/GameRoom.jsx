@@ -358,7 +358,20 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       {!room.gameStarted ? (
         <div className="players-grid" style={{ paddingTop: '0' }}>
           {canStart && (
-            <button className="neon-button start-hero full-width" style={{ height: '60px', fontSize: '1.4rem', marginBottom: '20px' }} onClick={onStart}>🔥 START HRY 🔥</button>
+            <button 
+              className="neon-button start-hero full-width" 
+              style={{ 
+                height: '60px', 
+                fontSize: '1.4rem', 
+                marginBottom: '20px',
+                opacity: room.players.length < 2 ? 0.5 : 1,
+                cursor: room.players.length < 2 ? 'not-allowed' : 'pointer'
+              }} 
+              onClick={onStart}
+              disabled={room.players.length < 2}
+            >
+              {room.players.length < 2 ? 'POČKEJ NA HRÁČE' : '🔥 START HRY 🔥'}
+            </button>
           )}
           <h3 className="section-title">PŘIPOJENÍ HRÁČI ({room.players.length}/6)</h3>
           <div className="online-list-horizontal" style={{ marginBottom: '15px', padding: '10px 0' }}>

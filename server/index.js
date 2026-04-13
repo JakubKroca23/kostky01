@@ -893,6 +893,25 @@ io.on('connection', (socket) => {
     if (player && player.roomId) io.to(player.roomId).emit('reaction-received', { emoji, playerId: socket.id });
   });
 
+  socket.on('start-game', () => {
+    const player = players.get(socket.id);
+    if (player && player.roomId) {
+      const room = rooms.get(player.roomId);
+      if (room && !room.gameStarted && room.players.length > 0 && room.players[0].nickname === player.nickname) {
+        if (room.players.length < 2) {
+          socket.emit('error', 'Hra vyžaduje alespoň 2 hráče.');
+          return;
+        }
+        room.gameStarted = true;
+        // Reset scores and turn info
+        room.turnInfo = { ...room.turnInfo, scores: {}, strikes: {}, enteredBoard: {}, currentTurnId: room.players[0].id, diceCount: 6, lastRoll: [], rollCount: 0, turnPoints: 0, chat: room.turnInfo.chat || [] };
+        room.players.forEach(p => room.turnInfo.scores[p.id] = 0);
+        io.to(player.roomId).emit('game-started', room);
+        saveState();
+      }
+    }
+  });
+
   socket.on('update-room-config', (config) => {
     const player = players.get(socket.id);
     if (player && player.roomId) {

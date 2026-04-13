@@ -153,30 +153,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
           </header>
           
           <div className="changelog-body">
-            {isEditingChangelog ? (
-              <div className="changelog-editor">
-                <div className="editor-group" style={{ marginBottom: '10px' }}>
-                  <label style={{ fontSize: '0.7rem', opacity: 0.6, display: 'block', marginBottom: '4px' }}>NÁZEV NOVÉ VERZE</label>
-                  <input 
-                    type="text" 
-                    value={versionDraft} 
-                    onChange={(e) => setVersionDraft(e.target.value)}
-                    className="glass-input-sm"
-                    style={{ width: '100px' }}
-                  />
-                </div>
-                <textarea 
-                  value={changelogDraft} 
-                  onChange={(e) => setChangelogDraft(e.target.value)}
-                  placeholder="Co je nového? (pomlčky pro odrážky)..."
-                />
-                <div className="editor-actions">
-                  <button className="neon-button sm success" onClick={handleSaveChangelog}>Uložit</button>
-                  <button className="neon-button sm" onClick={() => setIsEditingChangelog(false)}>Zrušit</button>
-                </div>
-              </div>
-            ) : (
-              <div className="changelog-history">
+            <div className="changelog-history">
                 {(!Array.isArray(changelog) || changelog.length === 0) ? (
                   <div className="changelog-empty">Zatím žádné záznamy...</div>
                 ) : (
@@ -238,11 +215,10 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
       {/* Feedback Modal Redesign */}
       {isFeedbackOpen && (
         <div className="modal-overlay fade-in" onClick={() => setIsFeedbackOpen(false)}>
-          <div className={`lobby-feedback-modal-v2 glass neon-card ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
+          <div className={`lobby-feedback-modal-v2 glass neon-card large-modal ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
             <header className="feedback-header">
               <div className="header-labels">
                 <span className="main-title">{feedbackType === 'bug' ? '🐞 NAHLÁSIT CHYBU' : '💡 NÁVRH FUNKCE'}</span>
-                <span className="sub-title">{isViewingHistory ? 'HISTORIE PODNĚTŮ' : 'NOVÝ PODNĚT'}</span>
               </div>
               <button className="close-btn" onClick={() => setIsFeedbackOpen(false)}>&times;</button>
             </header>
@@ -273,7 +249,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                   <div className="input-group-v2">
                     <label>POPIS</label>
                     <textarea 
-                      className="glass-textarea-v2"
+                      className="glass-textarea-v2 large"
                       value={feedbackDescription}
                       onChange={(e) => setFeedbackDescription(e.target.value)}
                       placeholder="Detailnější popis..."
@@ -311,6 +287,47 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Changelog Modal */}
+      {isAdmin && isEditingChangelog && (
+        <div className="modal-overlay fade-in" onClick={() => setIsEditingChangelog(false)}>
+          <div className="lobby-feedback-modal-v2 glass neon-card neon-card-cyan" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <header className="feedback-header">
+              <div className="header-labels">
+                <span className="main-title">🚀 EDITACE CHANGELOGU</span>
+              </div>
+              <button className="close-btn" onClick={() => setIsEditingChangelog(false)}>&times;</button>
+            </header>
+            <div className="feedback-content-area">
+               <div className="feedback-form-v2">
+                  <div className="input-group-v2">
+                    <label>VERZE</label>
+                    <input 
+                      type="text" 
+                      value={versionDraft} 
+                      onChange={(e) => setVersionDraft(e.target.value)}
+                      className="glass-input-v2"
+                    />
+                  </div>
+                  <div className="input-group-v2">
+                    <label>TEXT ZMĚN</label>
+                    <textarea 
+                      value={changelogDraft} 
+                      onChange={(e) => setChangelogDraft(e.target.value)}
+                      placeholder="Co je nového? (pomlčky pro odrážky)..."
+                      className="glass-textarea-v2"
+                      style={{ minHeight: '200px' }}
+                    />
+                  </div>
+                  <div className="form-actions-v2">
+                    <button className="neon-button success" onClick={handleSaveChangelog}>ULOŽIT</button>
+                    <button className="neon-button" onClick={() => setIsEditingChangelog(false)}>ZRUŠIT</button>
+                  </div>
+               </div>
             </div>
           </div>
         </div>
