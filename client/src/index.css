@@ -1755,30 +1755,12 @@ body {
   width: 100%;
 }
 
-.leaderboard-mini-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.dual-leaderboard-container {
-  display: flex;
-  flex-direction: row !important;
-  gap: 15px;
+.lobby-leaderboard-flat {
   margin-bottom: 30px;
-  width: 100%;
-}
-
-.lobby-leaderboard-flat.mini {
-  flex: 1;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 0;
   overflow: hidden;
-  border: none;
   border-bottom: 2px solid var(--glass-border);
-}
-
-.mini-lb-title {
-  display: none;
 }
 
 .leaderboard-mini-table {
@@ -1787,19 +1769,19 @@ body {
 }
 
 .leaderboard-mini-table th {
-  padding: 8px 10px;
-  font-size: 0.6rem;
-  color: var(--neon-gold);
+  padding: 12px 15px;
+  font-size: 0.65rem;
+  color: var(--neon-cyan);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   border-bottom: 1px solid var(--glass-border);
   text-align: left;
-  background: rgba(255, 255, 255, 0.02);
+  font-weight: 800;
 }
 
 .leaderboard-mini-table td {
-  padding: 8px 10px;
-  font-size: 0.75rem;
+  padding: 10px 15px;
+  font-size: 0.8rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
@@ -1807,29 +1789,22 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.val.highlight {
-  font-weight: 800;
-  color: var(--neon-cyan);
-}
-
 .rank-cell {
-  width: 30px;
-  text-align: center;
+  width: 40px;
   font-weight: 800;
+  text-align: center;
 }
 
-.leaderboard-mini-table .nick {
-  color: #fff;
-  opacity: 0.8;
+.val {
+  text-align: right;
+  font-weight: 600;
 }
 
-.leaderboard-mini-table tr.top-rank-1 { background: rgba(255, 184, 0, 0.05); }
+.val.pts { color: var(--neon-gold); }
+.val.wins { color: var(--neon-pink); }
 
 /* Responsive leaderboard */
 @media (max-width: 600px) {
-  .dual-leaderboard-container {
-    gap: 8px;
-  }
   .leaderboard-mini-table td, .leaderboard-mini-table th {
     padding: 6px 4px;
     font-size: 0.65rem;
@@ -2011,7 +1986,7 @@ body {
   flex: 1;
   padding: 12px;
   overflow-y: auto !important;
-  max-height: 400px; /* Limit výšky pro scrollování */
+  max-height: 50vh;
 }
 
 .changelog-history {

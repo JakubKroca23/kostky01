@@ -45,50 +45,29 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
     <main className="hero-section lobby-layout-v2 fade-in">
       <div className="lobby-main-stack">
         {leaderboard && leaderboard.length > 0 && (
-          <div className="dual-leaderboard-container">
-            {/* LEADERBOARD: MAX TAH */}
-            <div className="lobby-leaderboard-flat mini">
+          <div className="lobby-leaderboard-flat">
               <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>HRÁČ</th>
-                    <th>NEJVÍC V TAHU</th>
+                    <th>Hráč</th>
+                    <th title="Maximální body v jednom tahu">Tah</th>
+                    <th>Body</th>
+                    <th>Výhry</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...leaderboard].sort((a, b) => b.highScore - a.highScore).slice(0, 5).map((p, i) => (
+                  {[...leaderboard].sort((a,b) => b.total_points - a.total_points).slice(0, 5).map((p, i) => (
                     <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
-                      <td className="rank-cell">{i === 0 ? '🏆' : i + 1}</td>
+                      <td className="rank-cell">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
                       <td className="nick">{p.nickname}</td>
-                      <td className="val highlight">{(p.highScore ?? 0).toLocaleString()}</td>
+                      <td className="val">{(p.highScore ?? 0).toLocaleString()}</td>
+                      <td className="val pts">{(p.total_points ?? 0).toLocaleString()}</td>
+                      <td className="val wins">{p.wins}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-
-            {/* LEADERBOARD: TOTAL POINTS */}
-            <div className="lobby-leaderboard-flat mini">
-              <table className="leaderboard-mini-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>HRÁČ</th>
-                    <th>NEJVÍC TOKENŮ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...leaderboard].sort((a, b) => b.total_points - a.total_points).slice(0, 5).map((p, i) => (
-                    <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
-                      <td className="rank-cell">{i === 0 ? '⭐' : i + 1}</td>
-                      <td className="nick">{p.nickname}</td>
-                      <td className="val highlight">{(p.total_points ?? 0).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         )}
 
