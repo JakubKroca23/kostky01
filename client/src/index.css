@@ -1766,12 +1766,15 @@ body {
 }
 
 .leaderboard-mini-table th {
-  padding: 8px;
+  padding: 10px 8px;
   text-align: left;
-  color: #555;
-  font-size: 0.6rem;
+  color: var(--neon-cyan);
+  font-size: 0.75rem;
+  font-weight: 900;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--glass-border);
+  letter-spacing: 1.5px;
+  border-bottom: 2px solid var(--glass-border);
+  opacity: 0.9;
 }
 
 .leaderboard-mini-table.compact td, .leaderboard-mini-table.compact th {
