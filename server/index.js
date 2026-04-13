@@ -112,15 +112,19 @@ function broadcastLeaderboard() {
   (async () => {
     try {
       const result = await databases.listDocuments(DB_ID, COLL_ID, [
-        Query.limit(10)
+        Query.limit(20) // Get more to account for filtered admin
       ]);
-      const list = result.documents.map(d => ({
-        nickname: d.nickname,
-        wins: d.wins || 0,
-        total_points: d.total_points || 0,
-        games_played: d.games_played || 0,
-        highScore: d.highScore || 0
-      })).sort((a, b) => b.highScore - a.highScore);
+      const list = result.documents
+        .map(d => ({
+          nickname: d.nickname,
+          wins: d.wins || 0,
+          total_points: d.total_points || 0,
+          games_played: d.games_played || 0,
+          highScore: d.highScore || 0
+        }))
+        .filter(p => p.nickname.toLowerCase() !== 'admin') // Neobrazovat admina v leaderboardu
+        .sort((a, b) => b.highScore - a.highScore)
+        .slice(0, 10);
       io.emit('leaderboard-update', list);
     } catch (e) {
       console.error("Leaderboard Sync Error:", e.message);
@@ -552,7 +556,7 @@ io.on('connection', (socket) => {
   socket.on('force-straight', () => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id || player.nickname.toLowerCase() !== 'zakladatel') return;
+    if (!room || room.turnInfo.currentTurnId !== socket.id || player.nickname.toLowerCase() !== 'admin') return;
     room.turnInfo.rollCount = 1;
     room.turnInfo.diceCount = 6;
     room.turnInfo.storedDice = [];
@@ -573,7 +577,7 @@ io.on('connection', (socket) => {
   socket.on('force-fours', () => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id || player.nickname.toLowerCase() !== 'zakladatel') return;
+    if (!room || room.turnInfo.currentTurnId !== socket.id || player.nickname.toLowerCase() !== 'admin') return;
     room.turnInfo.rollCount++;
     const roll = [4, 4, 4, 4, 1, 5]; 
     room.turnInfo.lastRoll = roll;
@@ -732,7 +736,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-reset-scoreboard', async () => {
     const player = players.get(socket.id);
-    if (!player || player.nickname.toLowerCase() !== 'zakladatel') return;
+    if (!player || player.nickname.toLowerCase() !== 'admin') return;
     try {
       let offset = 0; let deleted = 0;
       while (true) {
@@ -799,14 +803,14 @@ io.on('connection', (socket) => {
 
   socket.on('toggle-maintenance', (status) => {
     const player = players.get(socket.id);
-    if (!player || player.nickname !== 'zakladatel') return;
+    if (!player || player.nickname !== 'admin') return;
     maintenanceMode = !!status;
     saveState();
     io.emit('maintenance-status', maintenanceMode);
     broadcastGlobalStats();
     if (maintenanceMode) {
       players.forEach((p, sid) => {
-        if (p.nickname !== 'zakladatel') {
+        if (p.nickname !== 'admin') {
            if (p.roomId) {
               const room = rooms.get(p.roomId);
               if (room) {
@@ -824,7 +828,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-kick-player', (targetNickname) => {
     const admin = players.get(socket.id);
-    if (!admin || admin.nickname !== 'zakladatel') return;
+    if (!admin || admin.nickname !== 'admin') return;
     const targetEntry = Array.from(players.entries()).find(([id, p]) => p.nickname === targetNickname && p.online);
     if (targetEntry) {
       const [targetId] = targetEntry;
@@ -838,7 +842,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-delete-room', (roomId) => {
     const admin = players.get(socket.id);
-    if (!admin || admin.nickname !== 'zakladatel') return;
+    if (!admin || admin.nickname !== 'admin') return;
     const room = rooms.get(roomId);
     if (room) {
       io.to(roomId).emit('kicked-to-lobby', 'Místnost byla zrušena zakladatelem.');
@@ -856,7 +860,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-clear-chat', () => {
     const admin = players.get(socket.id);
-    if (!admin || admin.nickname !== 'zakladatel') return;
+    if (!admin || admin.nickname !== 'admin') return;
     globalChat = [];
     io.emit('global-chat-update', globalChat);
     saveState();

@@ -42,7 +42,7 @@ function AdminMenu({ maintenanceMode, onToggleMaintenance, onClose, players, roo
                  {players.map(p => (
                     <div key={p} className="admin-item">
                        <span>{p}</span>
-                       {p.toLowerCase() !== 'zakladatel' && (
+                       {p.toLowerCase() !== 'admin' && (
                           <button className="neon-button sm danger" onClick={() => onKickPlayer(p)}>Kick</button>
                        )}
                     </div>
@@ -66,7 +66,7 @@ function AdminMenu({ maintenanceMode, onToggleMaintenance, onClose, players, roo
         </div>
         
         <div className="admin-footer">
-           <p>Uživatel: zakladatel (Vlastník)</p>
+           <p>Uživatel: ADMIN (Vlastník)</p>
         </div>
       </div>
     </div>

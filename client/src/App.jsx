@@ -435,11 +435,11 @@ function App() {
           onLogout={handleLogout}
           onChangeNickname={handleChangeNickname}
           onOpenAdmin={() => setIsAdminOpen(true)}
-          isAdmin={nickname?.toLowerCase() === 'zakladatel'}
+          isAdmin={nickname?.toLowerCase() === 'admin'}
         />
       )}
 
-      {maintenanceMode && nickname?.toLowerCase() !== 'zakladatel' && (
+      {maintenanceMode && nickname?.toLowerCase() !== 'admin' && (
         <MaintenanceOverlay />
       )}
 

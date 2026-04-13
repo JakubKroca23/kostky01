@@ -1726,13 +1726,13 @@ body {
   border-bottom: 1px solid var(--glass-border);
 }
 
-.leaderboard-mini-table td {
-  padding: 8px;
-  font-size: 0.85rem;
+.leaderboard-mini-table.compact td, .leaderboard-mini-table.compact th {
+  padding: 4px 8px;
+  font-size: 0.75rem;
   border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
-.leaderboard-mini-table .rank-cell { font-weight: bold; width: 40px; text-align: center; }
+.leaderboard-mini-table.compact .rank-cell { width: 30px; }
 .leaderboard-mini-table tr.top-rank-1 { background: rgba(255, 204, 0, 0.08); border-left: 3px solid var(--neon-gold); }
 .leaderboard-mini-table tr.top-rank-1 .nick { color: var(--neon-gold); }
 .leaderboard-mini-table tr.top-rank-2 { background: rgba(255, 255, 255, 0.05); border-left: 3px solid #ccc; }
@@ -1744,66 +1744,139 @@ body {
 .leaderboard-mini-table .wins { color: var(--neon-pink); }
 .leaderboard-mini-table .games { opacity: 0.5; }
 
-/* Grid Layout */
-.lobby-bottom-grid {
+/* New Layout V2 */
+.lobby-layout-v2 {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Dva sloupce vedle sebe i na mobilu */
-  gap: 15px;
-  flex: 1;
-  min-height: 0;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
 }
 
-@media (max-width: 600px) {
-  .lobby-bottom-grid {
-    gap: 8px; /* Těsnější mezera na mobilu */
-  }
-  .lobby-bottom-grid .neon-card {
-    padding: 10px; /* Menší vnitřní okraj */
-  }
-  .online-nickname {
-    font-size: 0.75rem; /* Menší písmo */
-  }
-  .status-dot {
-    width: 6px;
-    height: 6px;
+@media (max-width: 900px) {
+  .lobby-layout-v2 {
+    grid-template-columns: 1fr;
   }
 }
 
-.lobby-side-col { display: flex; flex-direction: column; gap: 15px; }
-.lobby-main-col { display: flex; flex-direction: column; min-height: 0; }
-.lobby-rooms-wrapper { display: flex; flex-direction: column; height: 100%; }
-
-.lobby-global-chat {
-  height: 180px;
-  margin-bottom: 20px;
-  flex-shrink: 0;
-}
-
-.online-list-vertical {
+.lobby-main-stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 5px;
+  gap: 15px;
 }
 
-.online-user-item {
+.lobby-leaderboard-minimal {
+  background: transparent;
+  width: 100%;
+}
+
+.no-glass { background: transparent; border: none; }
+
+.lobby-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-header-compact {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--neon-cyan);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--neon-cyan);
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--neon-gold);
+  letter-spacing: 1.5px;
+  opacity: 0.7;
+}
+
+.online-list-horizontal-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.online-user-pill-sm {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  background: rgba(0, 243, 255, 0.05);
+  border: 1px solid rgba(0, 243, 255, 0.1);
+  border-radius: 4px;
+  color: var(--neon-cyan);
+}
+
+.reaction-row-tiny {
+  display: flex;
+  gap: 10px;
+}
+
+.reaction-btn-tiny {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.reaction-btn-tiny:hover { opacity: 1; transform: scale(1.2); }
+
+.room-list-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.room-item-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.room-name-sm { font-size: 0.85rem; font-weight: 700; color: #fff; }
+.room-players-sm { font-size: 0.75rem; opacity: 0.6; margin-left: 5px; }
+
+.join-btn-sm {
+  background: var(--neon-pink);
+  border: none;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.join-btn-sm:hover { filter: brightness(1.2); }
+
+.compact-chat {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+}
+
+.chat-header-compact {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--neon-pink);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.chat-input-sm {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 5px;
+  padding: 8px;
+  color: #fff;
+  font-size: 0.8rem;
 }
 
 .online-nickname {
