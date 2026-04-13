@@ -429,7 +429,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               <div className="double-settings fade-in" style={{ padding: '8px', marginBottom: '10px', background: 'rgba(157, 0, 255, 0.03)', border: '1px dashed rgba(157, 0, 255, 0.2)', borderRadius: '10px' }}>
                 <div style={{ display: 'flex', gap: '15px' }}>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.6rem', opacity: 0.5, display: 'block' }}>INTERVAL (KOLA)</label>
+                    <label style={{ fontSize: '0.6rem', opacity: 0.5, display: 'block' }}>INTERVAL (HODŮ)</label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '3px' }}>
                        {canStart && <button className="btn-mini" onClick={() => {
                          const val = Math.max(1, doubleInterval - 1);
