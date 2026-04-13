@@ -22,6 +22,7 @@ A multiplayer online dice game (Kostky 10000) built with a React frontend and a 
 ## Components
 
 ### Client (Frontend)
+
 - **Purpose:** Game UI, lobby management, real-time interaction.
 - **Location:** `client/`
 - **Key Modules:**
@@ -31,6 +32,7 @@ A multiplayer online dice game (Kostky 10000) built with a React frontend and a 
   - `Matter.js`: Used for dice physics simulation (inferred).
 
 ### Server (Backend)
+
 - **Purpose:** Game state orchestration, room management, persistence via Appwrite.
 - **Location:** `server/`
 - **Key Modules:**
