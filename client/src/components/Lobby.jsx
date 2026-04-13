@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
-
-function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction }) {
+function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction, changelog, onUpdateChangelog }) {
   const [chatInput, setChatInput] = useState('');
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isEditingChangelog, setIsEditingChangelog] = useState(false);
+  const [changelogDraft, setChangelogDraft] = useState(changelog || '');
   const chatRef = React.useRef(null);
+  const isAdmin = nickname?.toLowerCase() === 'admin';
 
   React.useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [globalChat]);
+
+  React.useEffect(() => {
+    setChangelogDraft(changelog || '');
+  }, [changelog]);
+
+  const handleSaveChangelog = () => {
+    onUpdateChangelog?.(changelogDraft);
+    setIsEditingChangelog(false);
+  };
 
   return (
     <main className="hero-section lobby-layout-v2 fade-in">
@@ -52,32 +63,43 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
           </div>
         </section>
 
-        <section className="lobby-section rooms-compact">
+        <section className="lobby-actions-row">
+          <button
+            className="neon-button sm success create-btn-main"
+            onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
+            style={{ flex: 1 }}
+          >
+            + VYTVOŘIT HRU
+          </button>
+          <button
+            className="neon-button sm info feedback-toggle-btn"
+            onClick={() => setIsFeedbackOpen(true)}
+            style={{ width: 'auto', padding: '0 15px' }}
+          >
+            💬 Zpětná vazba
+          </button>
+        </section>
+
+        <section className="lobby-section rooms-compact-v3">
           <div className="section-header-compact">
-            <span className="section-label">AKTIVNÍ MÍSTNOSTI:</span>
-            <button
-              className="neon-button xs success"
-              onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
-            >
-              + VYTVOŘIT HRU
-            </button>
+            <span className="section-label">AKTIVNÍ MÍSTNOSTI ({rooms.length})</span>
           </div>
-          <div className="room-list-compact">
+          <div className="room-list-compact-grid">
             {rooms.length === 0 ? (
-              <div className="empty-state-sm">Žádné aktivní hry...</div>
+              <div className="empty-state-sm glass">Žádné aktivní hry...</div>
             ) : (
               rooms.map((room) => (
-                <div key={room.id} className="room-item-compact glass">
-                  <div className="room-info-sm">
-                    <span className="room-name-sm">{room.name}</span>
-                    <span className="room-players-sm">({room.playerCount}/{room.maxPlayers})</span>
+                <div key={room.id} className="room-card-mini glass pulse-hover-subtle">
+                  <div className="room-meta-left">
+                    <span className="room-name-mini">{room.name}</span>
+                    <span className="room-count-mini">{room.playerCount}/{room.maxPlayers}</span>
                   </div>
                   <button
-                    className="join-btn-sm"
+                    className="join-mini-btn"
                     disabled={room.playerCount >= room.maxPlayers}
                     onClick={() => onJoinRoom(room.id)}
                   >
-                    VSTOUPIT
+                    VS
                   </button>
                 </div>
               ))
@@ -87,36 +109,75 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
       </div>
 
       <div className="lobby-side-stack">
-        <div className="lobby-feedback-section glass neon-card compact-feedback">
-          <header className="feedback-header">Zpětná vazba & Bugy</header>
-          <div className="feedback-messages" ref={chatRef}>
-            {(globalChat || []).map((m) => (
-              <div key={m.id} className="feedback-msg">
-                <span className="msg-sender">{m.sender}:</span>
-                <span className="msg-text">{m.text}</span>
+        <div className="lobby-changelog-section glass neon-card-cyan">
+          <header className="changelog-header">
+            <span>CO JE NOVÉHO 🚀</span>
+            {isAdmin && !isEditingChangelog && (
+              <button className="btn-edit-sm" onClick={() => setIsEditingChangelog(true)}>Upravit</button>
+            )}
+          </header>
+          
+          <div className="changelog-body">
+            {isEditingChangelog ? (
+              <div className="changelog-editor">
+                <textarea 
+                  value={changelogDraft} 
+                  onChange={(e) => setChangelogDraft(e.target.value)}
+                  placeholder="Seznam změn (používejte pomlčky pro body)..."
+                />
+                <div className="editor-actions">
+                  <button className="neon-button sm success" onClick={handleSaveChangelog}>Uložit</button>
+                  <button className="neon-button sm" onClick={() => setIsEditingChangelog(false)}>Zrušit</button>
+                </div>
               </div>
-            ))}
-            {(globalChat || []).length === 0 && <div className="feedback-empty">Zatím žádná zpětná vazba...</div>}
+            ) : (
+              <div className="changelog-content">
+                {(changelog || 'Zatím žádné novinky...').split('\n').map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+              </div>
+            )}
           </div>
-          <form className="feedback-form" onSubmit={(e) => {
-            e.preventDefault();
-            if (chatInput.trim()) {
-              onSendMessage(chatInput);
-              setChatInput('');
-            }
-          }}>
-            <input
-              type="text"
-              className="feedback-input glass"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Napište námět nebo chybu..."
-              maxLength={150}
-            />
-            <button type="submit" className="neon-button xs feedback-send">Odeslat</button>
-          </form>
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      {isFeedbackOpen && (
+        <div className="modal-overlay fade-in" onClick={() => setIsFeedbackOpen(false)}>
+          <div className="lobby-feedback-modal glass neon-card" onClick={(e) => e.stopPropagation()}>
+            <header className="feedback-header">
+              <span>Zpětná vazba & Bugy</span>
+              <button className="close-btn" onClick={() => setIsFeedbackOpen(false)}>&times;</button>
+            </header>
+            <div className="feedback-messages" ref={chatRef}>
+              {(globalChat || []).map((m) => (
+                <div key={m.id} className="feedback-msg">
+                  <span className="msg-sender">{m.sender}:</span>
+                  <span className="msg-text">{m.text}</span>
+                </div>
+              ))}
+              {(globalChat || []).length === 0 && <div className="feedback-empty">Zatím žádná zpětná vazba...</div>}
+            </div>
+            <form className="feedback-form" onSubmit={(e) => {
+              e.preventDefault();
+              if (chatInput.trim()) {
+                onSendMessage(chatInput);
+                setChatInput('');
+              }
+            }}>
+              <input
+                type="text"
+                className="feedback-input glass"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Napište námět nebo chybu..."
+                maxLength={150}
+              />
+              <button type="submit" className="neon-button sm feedback-send">Odeslat</button>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

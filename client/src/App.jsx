@@ -35,6 +35,7 @@ function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [changelog, setChangelog] = useState('');
   const [doubleStatus, setDoubleStatus] = useState({ active: false, endsAt: 0 });
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
@@ -132,6 +133,10 @@ function App() {
 
     function onMaintenanceStatus(status) {
       setMaintenanceMode(status);
+    }
+
+    function onChangelogUpdate(text) {
+      setChangelog(text);
     }
 
     function onKickedToLobby(msg) {
@@ -278,6 +283,7 @@ function App() {
     socket.on('reaction-received', onReactionReceived);
     socket.on('chat-message-received', onChatMessageReceived);
     socket.on('maintenance-status', onMaintenanceStatus);
+    socket.on('changelog-update', onChangelogUpdate);
     socket.on('kicked-to-lobby', onKickedToLobby);
     socket.on('double-status-update', onDoubleStatusUpdate);
     socket.on('admin-action-result', ({ ok, message }) => {
@@ -311,6 +317,7 @@ function App() {
       socket.off('reaction-received', onReactionReceived);
       socket.off('chat-message-received', onChatMessageReceived);
       socket.off('maintenance-status', onMaintenanceStatus);
+      socket.off('changelog-update', onChangelogUpdate);
       socket.off('kicked-to-lobby', onKickedToLobby);
       socket.off('admin-action-result');
     };
@@ -512,11 +519,13 @@ function App() {
           onlineStats={onlineStats}
           globalChat={globalChat}
           leaderboard={leaderboard}
+          changelog={changelog}
           onCreateRoom={handleCreateRoom} 
           onJoinRoom={handleJoinRoom} 
           onChangeNickname={handleChangeNickname}
           onSendMessage={handleSendGlobalMessage}
           onReaction={handleSendReaction}
+          onUpdateChangelog={(text) => socket.emit('admin-update-changelog', text)}
         />
       )}
 
