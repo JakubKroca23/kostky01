@@ -51,13 +51,13 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                   <tr>
                     <th>#</th>
                     <th>Hráč</th>
-                    <th title="Maximální body v jednom tahu">Tah</th>
+                    <th title="Maximální body v jednom tahu">MAX V TAHU</th>
                     <th>Body</th>
                     <th>Výhry</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...leaderboard].sort((a,b) => b.total_points - a.total_points).slice(0, 5).map((p, i) => (
+                  {[...leaderboard].sort((a,b) => b.highScore - a.highScore).slice(0, 10).map((p, i) => (
                     <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
                       <td className="rank-cell">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
                       <td className="nick">{p.nickname}</td>
