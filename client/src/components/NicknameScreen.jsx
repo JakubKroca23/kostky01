@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 
-const FOUNDER_PASSWORD = 'Admin1234';
+const ADMIN_PASSWORD = 'kostky01'; // Nové heslo
 
 function NicknameScreen({ onJoin, error }) {
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
 
-  const isFounder = nickname.trim().toLowerCase() === 'zakladatel';
+  const isAdmin = nickname.trim().toLowerCase() === 'admin';
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setLocalError('');
     if (nickname.trim().length < 3) return;
 
-    if (isFounder) {
-      if (password !== FOUNDER_PASSWORD) {
-        setLocalError('Špatné heslo pro účet zakladatele.');
+    if (isAdmin) {
+      if (password !== ADMIN_PASSWORD) {
+        setLocalError('Špatné heslo pro účet ADMIN.');
         return;
       }
     }
 
-    onJoin(nickname.trim());
+    onJoin(nickname.trim(), password);
   };
 
   return (
@@ -41,12 +41,13 @@ function NicknameScreen({ onJoin, error }) {
             onChange={(e) => { setNickname(e.target.value); setLocalError(''); }}
             minLength={3}
             required
+            autoFocus
           />
         </div>
 
-        {isFounder && (
+        {isAdmin && (
           <div className="input-group" style={{ marginTop: '12px' }}>
-            <label style={{ color: 'var(--neon-cyan)' }}>🔐 Heslo zakladatele</label>
+            <label style={{ color: 'var(--neon-cyan)' }}>🔐 Admin Heslo</label>
             <input
               type="password"
               placeholder="Zadej heslo"

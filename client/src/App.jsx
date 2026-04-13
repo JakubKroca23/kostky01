@@ -48,6 +48,15 @@ function App() {
   }, [nickname]);
 
   useEffect(() => {
+    // Zakázat skrolování pouze pokud hra skutečně běží
+    if (screen === 'room' && currentRoom?.gameStarted) {
+      document.body.classList.add('game-active');
+    } else {
+      document.body.classList.remove('game-active');
+    }
+  }, [screen, currentRoom?.gameStarted]);
+
+  useEffect(() => {
     async function initApp() {
       try {
         const session = await account.get();
@@ -354,14 +363,14 @@ function App() {
     socket.emit('leave-room');
   };
 
-  const handleJoinNickname = async (name) => {
+  const handleJoinNickname = async (name, password) => {
     try {
       const existing = await account.get().catch(() => null);
       if (!existing) {
         await account.createAnonymousSession();
       }
       await account.updateName(name);
-      socket.emit('set-nickname', name);
+      socket.emit('set-nickname', { nickname: name, password });
     } catch (err) {
       setError('Chyba při přihlašování: ' + err.message);
     }

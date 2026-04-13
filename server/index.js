@@ -281,13 +281,23 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('set-nickname', (nickname) => {
+  socket.on('set-nickname', (data) => {
+    const nickname = typeof data === 'string' ? data : data?.nickname;
+    const password = typeof data === 'object' ? data?.password : null;
+
     if (!nickname || nickname.trim().length < 3) {
       socket.emit('nickname-error', 'Jméno musí mít aspoň 3 znaky.');
       return;
     }
 
-    const nicknameLower = nickname.toLowerCase();
+    const nicknameLower = nickname.trim().toLowerCase();
+    
+    // Admin Password Check
+    if (nicknameLower === 'admin' && password !== 'kostky01') {
+       socket.emit('nickname-error', 'Špatné admin heslo.');
+       return;
+    }
+
     const existingPlayerEntry = Array.from(players.entries()).find(([id, p]) => 
       id !== socket.id && p.nickname.toLowerCase() === nicknameLower
     );

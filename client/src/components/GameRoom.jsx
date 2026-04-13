@@ -624,7 +624,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
 
 
           <div className="action-stack">
-            {nickname.toLowerCase() === 'zakladatel' && isMyTurn && !isRolling && room.turnInfo.rollCount === 0 && (
+            {nickname.toLowerCase() === 'admin' && isMyTurn && !isRolling && room.turnInfo.rollCount === 0 && (
               <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                 <button 
                   onClick={() => socket.emit('force-straight')} 

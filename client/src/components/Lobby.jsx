@@ -10,8 +10,6 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
     }
   }, [globalChat]);
 
-  const emojis = ['🔥', '😂', '😭', '🎲', '👑', '🎆'];
-
   return (
     <main className="hero-section lobby-layout-v2 fade-in">
       <div className="lobby-main-stack">
@@ -54,13 +52,6 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
           <div className="online-list-horizontal-compact">
             {onlineStats.players.map((p, i) => (
               <span key={i} className="online-user-pill-sm">{p}</span>
-            ))}
-          </div>
-          <div className="reaction-row-tiny">
-            {emojis.map(e => (
-              <button key={e} className="reaction-btn-tiny" onClick={() => onReaction(e)}>
-                {e}
-              </button>
             ))}
           </div>
         </section>

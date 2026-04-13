@@ -12,15 +12,22 @@
   --glass-heavy: rgba(0, 0, 0, 0.6);
 }
 
-html, body, #root {
-  width: 100%;
-  height: 100dvh;
+body, html {
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  background: #050505;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-dark);
   color: white;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto; /* Povoleno skrolování pro lobby */
+}
+
+/* Kdyz je aktivni hra, zakazeme skrolovani na urovni HTML/Body */
+body.game-active {
+  overflow: hidden !important;
+  touch-action: none;
 }
 
 body {
@@ -1744,21 +1751,19 @@ body {
 .leaderboard-mini-table .wins { color: var(--neon-pink); }
 .leaderboard-mini-table .games { opacity: 0.5; }
 
-/* New Layout V2 */
+/* New Layout V2 - Full Width Stack */
 .lobby-layout-v2 {
-  display: grid;
-  grid-template-columns: 1fr 320px;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-  align-items: start;
+  width: 100%;
+  max-width: 100%; /* Roztažení na celou šířku */
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
-@media (max-width: 900px) {
-  .lobby-layout-v2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-.lobby-main-stack {
+.lobby-main-stack, .lobby-side-stack {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -1825,8 +1830,8 @@ body {
 
 .room-list-compact {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr; /* Jeden sloupec pro full width na mobilu/desktopy dle požadavku */
+  gap: 8px;
 }
 
 .room-item-compact {
@@ -1857,7 +1862,12 @@ body {
 .compact-chat {
   display: flex;
   flex-direction: column;
-  height: 500px;
+  height: 200px; /* Ještě kompaktnejší výška */
+}
+
+.global-chat-messages {
+  flex: 1;
+  min-height: 0;
 }
 
 .chat-header-compact {
