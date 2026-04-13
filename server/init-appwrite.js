@@ -51,11 +51,13 @@ export async function initAppwrite() {
             await databases.createIntegerAttribute(DB_ID, COLL_ID, 'wins', false, 0);
             await databases.createIntegerAttribute(DB_ID, COLL_ID, 'total_points', false, 0);
             await databases.createIntegerAttribute(DB_ID, COLL_ID, 'games_played', false, 0);
+            await databases.createIntegerAttribute(DB_ID, COLL_ID, 'total_rolls', false, 0);
             await databases.createIntegerAttribute(DB_ID, COLL_ID, 'highScore', false, 0);
             console.log('Appwrite: Attributes created. (Syncing may take a moment)');
             
             // 4. Create Indexes
             await databases.createIndex(DB_ID, COLL_ID, 'idx_wins', 'key', ['wins'], ['desc']);
+            await databases.createIndex(DB_ID, COLL_ID, 'idx_highScore', 'key', ['highScore'], ['desc']);
             console.log('Appwrite: Index created.');
         }
 

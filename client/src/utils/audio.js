@@ -41,7 +41,7 @@ class AudioManager {
     if (!this.enabled) return;
     this.init();
     const now = this.context.currentTime;
-    const duration = 1.2;
+    const duration = 1.0;
     
     // Low rumble noise
     const bufferSize = this.context.sampleRate * duration;
@@ -53,11 +53,11 @@ class AudioManager {
     noise.buffer = buffer;
     const filter = this.context.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(300, now);
-    filter.frequency.exponentialRampToValueAtTime(80, now + duration);
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.exponentialRampToValueAtTime(100, now + duration);
     
     const gain = this.context.createGain();
-    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.setValueAtTime(0.06, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     
     noise.connect(filter);
@@ -66,22 +66,22 @@ class AudioManager {
     noise.start();
     noise.stop(now + duration);
 
-    // Add random clacks
-    for (let i = 0; i < 6; i++) {
-       const delay = Math.random() * 0.8;
+    // Add random clacks (more of them for density)
+    for (let i = 0; i < 12; i++) {
+       const delay = Math.random() * 0.7;
        const osc = this.context.createOscillator();
        const cGain = this.context.createGain();
-       osc.type = 'triangle';
-       osc.frequency.setValueAtTime(150 + Math.random() * 200, now + delay);
-       osc.frequency.exponentialRampToValueAtTime(50, now + delay + 0.05);
+       osc.type = Math.random() > 0.5 ? 'triangle' : 'square';
+       osc.frequency.setValueAtTime(200 + Math.random() * 300, now + delay);
+       osc.frequency.exponentialRampToValueAtTime(40, now + delay + 0.08);
        
-       cGain.gain.setValueAtTime(0.05, now + delay);
-       cGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.05);
+       cGain.gain.setValueAtTime(0.08, now + delay);
+       cGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.08);
        
        osc.connect(cGain);
        cGain.connect(this.context.destination);
        osc.start(now + delay);
-       osc.stop(now + delay + 0.05);
+       osc.stop(now + delay + 0.08);
     }
   }
 
@@ -89,26 +89,25 @@ class AudioManager {
     if (!this.enabled) return;
     this.init();
     const now = this.context.currentTime;
-    const duration = 0.8;
+    const duration = 1.2;
     
-    // Aggressive buzzing failure sound
-    [110, 107, 103].forEach(freq => {
+    // Aggressive buzzing failure sound with more harmonics
+    [110, 82, 55].forEach((freq, idx) => {
       const osc = this.context.createOscillator();
       const gain = this.context.createGain();
       
-      osc.type = 'sawtooth';
+      osc.type = idx === 0 ? 'sawtooth' : 'square';
       osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(freq / 2, now + duration);
+      osc.frequency.linearRampToValueAtTime(freq * 0.8, now + duration);
       
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.linearRampToValueAtTime(0, now + duration);
+      gain.gain.setValueAtTime(0.15 - (idx * 0.04), now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
       
-      // Filter for "grit"
       const filter = this.context.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1000, now);
-      filter.frequency.linearRampToValueAtTime(200, now + duration);
-      filter.Q.value = 10;
+      filter.frequency.setValueAtTime(2000, now);
+      filter.frequency.exponentialRampToValueAtTime(100, now + duration);
+      filter.Q.value = 15;
       
       osc.connect(filter);
       filter.connect(gain);

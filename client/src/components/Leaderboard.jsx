@@ -16,22 +16,30 @@ function Leaderboard({ list, onClose }) {
                 <th>Pořadí</th>
                 <th>Hráč</th>
                 <th>Výhry</th>
-                <th>Body (Kariéra)</th>
+                <th>Průměr/Hod</th>
+                <th>Max v tahu</th>
                 <th className="hide-mobile">Hry</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((player, index) => (
-                <tr key={index} className={`rank-${index + 1}`}>
-                  <td className="rank-col">
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
-                  </td>
-                  <td className="nickname-col">{player.nickname}</td>
-                  <td className="wins-col">{player.wins}</td>
-                  <td className="points-col">{player.total_points.toLocaleString()}</td>
-                  <td className="hide-mobile">{player.games_played}</td>
-                </tr>
-              ))}
+              {list.map((player, index) => {
+                const avgRoll = player.total_rolls > 0 
+                  ? (player.total_points / player.total_rolls).toFixed(1) 
+                  : '0.0';
+                
+                return (
+                  <tr key={index} className={`rank-${index + 1}`}>
+                    <td className="rank-col">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                    </td>
+                    <td className="nickname-col">{player.nickname}</td>
+                    <td className="wins-col">{player.wins}</td>
+                    <td className="points-col">{avgRoll}</td>
+                    <td className="pts-col">{player.highScore?.toLocaleString() || 0}</td>
+                    <td className="hide-mobile">{player.games_played}</td>
+                  </tr>
+                );
+              })}
               {list.length === 0 && (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>

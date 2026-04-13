@@ -55,20 +55,23 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                     <th>#</th>
                     <th>Hráč</th>
                     <th title="Maximální body v jednom tahu">MAX V TAHU</th>
-                    <th>Body</th>
+                    <th>PRŮMĚR/HOD</th>
                     <th>Výhry</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...leaderboard].sort((a,b) => b.highScore - a.highScore).slice(0, 10).map((p, i) => (
-                    <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
-                      <td className="rank-cell">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
-                      <td className="nick">{p.nickname}</td>
-                      <td className="val">{(p.highScore ?? 0).toLocaleString()}</td>
-                      <td className="val pts">{(p.total_points ?? 0).toLocaleString()}</td>
-                      <td className="val wins">{p.wins}</td>
-                    </tr>
-                  ))}
+                  {[...leaderboard].sort((a,b) => b.highScore - a.highScore).slice(0, 10).map((p, i) => {
+                    const avgRoll = p.total_rolls > 0 ? (p.total_points / p.total_rolls).toFixed(1) : '0.0';
+                    return (
+                      <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
+                        <td className="rank-cell">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                        <td className="nick">{p.nickname}</td>
+                        <td className="val">{(p.highScore ?? 0).toLocaleString()}</td>
+                        <td className="val pts">{avgRoll}</td>
+                        <td className="val wins">{p.wins}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
           </div>
