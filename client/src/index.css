@@ -37,7 +37,7 @@ body {
     radial-gradient(circle at 10% 90%, rgba(0, 255, 255, 0.04) 0%, transparent 40%);
 }
 
-/* Skrýt scrollbary všude */
+/* SkrĂ˝t scrollbary vĹˇude */
 ::-webkit-scrollbar { display: none; }
 * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -60,10 +60,10 @@ body {
   z-index: 20000;
   background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
   display: flex;
-  align-items: flex-start; /* Změna: start místo center pro skrolování */
+  align-items: flex-start; /* ZmÄ›na: start mĂ­sto center pro skrolovĂˇnĂ­ */
   justify-content: center;
   padding: 40px 20px;
-  overflow-y: auto; /* Povoleno skrolování pro žebříček */
+  overflow-y: auto; /* Povoleno skrolovĂˇnĂ­ pro ĹľebĹ™Ă­ÄŤek */
 }
 
 /* Professional Navbar */
@@ -763,7 +763,7 @@ body {
 }
 
 /* ============================================
-   DICE PHYSICS - 100% JS/Matter.js řízeno
+   DICE PHYSICS - 100% JS/Matter.js Ĺ™Ă­zeno
    CSS pouze definuje vzhled, ne pohyb!
    ============================================ */
 
@@ -773,7 +773,7 @@ body {
   height: 100%;
 }
 
-/* Základní styl kostky - pohyb řídí JS přes inline style */
+/* ZĂˇkladnĂ­ styl kostky - pohyb Ĺ™Ă­dĂ­ JS pĹ™es inline style */
 .dice-body {
   width: 62px;
   height: 62px;
@@ -797,19 +797,19 @@ body {
   will-change: transform;
 }
 
-/* Během hodu - pointer-events off, jinak stejný vzhled */
+/* BÄ›hem hodu - pointer-events off, jinak stejnĂ˝ vzhled */
 .dice-body.rolling {
   pointer-events: none;
 }
 
 
-/* Vybraná kostka */
+/* VybranĂˇ kostka */
 .dice-body.selected {
   border-color: var(--neon-pink) !important;
   box-shadow: 0 0 20px var(--neon-pink);
 }
 
-/* Kostka, která se dá vybrat - pulzující lem */
+/* Kostka, kterĂˇ se dĂˇ vybrat - pulzujĂ­cĂ­ lem */
 .dice-body.can-select {
   animation: pickPulse 1.5s infinite;
 }
@@ -819,7 +819,7 @@ body {
   50% { border-color: white; box-shadow: 0 0 18px var(--neon-cyan); }
 }
 
-/* Bust stav kostky — zobrazí lebky místo tečeček */
+/* Bust stav kostky â€” zobrazĂ­ lebky mĂ­sto teÄŤeÄŤek */
 .dice-body.bust {
   background: transparent !important;
   border-color: #ff2244 !important;
@@ -833,7 +833,7 @@ body {
   to   { border-color: #ff6677; box-shadow: 0 0 28px rgba(255, 34, 68, 1), 0 0 50px rgba(255, 0, 0, 0.3); }
 }
 
-/* Lebka uvnitř kostky při bustu */
+/* Lebka uvnitĹ™ kostky pĹ™i bustu */
 .bust-skull {
   font-size: 2rem;
   line-height: 1;
@@ -848,7 +848,7 @@ body {
   overflow: visible;
 }
 
-/* Obrázek fakáče na kostkách */
+/* ObrĂˇzek fakĂˇÄŤe na kostkĂˇch */
 .bust-facepalm-img {
   width: 140px;
   height: 140px;
@@ -1014,7 +1014,7 @@ body {
   opacity: 0.35;
 }
 
-/* Staré score-item pro zpětnou kompatibilitu */
+/* StarĂ© score-item pro zpÄ›tnou kompatibilitu */
 .score-item {
   display: flex;
   justify-content: space-between;
@@ -1044,7 +1044,7 @@ body {
 }
 
 /* ============================================
-   KONFETY - čistě CSS + inline JS proměnné
+   KONFETY - ÄŤistÄ› CSS + inline JS promÄ›nnĂ©
    ============================================ */
 .confetti-container {
   position: fixed;
@@ -1068,7 +1068,7 @@ body {
   100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--rotation)); opacity: 0; }
 }
 
-/* Karta vítěze */
+/* Karta vĂ­tÄ›ze */
 .victory-card {
   position: relative;
   width: 92%;
@@ -1084,7 +1084,7 @@ body {
   to   { opacity: 1; transform: scale(1)  translateY(0); }
 }
 
-/* Neonová záře za kartou */
+/* NeonovĂˇ zĂˇĹ™e za kartou */
 .victory-glow {
   position: absolute;
   inset: -40px;
@@ -1133,7 +1133,7 @@ body {
   97%           { opacity: 0.5; }
 }
 
-/* Sekce vítěze */
+/* Sekce vĂ­tÄ›ze */
 .winner-announcement {
   margin-bottom: 24px;
 }
@@ -1162,7 +1162,7 @@ body {
   to   { text-shadow: 0 0 20px var(--neon-pink), 0 0 50px rgba(255, 0, 222, 0.7), 0 0 80px rgba(255, 0, 222, 0.3); }
 }
 
-/* Finální tabulka */
+/* FinĂˇlnĂ­ tabulka */
 .final-scoreboard {
   margin: 0 0 24px;
   border-top: 1px solid var(--glass-border);
@@ -1225,7 +1225,7 @@ body {
   opacity: 0.5;
 }
 
-/* Tlačítko */
+/* TlaÄŤĂ­tko */
 .victory-btn {
   margin-top: 4px;
 }
@@ -1703,7 +1703,7 @@ body {
 }
 
 .reaction-buttons-row {
-  display: none; /* Skryto ve hře, nahrazeno výsuvným menu */
+  display: none; /* Skryto ve hĹ™e, nahrazeno vĂ˝suvnĂ˝m menu */
 }
 
 .completion-modal {
@@ -1825,7 +1825,7 @@ body {
   gap: 20px;
   width: 100%;
   max-width: 100%;
-  padding: 40px 10px 0; /* Zvětšené odsazení od navbaru */
+  padding: 40px 10px 0; /* ZvÄ›tĹˇenĂ© odsazenĂ­ od navbaru */
   box-sizing: border-box;
 }
 
@@ -2721,7 +2721,7 @@ body {
   flex-shrink: 0 !important;
   white-space: nowrap !important;
   padding: 8px 16px !important;
-  height: 38px !important; /* Shodná výška s inputem */
+  height: 38px !important; /* ShodnĂˇ vĂ˝Ĺˇka s inputem */
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3010,45 +3010,195 @@ body {
   cursor: not-allowed !important;
   box-shadow: none !important;
 }
-/* iPhone & Mobile Optimisation for Modals */
-@media (max-width: 600px) {
-  .lobby-feedback-modal-v2 {
-    width: 98% !important;
-    max-height: 92vh !important;
-    border-radius: 12px !important;
-  }
-  
-  .large-modal {
-    width: 100% !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-  }
+/* ============================================
+   UNIFIED MOBILE-FIRST MODAL SYSTEM
+   ============================================ */
 
-  .feedback-content-area {
-    padding: 15px !important;
-  }
-
-  .glass-input-v2, .glass-textarea-v2 {
-    font-size: 1.1rem !important; /* Prevents iOS auto-zoom */
-    padding: 18px !important;
-  }
-  
-  .glass-textarea-v2.large {
-    min-height: 350px !important;
-  }
-
-  .main-title {
-    font-size: 1.3rem !important;
-  }
-  
-  .input-group-v2 label {
-    font-size: 0.9rem !important;
-    margin-bottom: 10px !important;
-  }
+.fullscreen-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Base refinement for desktop too */
-.glass-input-v2, .glass-textarea-v2 {
+.modal-chat-style {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0f !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: hidden;
+}
+
+/* Header */
+.modal-chat-header {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 2px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.modal-chat-title {
+  font-weight: 900;
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.modal-chat-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  line-height: 1;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+/* Body */
+.modal-chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-chat-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-chat-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-chat-input-field,
+.modal-chat-textarea-field {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  padding: 18px !important;
+  font-size: 1.15rem !important; /* CRITICAL for iPhone: 18px+ stops auto-zoom */
+  font-family: inherit !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.modal-chat-input-field:focus,
+.modal-chat-textarea-field:focus {
+  border-color: var(--neon-cyan) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.neon-card-pink .modal-chat-input-field:focus,
+.neon-card-pink .modal-chat-textarea-field:focus {
+  border-color: var(--neon-pink) !important;
+}
+
+.modal-chat-textarea-field {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+}
+
+/* Actions */
+.modal-chat-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px 0;
+  flex-shrink: 0;
+}
+
+.modal-chat-actions .neon-button {
+  width: 100% !important;
+  padding: 22px !important;
+  font-size: 1.2rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  height: auto !important;
+}
+
+/* History Card */
+.modal-chat-card {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: var(--neon-cyan);
+}
+
+.neon-card-pink .card-title {
+  color: var(--neon-pink);
+}
+
+.modal-chat-card .card-meta {
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.modal-chat-card .card-text {
   font-size: 1.05rem;
-}$css
+  line-height: 1.5;
+  color: #eee;
+}
+
+/* DESKTOP ADAPTATION */
+@media (min-width: 900px) {
+  .fullscreen-modal-overlay {
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.85);
+  }
+
+  .modal-chat-style {
+    width: 60% !important;
+    height: auto !important;
+    max-height: 85vh !important;
+    max-width: 900px !important;
+    border-radius: 24px !important;
+    border: 2px solid var(--glass-border) !important;
+  }
+
+  .modal-chat-actions {
+    flex-direction: row !important;
+    justify-content: center !important;
+  }
+
+  .modal-chat-actions .neon-button {
+    flex: 1 !important;
+    padding: 15px !important;
+    font-size: 1rem !important;
+  }
+}

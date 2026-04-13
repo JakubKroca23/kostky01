@@ -212,77 +212,59 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
         </a>
       </footer>
 
-      {/* Feedback Modal Redesign */}
+      {/* Redesigned Unified Modal (Feedback & Bugs) */}
       {isFeedbackOpen && (
-        <div className="modal-overlay fade-in" onClick={() => setIsFeedbackOpen(false)}>
-          <div className={`lobby-feedback-modal-v2 glass neon-card large-modal ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
-            <header className="feedback-header">
-              <div className="header-labels">
-                <span className="main-title">{feedbackType === 'bug' ? '🐞 NAHLÁSIT CHYBU' : '💡 NÁVRH FUNKCE'}</span>
-              </div>
-              <button className="close-btn" onClick={() => setIsFeedbackOpen(false)}>&times;</button>
+        <div className="fullscreen-modal-overlay fade-in" onClick={() => setIsFeedbackOpen(false)}>
+          <div className={`modal-chat-style glass neon-card ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
+            <header className="modal-chat-header">
+              <span className="modal-chat-title">{feedbackType === 'bug' ? '🐞 NAHLÁSIT CHYBU' : '💡 NÁVRH FUNKCE'}</span>
+              <button className="modal-chat-close" onClick={() => setIsFeedbackOpen(false)}>&times;</button>
             </header>
             
-            <div className="feedback-content-area">
+            <div className="modal-chat-body">
               {!isViewingHistory ? (
-                /* FORM VIEW */
-                <form className="feedback-form-v2" onSubmit={(e) => {
+                <form className="modal-chat-form" onSubmit={(e) => {
                   e.preventDefault();
                   if (feedbackTitle.trim() && feedbackDescription.trim()) {
                     onSendMessage({ title: feedbackTitle, text: feedbackDescription, type: feedbackType });
-                    setFeedbackTitle('');
-                    setFeedbackDescription('');
-                    setIsViewingHistory(true);
+                    setFeedbackTitle(''); setFeedbackDescription(''); setIsViewingHistory(true);
                   }
                 }}>
-                  <div className="input-group-v2">
+                  <div className="modal-chat-inputs">
                     <input 
-                      type="text" 
-                      className="glass-input-chat"
-                      value={feedbackTitle}
-                      onChange={(e) => setFeedbackTitle(e.target.value)}
-                      placeholder="NÁZEV..."
-                      required
+                      type="text" className="modal-chat-input-field"
+                      value={feedbackTitle} onChange={(e) => setFeedbackTitle(e.target.value)}
+                      placeholder="NÁZEV (STRUČNĚ)..." required
                     />
-                  </div>
-                  <div className="input-group-v2">
                     <textarea 
-                      className="glass-textarea-chat"
-                      value={feedbackDescription}
-                      onChange={(e) => setFeedbackDescription(e.target.value)}
-                      placeholder="VAŠE ZPRÁVA / POPIS..."
-                      required
+                      className="modal-chat-textarea-field"
+                      value={feedbackDescription} onChange={(e) => setFeedbackDescription(e.target.value)}
+                      placeholder="PODROBNÝ POPIS..." required
                     />
                   </div>
-                  <div className="form-actions-chat">
-                    <button type="submit" className={`neon-button sm ${feedbackType === 'bug' ? 'danger' : 'info'}`}>ODESLAT</button>
-                    <button type="button" className="neon-button sm" onClick={() => setIsFeedbackOpen(false)}>ZRUŠIT</button>
-                    <button type="button" className="neon-button sm secondary" onClick={() => setIsViewingHistory(true)}>SEZNAM</button>
+                  <div className="modal-chat-actions">
+                    <button type="submit" className={`neon-button ${feedbackType === 'bug' ? 'danger' : 'info'}`}>ODESLAT</button>
+                    <button type="button" className="neon-button secondary" onClick={() => setIsViewingHistory(true)}>ZOBRAZIT HISTORII</button>
+                    <button type="button" className="neon-button" onClick={() => setIsFeedbackOpen(false)}>ZRUŠIT</button>
                   </div>
                 </form>
               ) : (
-                /* HISTORY VIEW */
-                <div className="feedback-history-v2">
-                  <div className="history-list">
-                    {(globalChat || [])
-                      .filter(m => m.type === feedbackType)
-                      .slice().reverse()
-                      .map((m) => (
-                      <div key={m.id} className="feedback-card-v2 glass">
-                        <div className="card-header-v2">
-                          <span className="card-title-v2">{m.title || 'Bez názvu'}</span>
-                          <span className="card-time-v2">{m.time}</span>
+                <div className="modal-chat-history">
+                  <div className="modal-chat-list scroll-area">
+                    {(globalChat || []).filter(m => m.type === feedbackType).slice().reverse().map((m) => (
+                      <div key={m.id} className="modal-chat-card glass">
+                        <div className="card-header">
+                          <span className="card-title">{m.title}</span>
+                          <span className="card-meta">{m.time} | {m.sender}</span>
                         </div>
-                        <div className="card-sender-v2">Od: {m.sender}</div>
-                        <div className="card-body-v2">{m.text}</div>
+                        <div className="card-text">{m.text}</div>
                       </div>
                     ))}
+                    {(globalChat || []).filter(m => m.type === feedbackType).length === 0 && <div className="empty-msg">Žádné podněty...</div>}
                   </div>
-                  <div className="form-actions-chat" style={{ marginTop: '15px' }}>
-                    <button className="neon-button sm width-100" onClick={() => setIsViewingHistory(false)}>
-                      + PŘIDAT NOVÝ
-                    </button>
-                    <button className="neon-button sm" onClick={() => setIsFeedbackOpen(false)}>ZAVŘÍT</button>
+                  <div className="modal-chat-actions">
+                    <button className="neon-button info" onClick={() => setIsViewingHistory(false)}>+ PŘIDAT NOVÝ</button>
+                    <button className="neon-button" onClick={() => setIsFeedbackOpen(false)}>ZAVŘÍT</button>
                   </div>
                 </div>
               )}
@@ -291,42 +273,33 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
         </div>
       )}
 
-      {/* Admin Changelog Modal */}
+      {/* Redesigned Unified Modal (Admin Changelog) */}
       {isAdmin && isEditingChangelog && (
-        <div className="modal-overlay fade-in" onClick={() => setIsEditingChangelog(false)}>
-          <div className="lobby-feedback-modal-v2 glass neon-card neon-card-cyan" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <header className="feedback-header">
-              <div className="header-labels">
-                <span className="main-title">🚀 EDITACE CHANGELOGU</span>
-              </div>
-              <button className="close-btn" onClick={() => setIsEditingChangelog(false)}>&times;</button>
+        <div className="fullscreen-modal-overlay fade-in" onClick={() => setIsEditingChangelog(false)}>
+          <div className="modal-chat-style glass neon-card neon-card-cyan" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-chat-header">
+              <span className="modal-chat-title">🚀 EDITACE CHANGELOGU</span>
+              <button className="modal-chat-close" onClick={() => setIsEditingChangelog(false)}>&times;</button>
             </header>
-            <div className="feedback-content-area">
-               <div className="feedback-form-v2">
-                  <div className="input-group-v2">
-                    <label>VERZE</label>
-                    <input 
-                      type="text" 
-                      value={versionDraft} 
-                      onChange={(e) => setVersionDraft(e.target.value)}
-                      className="glass-input-v2"
-                    />
-                  </div>
-                  <div className="input-group-v2">
-                    <label>TEXT ZMĚN</label>
-                    <textarea 
-                      value={changelogDraft} 
-                      onChange={(e) => setChangelogDraft(e.target.value)}
-                      placeholder="Co je nového? (pomlčky pro odrážky)..."
-                      className="glass-textarea-v2"
-                      style={{ minHeight: '200px' }}
-                    />
-                  </div>
-                  <div className="form-actions-v2">
-                    <button className="neon-button success" onClick={handleSaveChangelog}>ULOŽIT</button>
-                    <button className="neon-button" onClick={() => setIsEditingChangelog(false)}>ZRUŠIT</button>
-                  </div>
-               </div>
+            <div className="modal-chat-body">
+              <form className="modal-chat-form" onSubmit={(e) => { e.preventDefault(); handleSaveChangelog(); }}>
+                <div className="modal-chat-inputs">
+                  <input 
+                    type="text" className="modal-chat-input-field"
+                    value={versionDraft} onChange={(e) => setVersionDraft(e.target.value)}
+                    placeholder="VERZE (např. v1.3)..." required
+                  />
+                  <textarea 
+                    className="modal-chat-textarea-field"
+                    value={changelogDraft} onChange={(e) => setChangelogDraft(e.target.value)}
+                    placeholder="CO JE NOVÉHO?" required
+                  />
+                </div>
+                <div className="modal-chat-actions">
+                  <button type="submit" className="neon-button success">ULOŽIT ZMĚNY</button>
+                  <button type="button" className="neon-button" onClick={() => setIsEditingChangelog(false)}>ZRUŠIT</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
