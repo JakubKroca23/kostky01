@@ -5,6 +5,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
   const [changelogDraft, setChangelogDraft] = useState(changelog || '');
+  const [versionDraft, setVersionDraft] = useState(appVersion || '1.0');
   const chatRef = React.useRef(null);
   const isAdmin = nickname?.toLowerCase() === 'admin';
 
@@ -16,10 +17,11 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
 
   React.useEffect(() => {
     setChangelogDraft(changelog || '');
-  }, [changelog]);
+    setVersionDraft(appVersion || '1.0');
+  }, [changelog, appVersion]);
 
   const handleSaveChangelog = () => {
-    onUpdateChangelog?.(changelogDraft);
+    onUpdateChangelog?.({ version: versionDraft, text: changelogDraft });
     setIsEditingChangelog(false);
   };
 
@@ -122,6 +124,16 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
           <div className="changelog-body">
             {isEditingChangelog ? (
               <div className="changelog-editor">
+                <div className="editor-group" style={{ marginBottom: '10px' }}>
+                  <label style={{ fontSize: '0.7rem', opacity: 0.6, display: 'block', marginBottom: '4px' }}>VERZE</label>
+                  <input 
+                    type="text" 
+                    value={versionDraft} 
+                    onChange={(e) => setVersionDraft(e.target.value)}
+                    className="glass-input-sm"
+                    style={{ width: '100px' }}
+                  />
+                </div>
                 <textarea 
                   value={changelogDraft} 
                   onChange={(e) => setChangelogDraft(e.target.value)}

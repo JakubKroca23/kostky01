@@ -2707,3 +2707,17 @@ body {
   background: var(--glass-border);
   border-radius: 10px;
 }
+
+.glass-input-sm {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.glass-input-sm:focus {
+  border-color: var(--neon-cyan);
+}

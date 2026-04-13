@@ -58,13 +58,17 @@ const players = new Map(); // socket.id -> { nickname, roomId }
 const rooms = new Map(); // roomId -> { id, name, players: [{id, nickname}] }
 let globalChat = [];
 let maintenanceMode = false;
+let appVersion = '1.2';
+let changelog = '';
 
 function saveState() {
   try {
     const data = {
       rooms: Array.from(rooms.entries()),
       players: Array.from(players.entries()),
-      maintenanceMode
+      maintenanceMode,
+      appVersion,
+      changelog
     };
     fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
   } catch (err) {
@@ -84,7 +88,9 @@ function loadState() {
         });
       }
       if (data.maintenanceMode !== undefined) maintenanceMode = data.maintenanceMode;
-      console.log(`State loaded: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}`);
+      if (data.appVersion) appVersion = data.appVersion;
+      if (data.changelog) changelog = data.changelog;
+      console.log(`State loaded: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}, Version: ${appVersion}`);
     } catch (e) {
       console.error('Error loading state:', e);
     }
@@ -278,6 +284,9 @@ function handlePlayerLeave(socketId, roomId) {
 io.on('connection', (socket) => {
   console.log('New connection:', socket.id);
 
+  // Send current maintenance status immediately
+  socket.emit('maintenance-status', maintenanceMode);
+
   socket.on('request-room-sync', () => {
     const player = players.get(socket.id);
     if (player && player.roomId) {
@@ -377,6 +386,8 @@ io.on('connection', (socket) => {
     socket.emit('nickname-set', nickname);
     socket.emit('room-list-update', getRoomList());
     socket.emit('global-chat-update', globalChat);
+    socket.emit('app-version-update', appVersion);
+    socket.emit('changelog-update', changelog);
     broadcastLeaderboard(socket);
     broadcastGlobalStats();
   });
@@ -873,6 +884,16 @@ io.on('connection', (socket) => {
       saveState();
       io.emit('room-list-update', getRoomList());
     }
+  });
+
+  socket.on('admin-update-changelog', ({ version, text }) => {
+    const admin = players.get(socket.id);
+    if (!admin || admin.nickname.toLowerCase() !== 'admin') return;
+    if (version) appVersion = version;
+    if (text !== undefined) changelog = text;
+    saveState();
+    io.emit('app-version-update', appVersion);
+    io.emit('changelog-update', changelog);
   });
 
   socket.on('admin-clear-chat', () => {

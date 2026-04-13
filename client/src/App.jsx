@@ -34,7 +34,8 @@ function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(() => localStorage.getItem('kostky-maintenance') === 'true');
+  const [appVersion, setAppVersion] = useState('1.2');
   const [changelog, setChangelog] = useState('');
   const [doubleStatus, setDoubleStatus] = useState({ active: false, endsAt: 0 });
   const [error, setError] = useState('');
@@ -49,6 +50,10 @@ function App() {
   useEffect(() => {
     nicknameRef.current = nickname;
   }, [nickname]);
+
+  useEffect(() => {
+    document.title = `KOSTKY ${appVersion}`;
+  }, [appVersion]);
 
   useEffect(() => {
     // Zakázat skrolování pouze pokud hra skutečně běží
@@ -133,10 +138,15 @@ function App() {
 
     function onMaintenanceStatus(status) {
       setMaintenanceMode(status);
+      localStorage.setItem('kostky-maintenance', status);
     }
 
     function onChangelogUpdate(text) {
       setChangelog(text);
+    }
+
+    function onVersionUpdate(v) {
+      setAppVersion(v);
     }
 
     function onKickedToLobby(msg) {
@@ -283,6 +293,7 @@ function App() {
     socket.on('reaction-received', onReactionReceived);
     socket.on('chat-message-received', onChatMessageReceived);
     socket.on('maintenance-status', onMaintenanceStatus);
+    socket.on('app-version-update', onVersionUpdate);
     socket.on('changelog-update', onChangelogUpdate);
     socket.on('kicked-to-lobby', onKickedToLobby);
     socket.on('double-status-update', onDoubleStatusUpdate);
@@ -317,6 +328,7 @@ function App() {
       socket.off('reaction-received', onReactionReceived);
       socket.off('chat-message-received', onChatMessageReceived);
       socket.off('maintenance-status', onMaintenanceStatus);
+      socket.off('app-version-update', onVersionUpdate);
       socket.off('changelog-update', onChangelogUpdate);
       socket.off('kicked-to-lobby', onKickedToLobby);
       socket.off('admin-action-result');
@@ -454,6 +466,7 @@ function App() {
       {nickname && (
         <Navbar 
           nickname={nickname}
+          version={appVersion}
           soundEnabled={soundEnabled}
           onToggleSound={toggleSound}
           onLogout={handleLogout}
@@ -520,12 +533,13 @@ function App() {
           globalChat={globalChat}
           leaderboard={leaderboard}
           changelog={changelog}
+          appVersion={appVersion}
           onCreateRoom={handleCreateRoom} 
           onJoinRoom={handleJoinRoom} 
           onChangeNickname={handleChangeNickname}
           onSendMessage={handleSendGlobalMessage}
           onReaction={handleSendReaction}
-          onUpdateChangelog={(text) => socket.emit('admin-update-changelog', text)}
+          onUpdateChangelog={(data) => socket.emit('admin-update-changelog', data)}
         />
       )}
 

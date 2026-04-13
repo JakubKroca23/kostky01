@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickname, onOpenAdmin, onOpenHelp, isAdmin }) {
+function Navbar({ nickname, version, soundEnabled, onToggleSound, onLogout, onChangeNickname, onOpenAdmin, onOpenHelp, isAdmin }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -8,7 +8,7 @@ function Navbar({ nickname, soundEnabled, onToggleSound, onLogout, onChangeNickn
       <div className="nav-container">
         <div className="nav-logo">
           <span className="dice-icon">🎲</span>
-          <h1 className="neon-text-cyan">KOSTKY <span className="logo-v">v1.2</span></h1>
+          <h1 className="neon-text-cyan">KOSTKY <span className="logo-v">v{version || '1.2'}</span></h1>
         </div>
 
         <div className="nav-right">
