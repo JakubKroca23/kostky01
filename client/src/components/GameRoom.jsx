@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { audio } from '../utils/audio';
 import { calculateScore } from '@shared/scoring';
-import useDicePhysics from '../hooks/useDicePhysics';
-import useWebRTC from '../hooks/useWebRTC';
+import { useDicePhysics } from '../hooks/useDicePhysics';
+import { useWebRTC } from '../hooks/useWebRTC';
 import Die from './Die';
 import Scoreboard from './room/Scoreboard';
 import GameControls from './room/GameControls';
