@@ -3010,6 +3010,45 @@ body {
   cursor: not-allowed !important;
   box-shadow: none !important;
 }
-$css
-$css
-$css
+/* iPhone & Mobile Optimisation for Modals */
+@media (max-width: 600px) {
+  .lobby-feedback-modal-v2 {
+    width: 98% !important;
+    max-height: 92vh !important;
+    border-radius: 12px !important;
+  }
+  
+  .large-modal {
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .feedback-content-area {
+    padding: 15px !important;
+  }
+
+  .glass-input-v2, .glass-textarea-v2 {
+    font-size: 1.1rem !important; /* Prevents iOS auto-zoom */
+    padding: 18px !important;
+  }
+  
+  .glass-textarea-v2.large {
+    min-height: 350px !important;
+  }
+
+  .main-title {
+    font-size: 1.3rem !important;
+  }
+  
+  .input-group-v2 label {
+    font-size: 0.9rem !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+/* Base refinement for desktop too */
+.glass-input-v2, .glass-textarea-v2 {
+  font-size: 1.05rem;
+}
