@@ -239,42 +239,31 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
       {/* Feedback Modal */}
       {isFeedbackOpen && (
         <div className="modal-overlay fade-in" onClick={() => setIsFeedbackOpen(false)}>
-          <div className="lobby-feedback-modal glass neon-card" onClick={(e) => e.stopPropagation()}>
+          <div className={`lobby-feedback-modal glass neon-card ${feedbackType === 'bug' ? 'neon-card-pink' : 'neon-card-cyan'}`} onClick={(e) => e.stopPropagation()}>
             <header className="feedback-header">
-              <span>Zpětná vazba & Bugy</span>
+              <span>{feedbackType === 'bug' ? '🐞 NAHLÁSIT CHYBU' : '💡 NÁVRH FUNKCE'}</span>
               <button className="close-btn" onClick={() => setIsFeedbackOpen(false)}>&times;</button>
             </header>
+            
             <div className="feedback-messages" ref={chatRef}>
-              {(globalChat || []).map((m) => (
+              {(globalChat || [])
+                .filter(m => m.type === feedbackType)
+                .map((m) => (
                 <div key={m.id} className="feedback-msg">
                   <div className="feedback-msg-header">
                     <span className="msg-sender">{m.sender}</span>
-                    <span className={`msg-type-badge ${m.type === 'bug' ? 'bug' : 'feature'}`}>
-                      {m.type === 'bug' ? 'CHYBA' : 'NÁVRH'}
-                    </span>
                     <span className="msg-time">{m.time}</span>
                   </div>
                   <div className="msg-text">{m.text}</div>
                 </div>
               ))}
-              {(globalChat || []).length === 0 && <div className="feedback-empty">Zatím žádná zpětná vazba...</div>}
+              {(globalChat || []).filter(m => m.type === feedbackType).length === 0 && (
+                <div className="feedback-empty">
+                  {feedbackType === 'bug' ? 'Zatím žádné nahlášené chyby...' : 'Zatím žádné nové nápady...'}
+                </div>
+              )}
             </div>
             
-            <div className="feedback-type-selector">
-              <button 
-                className={`type-btn ${feedbackType === 'feature' ? 'active' : ''}`}
-                onClick={() => setFeedbackType('feature')}
-              >
-                💡 NOVÁ FUNKCE
-              </button>
-              <button 
-                className={`type-btn ${feedbackType === 'bug' ? 'active bug' : ''}`}
-                onClick={() => setFeedbackType('bug')}
-              >
-                🐞 OPRAVA CHYBY
-              </button>
-            </div>
-
             <form className="feedback-form" onSubmit={(e) => {
               e.preventDefault();
               if (chatInput.trim()) {
@@ -287,10 +276,11 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 className="feedback-input glass"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Napište námět nebo chybu..."
-                maxLength={150}
+                placeholder={feedbackType === 'bug' ? 'Popište chybu, kterou jste našli...' : 'Napište svůj nápad na vylepšení...'}
+                maxLength={1000}
+                autoFocus
               />
-              <button type="submit" className="neon-button sm feedback-send">Odeslat</button>
+              <button type="submit" className={`neon-button sm ${feedbackType === 'bug' ? 'danger' : 'info'}`}>Odeslat</button>
             </form>
           </div>
         </div>
