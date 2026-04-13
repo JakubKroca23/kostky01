@@ -83,7 +83,7 @@ function NicknameScreen({ onJoin, error, leaderboard }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {leaderboard.slice(0, 10).map((p, i) => (
+                  {leaderboard.slice(0, 5).map((p, i) => (
                     <tr key={i} className={i < 3 ? `top-rank-${i + 1}` : ''}>
                       <td className="rank-cell">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
                       <td className="nick">{p.nickname}</td>

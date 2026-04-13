@@ -14,17 +14,19 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
     <main className="hero-section lobby-layout-v2 fade-in">
       <div className="lobby-main-stack">
         {leaderboard && leaderboard.length > 0 && (
-          <div className="lobby-leaderboard-minimal">
-            <div className="leaderboard-mini-wrapper no-glass">
-              <table className="leaderboard-mini-table compact">
+          <section className="lobby-section lobby-leaderboard-full glass neon-card">
+            <div className="section-header-compact">
+              <span className="section-label">🏆 TOP 5 ŽEBŘÍČEK:</span>
+            </div>
+            <div className="leaderboard-table-container">
+              <table className="leaderboard-mini-table">
                 <thead>
                   <tr>
                     <th>#</th>
                     <th>Hráč</th>
-                    <th title="Maximální body v jednom tahu">Max tah</th>
-                    <th title="Celkové body za kariéru">Body</th>
+                    <th title="Maximální body v jednom tahu">Tah</th>
+                    <th>Body</th>
                     <th>Výhry</th>
-                    <th>Hry</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -35,13 +37,12 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
                       <td className="val">{(p.highScore ?? 0).toLocaleString()}</td>
                       <td className="val pts">{(p.total_points ?? 0).toLocaleString()}</td>
                       <td className="val wins">{p.wins}</td>
-                      <td className="val games">{p.games_played}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         )}
 
         <section className="lobby-section online-players-compact">
