@@ -356,7 +356,10 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       </div>
 
       {!room.gameStarted ? (
-        <div className="players-grid">
+        <div className="players-grid" style={{ paddingTop: '0' }}>
+          {canStart && (
+            <button className="neon-button start-hero full-width" style={{ height: '60px', fontSize: '1.4rem', marginBottom: '20px' }} onClick={onStart}>🔥 START HRY 🔥</button>
+          )}
           <h3 className="section-title">PŘIPOJENÍ HRÁČI ({room.players.length}/6)</h3>
           <div className="online-list-horizontal" style={{ marginBottom: '15px', padding: '10px 0' }}>
           {room.players.map((p, i) => (
@@ -461,9 +464,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               </div>
             )}
 
-            {canStart ? (
-              <button className="neon-button start-hero full-width" style={{ marginTop: '5px', height: '50px', fontSize: '1.2rem' }} onClick={onStart}>🔥 START HRY 🔥</button>
-            ) : (
+            {!canStart && (
               <div className="wait-pill glass full-width" style={{ textAlign: 'center', padding: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--neon-pink)', fontSize: '0.7rem' }}>
                 ⌛ ČEKÁ SE NA START (HOST)...
               </div>
