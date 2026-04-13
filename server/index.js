@@ -108,7 +108,7 @@ function getRoomList() {
   }));
 }
 
-function broadcastLeaderboard() {
+function broadcastLeaderboard(targetSocket = null) {
   (async () => {
     try {
       const result = await databases.listDocuments(DB_ID, COLL_ID, [
@@ -125,7 +125,12 @@ function broadcastLeaderboard() {
         .filter(p => p.nickname.toLowerCase() !== 'admin') // Neobrazovat admina v leaderboardu
         .sort((a, b) => b.highScore - a.highScore)
         .slice(0, 10);
-      io.emit('leaderboard-update', list);
+      
+      if (targetSocket) {
+        targetSocket.emit('leaderboard-update', list);
+      } else {
+        io.emit('leaderboard-update', list);
+      }
     } catch (e) {
       console.error("Leaderboard Sync Error:", e.message);
     }
@@ -372,6 +377,7 @@ io.on('connection', (socket) => {
     socket.emit('nickname-set', nickname);
     socket.emit('room-list-update', getRoomList());
     socket.emit('global-chat-update', globalChat);
+    broadcastLeaderboard(socket);
     broadcastGlobalStats();
   });
 
