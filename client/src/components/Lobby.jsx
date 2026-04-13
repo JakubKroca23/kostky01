@@ -147,7 +147,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
               </div>
             ) : (
               <div className="changelog-history">
-                {(!changelog || changelog.length === 0) ? (
+                {(!Array.isArray(changelog) || changelog.length === 0) ? (
                   <div className="changelog-empty">Zatím žádné záznamy...</div>
                 ) : (
                   changelog.map((entry, idx) => (
