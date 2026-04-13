@@ -1871,22 +1871,24 @@ body {
 }
 
 .chat-header-compact {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
-  color: var(--neon-pink);
-  margin-bottom: 10px;
-  text-align: center;
+  color: var(--neon-cyan);
+  margin-bottom: 12px;
+  text-align: left;
+  letter-spacing: 1px;
 }
 
 .chat-input-sm {
-  width: 100%;
-  background: rgba(0,0,0,0.3);
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
-  border-radius: 5px;
-  padding: 8px;
+  border-radius: 6px;
+  padding: 8px 12px;
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  min-width: 0; /* Prevents overflow in flex */
 }
 
 .online-nickname {
@@ -2445,16 +2447,17 @@ body {
 .compact-chat .chat-form {
   display: flex !important;
   gap: 8px !important;
-  padding: 8px !important;
-  background: rgba(0,0,0,0.2) !important;
+  padding: 10px !important;
+  background: rgba(0, 0, 0, 0.3) !important;
   border-top: 1px solid var(--glass-border) !important;
 }
 
-.compact-chat .chat-input-sm {
-  flex: 1 !important;
-  margin: 0 !important;
-}
-
 .chat-send {
+  flex-shrink: 0 !important;
   white-space: nowrap !important;
+  padding: 8px 16px !important;
+  height: 38px !important; /* Shodná výška s inputem */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }

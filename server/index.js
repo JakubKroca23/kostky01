@@ -813,14 +813,14 @@ io.on('connection', (socket) => {
 
   socket.on('toggle-maintenance', (status) => {
     const player = players.get(socket.id);
-    if (!player || player.nickname !== 'admin') return;
+    if (!player || player.nickname.toLowerCase() !== 'admin') return;
     maintenanceMode = !!status;
     saveState();
     io.emit('maintenance-status', maintenanceMode);
     broadcastGlobalStats();
     if (maintenanceMode) {
       players.forEach((p, sid) => {
-        if (p.nickname !== 'admin') {
+        if (p.nickname.toLowerCase() !== 'admin') {
            if (p.roomId) {
               const room = rooms.get(p.roomId);
               if (room) {
@@ -838,7 +838,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-kick-player', (targetNickname) => {
     const admin = players.get(socket.id);
-    if (!admin || admin.nickname !== 'admin') return;
+    if (!admin || admin.nickname.toLowerCase() !== 'admin') return;
     const targetEntry = Array.from(players.entries()).find(([id, p]) => p.nickname === targetNickname && p.online);
     if (targetEntry) {
       const [targetId] = targetEntry;
@@ -852,7 +852,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-delete-room', (roomId) => {
     const admin = players.get(socket.id);
-    if (!admin || admin.nickname !== 'admin') return;
+    if (!admin || admin.nickname.toLowerCase() !== 'admin') return;
     const room = rooms.get(roomId);
     if (room) {
       io.to(roomId).emit('kicked-to-lobby', 'Místnost byla zrušena zakladatelem.');
@@ -870,7 +870,7 @@ io.on('connection', (socket) => {
 
   socket.on('admin-clear-chat', () => {
     const admin = players.get(socket.id);
-    if (!admin || admin.nickname !== 'admin') return;
+    if (!admin || admin.nickname.toLowerCase() !== 'admin') return;
     globalChat = [];
     io.emit('global-chat-update', globalChat);
     saveState();

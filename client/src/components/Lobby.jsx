@@ -63,7 +63,7 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
               className="neon-button xs primary"
               onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}
             >
-              + NOVÁ HRA
+              + VYTVOŘIT HERNÍ MÍSTNOST
             </button>
           </div>
           <div className="room-list-compact">
