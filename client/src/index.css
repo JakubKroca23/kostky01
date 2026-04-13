@@ -365,6 +365,20 @@ body {
   box-shadow: 0 0 15px var(--neon-pink);
 }
 
+.admin-toggle.sm {
+  width: 40px;
+  height: 20px;
+}
+
+.admin-toggle.sm .toggle-handle {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-toggle.sm.active .toggle-handle {
+  left: calc(100% - 17px);
+}
+
 .toggle-handle {
   width: 24px;
   height: 24px;
@@ -1408,6 +1422,26 @@ body {
   color: var(--color-gold) !important;
   font-size: 0.8rem;
   padding: 0 4px !important;
+}
+
+.btn-mini {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.btn-mini:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--neon-cyan);
 }
 
 .wait-pill {

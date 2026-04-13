@@ -289,9 +289,6 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             >
               {voiceChatEnabled ? '🎙️' : '🔇'}
             </button>
-            {canStart && (
-              <button className="neon-button sm success start-btn-top" onClick={onStart} style={{ padding: '4px 10px', fontSize: '0.75rem' }}>START HRY</button>
-            )}
             <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>Odejít</button>
           </div>
         </div>
@@ -386,19 +383,18 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
           </div>
 
         {!room.gameStarted && (
-          <div className="host-settings glass neon-card" style={{ marginBottom: '15px', padding: '15px' }}>
-            <h3 className="section-title" style={{ fontSize: '1rem', marginBottom: '10px' }}>
-              {canStart ? 'NASTAVENÍ HRY' : 'PRAVIDLA MÍSTNOSTI'}
-            </h3>
+          <div className="host-settings glass neon-card" style={{ marginBottom: '10px', padding: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 className="section-title" style={{ fontSize: '0.85rem', margin: 0 }}>
+                {canStart ? 'NASTAVENÍ HRY' : 'PRAVIDLA MÍSTNOSTI'}
+              </h3>
+            </div>
             
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-              <div className="admin-action-row glass" style={{ flex: 1, padding: '10px', margin: 0, opacity: !canStart ? 0.8 : 1, flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                <div className="action-info">
-                  <h4 style={{ margin: 0, color: 'var(--neon-pink)', fontSize: '0.85rem' }}>Double Score</h4>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.65rem', opacity: 0.7 }}>2x body v intervalech.</p>
-                </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <div className="admin-action-row glass" style={{ flex: 1, padding: '6px 10px', margin: 0, opacity: !canStart ? 0.8 : 1, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '5px' }}>
+                <span style={{ color: 'var(--neon-pink)', fontSize: '0.75rem', fontWeight: 'bold' }}>Double</span>
                 {canStart ? (
-                  <div className={`admin-toggle ${doubleEnabled ? 'active' : ''}`} 
+                  <div className={`admin-toggle sm ${doubleEnabled ? 'active' : ''}`} 
                        onClick={() => {
                          setDoubleEnabled(!doubleEnabled);
                          onUpdateConfig?.({ doubleScoreEnabled: !doubleEnabled, doubleInterval, doubleDuration });
@@ -406,19 +402,14 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                      <div className="toggle-handle"></div>
                   </div>
                 ) : (
-                  <div className={`rule-status-badge ${doubleEnabled ? 'active' : ''}`}>
-                    {doubleEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
-                  </div>
+                  <span style={{ fontSize: '0.65rem', color: doubleEnabled ? 'var(--neon-green)' : '#666' }}>{doubleEnabled ? 'ANO' : 'NE'}</span>
                 )}
               </div>
 
-              <div className="admin-action-row glass" style={{ flex: 1, padding: '10px', margin: 0, opacity: !canStart ? 0.8 : 1, flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                <div className="action-info">
-                  <h4 style={{ margin: 0, color: 'var(--neon-cyan)', fontSize: '0.85rem' }}>Zloděj bodů</h4>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.65rem', opacity: 0.7 }}>Krádež 1k při postupce.</p>
-                </div>
+              <div className="admin-action-row glass" style={{ flex: 1, padding: '6px 10px', margin: 0, opacity: !canStart ? 0.8 : 1, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '5px' }}>
+                <span style={{ color: 'var(--neon-cyan)', fontSize: '0.75rem', fontWeight: 'bold' }}>Zloděj</span>
                 {canStart ? (
-                  <div className={`admin-toggle ${thiefEnabled ? 'active' : ''}`} 
+                  <div className={`admin-toggle sm ${thiefEnabled ? 'active' : ''}`} 
                        onClick={() => {
                          setThiefEnabled(!thiefEnabled);
                          onUpdateConfig?.({ thiefModeEnabled: !thiefEnabled });
@@ -426,62 +417,54 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
                      <div className="toggle-handle"></div>
                   </div>
                 ) : (
-                  <div className={`rule-status-badge ${thiefEnabled ? 'active' : ''}`} style={{ borderColor: thiefEnabled ? 'var(--neon-cyan)' : 'var(--glass-border)', color: thiefEnabled ? 'var(--neon-cyan)' : '#888' }}>
-                    {thiefEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
-                  </div>
+                  <span style={{ fontSize: '0.65rem', color: thiefEnabled ? 'var(--neon-cyan)' : '#666' }}>{thiefEnabled ? 'ANO' : 'NE'}</span>
                 )}
               </div>
             </div>
 
             {doubleEnabled && (
-              <div className="double-settings fade-in" style={{ padding: '10px', marginTop: 0, marginBottom: '15px', background: 'rgba(157, 0, 255, 0.05)', border: '1px dashed var(--neon-purple)', borderRadius: '12px' }}>
-                <div className="input-row" style={{ display: 'flex', gap: '10px' }}>
-                  <div className="input-group" style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.65rem', display: 'block', marginBottom: '3px', color: '#888' }}>INTERVAL (KOLA)</label>
-                    {canStart ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
-                           const val = Math.max(1, doubleInterval - 1);
-                           setDoubleInterval(val);
-                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
-                         }}>-</button>
-                         <div className="rule-value-box" style={{ flex: 1, textAlign: 'center', padding: '5px' }}>{doubleInterval}</div>
-                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
-                           const val = Math.min(100, doubleInterval + 1);
-                           setDoubleInterval(val);
-                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
-                         }}>+</button>
-                      </div>
-                    ) : (
-                      <div className="rule-value-box" style={{ padding: '5px' }}>{doubleInterval} hodů</div>
-                    )}
+              <div className="double-settings fade-in" style={{ padding: '8px', marginBottom: '10px', background: 'rgba(157, 0, 255, 0.03)', border: '1px dashed rgba(157, 0, 255, 0.2)', borderRadius: '10px' }}>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.6rem', opacity: 0.5, display: 'block' }}>INTERVAL (KOLA)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '3px' }}>
+                       {canStart && <button className="btn-mini" onClick={() => {
+                         const val = Math.max(1, doubleInterval - 1);
+                         setDoubleInterval(val);
+                         onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
+                       }}>-</button>}
+                       <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{doubleInterval}</span>
+                       {canStart && <button className="btn-mini" onClick={() => {
+                         const val = Math.min(100, doubleInterval + 1);
+                         setDoubleInterval(val);
+                         onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval: val, doubleDuration });
+                       }}>+</button>}
+                    </div>
                   </div>
-                  <div className="input-group" style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.65rem', display: 'block', marginBottom: '3px', color: '#888' }}>TRVÁNÍ (SEK)</label>
-                    {canStart ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
-                           const val = Math.max(5, doubleDuration - 5);
-                           setDoubleDuration(val);
-                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
-                         }}>-</button>
-                         <div className="rule-value-box" style={{ flex: 1, textAlign: 'center', padding: '5px' }}>{doubleDuration}s</div>
-                         <button className="neon-button sm" style={{ padding: '5px 10px' }} onClick={() => {
-                           const val = Math.min(300, doubleDuration + 5);
-                           setDoubleDuration(val);
-                           onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
-                         }}>+</button>
-                      </div>
-                    ) : (
-                      <div className="rule-value-box" style={{ padding: '5px' }}>{doubleDuration}s</div>
-                    )}
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.6rem', opacity: 0.5, display: 'block' }}>TRVÁNÍ (SEK)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '3px' }}>
+                       {canStart && <button className="btn-mini" onClick={() => {
+                         const val = Math.max(5, doubleDuration - 5);
+                         setDoubleDuration(val);
+                         onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
+                       }}>-</button>}
+                       <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{doubleDuration}s</span>
+                       {canStart && <button className="btn-mini" onClick={() => {
+                         const val = Math.min(300, doubleDuration + 5);
+                         setDoubleDuration(val);
+                         onUpdateConfig?.({ doubleScoreEnabled: doubleEnabled, doubleInterval, doubleDuration: val });
+                       }}>+</button>}
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {!canStart && (
-              <div className="wait-pill glass full-width" style={{ textAlign: 'center', padding: '15px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--neon-pink)' }}>
+            {canStart ? (
+              <button className="neon-button start-hero full-width" style={{ marginTop: '5px', height: '50px', fontSize: '1.2rem' }} onClick={onStart}>🔥 START HRY 🔥</button>
+            ) : (
+              <div className="wait-pill glass full-width" style={{ textAlign: 'center', padding: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--neon-pink)', fontSize: '0.7rem' }}>
                 ⌛ ČEKÁ SE NA START (HOST)...
               </div>
             )}
