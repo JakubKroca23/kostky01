@@ -497,7 +497,7 @@ io.on('connection', (socket) => {
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (isBust || isTooLowAfter3) {
-      const msg = isBust ? \"SMŮLA, ZKUS TO PŘÍŠTĚ!\" : \"MÁLO BODŮ (LIMIT 350)!\";
+      const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
       io.to(room.id).emit('dice-rolled', { 
         roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice, isStraight: false
@@ -533,7 +533,7 @@ io.on('connection', (socket) => {
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
 
     if (isBust || isTooLowAfter3) {
-      const msg = isBust ? \"SMŮLA, ZKUS TO PŘÍŠTĚ!\" : \"MÁLO BODŮ (LIMIT 350)!\";
+      const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
       io.to(room.id).emit('dice-rolled', { 
         roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice, isStraight: false
@@ -650,7 +650,7 @@ io.on('connection', (socket) => {
     const totalPotential = room.turnInfo.turnPoints + nextScore;
     const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
     if (nextScore === 0 || isTooLowAfter3) {
-      const msg = nextScore === 0 ? \"SMŮLA, ZKUS TO PŘÍŠTĚ!\" : \"MÁLO BODŮ (LIMIT 350)!\";
+      const msg = nextScore === 0 ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
       io.to(room.id).emit('dice-rolled', { 
         roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
         diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice
@@ -705,7 +705,7 @@ io.on('connection', (socket) => {
               });
             }
           }
-        } catch (e) { console.error(\"Appwrite Game Over Error:\", e.message); }
+        } catch (e) { console.error("Appwrite Game Over Error:", e.message); }
         finally { broadcastLeaderboard(); }
       })();
       rooms.delete(room.id);
