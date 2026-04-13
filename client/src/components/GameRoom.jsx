@@ -1,9 +1,32 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { audio } from '../utils/audio';
+import { calculateScore } from '@shared/scoring';
+import useDicePhysics from '../hooks/useDicePhysics';
+import useWebRTC from '../hooks/useWebRTC';
+import Die from './Die';
 import Scoreboard from './room/Scoreboard';
 import GameControls from './room/GameControls';
 import RoomChat from './room/RoomChat';
 import DiceArena from './room/DiceArena';
 
+function RemoteAudioPlayer({ stream }) {
+  const audioRef = useRef();
+  useEffect(() => {
+    if (audioRef.current && stream) {
+      audioRef.current.srcObject = stream;
+    }
+  }, [stream]);
+  return <audio ref={audioRef} autoPlay />;
+}
+
 function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain, onStop, onStart, onDohodit, onReaction, onUpdateSelection, onSendMessage, onlineStats, onLeave, doubleStatus, onUpdateConfig }) {
+  const handleRollAgain = () => {
+    if (onRollAgain) onRollAgain(selectedDice);
+  };
+
+  const handleStop = () => {
+    if (onStop) onStop(selectedDice);
+  };
   const [selectedDice, setSelectedDice] = useState([]);
   const [isRolling, setIsRolling] = useState(false);
   const [isBust, setIsBust] = useState(false);
