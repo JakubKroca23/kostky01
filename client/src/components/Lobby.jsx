@@ -146,6 +146,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
               </div>
             ) : (
               <div className="changelog-content">
+                {appVersion && <div className="changelog-version-tag">AKTUÁLNÍ VERZE {appVersion}</div>}
                 {(changelog || 'Zatím žádné novinky...').split('\n').map((line, i) => (
                   <p key={i}>{line}</p>
                 ))}
