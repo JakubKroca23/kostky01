@@ -127,7 +127,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                     <span className="room-count-mini">{room.playerCount}/{room.maxPlayers}</span>
                   </div>
                   <button
-                    className="join-mini-btn"
+                    className="join-btn-ultimate"
                     disabled={room.playerCount >= room.maxPlayers}
                     onClick={() => onJoinRoom(room.id)}
                   >

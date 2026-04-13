@@ -1940,20 +1940,24 @@ body {
 }
 
 .join-mini-btn {
-  background: var(--neon-cyan);
-  border: none;
-  color: #000;
-  font-size: 0.65rem;
-  font-weight: 900;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: 0.2s;
+  background: var(--neon-cyan) !important;
+  color: #000 !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 900 !important;
+  width: auto !important;
+  height: 40px !important;
+  min-width: 120px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: 0.2s !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.4) !important;
 }
 
 .join-mini-btn:hover { 
@@ -2961,4 +2965,39 @@ body {
   background: rgba(255, 0, 127, 0.1) !important;
   border-color: var(--neon-pink) !important;
   color: var(--neon-pink) !important;
+}
+
+.join-btn-ultimate {
+  background: var(--neon-cyan) !important;
+  color: #000 !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  font-weight: 900 !important;
+  width: auto !important;
+  height: 44px !important;
+  min-width: 140px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: 0.2s !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.4) !important;
+  letter-spacing: 1px !important;
+}
+
+.join-btn-ultimate:hover:not(:disabled) {
+  background: #fff !important;
+  box-shadow: 0 0 30px var(--neon-cyan) !important;
+  transform: scale(1.03) !important;
+}
+
+.join-btn-ultimate:disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.2) !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
 }
