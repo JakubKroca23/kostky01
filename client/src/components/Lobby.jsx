@@ -14,6 +14,26 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
 
   return (
     <main className="hero-section lobby-layout fade-in">
+      {leaderboard && leaderboard.length > 0 && (
+        <div className="lobby-leaderboard-section rotating-card glass neon-card">
+          <div className="leaderboard-rotating-content">
+            <span className="mini-title-inline">ŽEBŘÍČEK:</span>
+            <div className="rotating-winner-track">
+              {leaderboard.slice(0, 3).map((p, i) => (
+                <div key={i} className="rotating-winner-item" style={{ animationDelay: `${i * 3}s` }}>
+                  <span className="rank-emoji">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                  <span className="nick">{p.nickname}</span>
+                  <span className="stats">
+                    <span className="stat-pill wins">{p.wins}W</span>
+                    <span className="stat-pill pts">{((p.total_points ?? 0) / 1000).toFixed(1)}k pts</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="online-players-card neon-card glass">
         <h3 className="section-title">ONLINE HRÁČI ({onlineStats.onlineCount})</h3>
         <div className="online-list-horizontal">
@@ -29,38 +49,6 @@ function Lobby({ rooms, onlineStats, globalChat, leaderboard, onCreateRoom, onJo
             </button>
           ))}
         </div>
-
-        {leaderboard && leaderboard.length > 0 && (
-          <div className="lobby-leaderboard-section">
-            <h4 className="mini-title">ŽEBŘÍČEK</h4>
-            <div className="leaderboard-mini-wrapper glass">
-              <table className="leaderboard-mini-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Jméno</th>
-                    <th title="Max body v tahu">Max tah</th>
-                    <th title="Celkové body">Body</th>
-                    <th title="Výhry">Výhry</th>
-                    <th title="Odehrané hry">Hry</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.slice(0, 10).map((p, i) => (
-                    <tr key={i}>
-                      <td>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
-                      <td className="nick">{p.nickname}</td>
-                      <td className="wins">{(p.highScore ?? 0).toLocaleString()}</td>
-                      <td className="pts">{(p.total_points ?? 0).toLocaleString()}</td>
-                      <td>{p.wins}</td>
-                      <td>{p.games_played}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
         <div className="lobby-global-chat glass neon-card">
           <div className="global-chat-messages" ref={chatRef}>
