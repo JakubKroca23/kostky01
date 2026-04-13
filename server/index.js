@@ -59,7 +59,7 @@ const rooms = new Map(); // roomId -> { id, name, players: [{id, nickname}] }
 let globalChat = [];
 let maintenanceMode = false;
 let appVersion = '1.2';
-let changelog = '';
+let changelogHistory = [];
 
 function saveState() {
   try {
@@ -68,7 +68,7 @@ function saveState() {
       players: Array.from(players.entries()),
       maintenanceMode,
       appVersion,
-      changelog
+      changelogHistory
     };
     fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
   } catch (err) {
@@ -89,7 +89,7 @@ function loadState() {
       }
       if (data.maintenanceMode !== undefined) maintenanceMode = data.maintenanceMode;
       if (data.appVersion) appVersion = data.appVersion;
-      if (data.changelog) changelog = data.changelog;
+      if (data.changelogHistory) changelogHistory = data.changelogHistory;
       console.log(`State loaded: ${rooms.size} rooms, ${players.size} players. Maintenance: ${maintenanceMode}, Version: ${appVersion}`);
     } catch (e) {
       console.error('Error loading state:', e);
@@ -387,7 +387,7 @@ io.on('connection', (socket) => {
     socket.emit('room-list-update', getRoomList());
     socket.emit('global-chat-update', globalChat);
     socket.emit('app-version-update', appVersion);
-    socket.emit('changelog-update', changelog);
+    socket.emit('changelog-update', changelogHistory);
     broadcastLeaderboard(socket);
     broadcastGlobalStats();
   });
@@ -889,11 +889,20 @@ io.on('connection', (socket) => {
   socket.on('admin-update-changelog', ({ version, text }) => {
     const admin = players.get(socket.id);
     if (!admin || admin.nickname.toLowerCase() !== 'admin') return;
-    if (version) appVersion = version;
-    if (text !== undefined) changelog = text;
+    
+    // Nový záznam na začátek
+    const newEntry = {
+      version: version || appVersion,
+      text: text || '',
+      date: new Date().toLocaleDateString('cs-CZ')
+    };
+    
+    changelogHistory = [newEntry, ...changelogHistory].slice(0, 20); // Limit 20 entries
+    appVersion = newEntry.version;
+    
     saveState();
     io.emit('app-version-update', appVersion);
-    io.emit('changelog-update', changelog);
+    io.emit('changelog-update', changelogHistory);
   });
 
   socket.on('admin-clear-chat', () => {

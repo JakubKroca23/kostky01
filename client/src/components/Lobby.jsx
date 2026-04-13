@@ -4,7 +4,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   const [chatInput, setChatInput] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
-  const [changelogDraft, setChangelogDraft] = useState(changelog || '');
+  const [changelogDraft, setChangelogDraft] = useState('');
   const [versionDraft, setVersionDraft] = useState(appVersion || '1.0');
   const chatRef = React.useRef(null);
   const isAdmin = nickname?.toLowerCase() === 'admin';
@@ -16,13 +16,14 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
   }, [globalChat]);
 
   React.useEffect(() => {
-    setChangelogDraft(changelog || '');
     setVersionDraft(appVersion || '1.0');
-  }, [changelog, appVersion]);
+    setChangelogDraft('');
+  }, [appVersion]);
 
   const handleSaveChangelog = () => {
     onUpdateChangelog?.({ version: versionDraft, text: changelogDraft });
     setIsEditingChangelog(false);
+    setChangelogDraft('');
   };
 
   return (
@@ -125,7 +126,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
             {isEditingChangelog ? (
               <div className="changelog-editor">
                 <div className="editor-group" style={{ marginBottom: '10px' }}>
-                  <label style={{ fontSize: '0.7rem', opacity: 0.6, display: 'block', marginBottom: '4px' }}>VERZE</label>
+                  <label style={{ fontSize: '0.7rem', opacity: 0.6, display: 'block', marginBottom: '4px' }}>NÁZEV NOVÉ VERZE</label>
                   <input 
                     type="text" 
                     value={versionDraft} 
@@ -137,7 +138,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 <textarea 
                   value={changelogDraft} 
                   onChange={(e) => setChangelogDraft(e.target.value)}
-                  placeholder="Seznam změn (používejte pomlčky pro body)..."
+                  placeholder="Co je nového? (pomlčky pro odrážky)..."
                 />
                 <div className="editor-actions">
                   <button className="neon-button sm success" onClick={handleSaveChangelog}>Uložit</button>
@@ -145,16 +146,35 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                 </div>
               </div>
             ) : (
-              <div className="changelog-content">
-                {appVersion && <div className="changelog-version-tag">AKTUÁLNÍ VERZE {appVersion}</div>}
-                {(changelog || 'Zatím žádné novinky...').split('\n').map((line, i) => (
-                  <p key={i}>{line}</p>
-                ))}
+              <div className="changelog-history">
+                {(!changelog || changelog.length === 0) ? (
+                  <div className="changelog-empty">Zatím žádné záznamy...</div>
+                ) : (
+                  changelog.map((entry, idx) => (
+                    <div key={idx} className="changelog-entry">
+                      <div className="changelog-entry-header">
+                        <span className="changelog-version-tag">v{entry.version}</span>
+                        <span className="changelog-date">{entry.date}</span>
+                      </div>
+                      <div className="changelog-text">
+                        {entry.text.split('\n').map((line, i) => (
+                          <p key={i}>{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <footer className="lobby-footer">
+        <a href="https://propoj.app" target="_blank" rel="noopener noreferrer">
+          &copy; PROPOJ.APP
+        </a>
+      </footer>
 
       {/* Feedback Modal */}
       {isFeedbackOpen && (

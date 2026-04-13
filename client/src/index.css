@@ -1969,7 +1969,36 @@ body {
 .changelog-body {
   flex: 1;
   padding: 12px;
-  overflow-y: auto;
+  overflow-y: auto !important;
+  max-height: 400px; /* Limit výšky pro scrollování */
+}
+
+.changelog-history {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.changelog-entry {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.changelog-entry:last-child {
+  border-bottom: none;
+}
+
+.changelog-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.changelog-date {
+  font-size: 0.55rem;
+  opacity: 0.4;
+  font-family: monospace;
 }
 
 .changelog-version-tag {
@@ -1980,18 +2009,17 @@ body {
   background: rgba(255, 0, 127, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
-  margin-bottom: 8px;
   letter-spacing: 1px;
 }
 
-.changelog-content {
+.changelog-text {
   font-size: 0.75rem;
   line-height: 1.4;
   opacity: 0.85;
 }
 
-.changelog-content p {
-  margin-bottom: 4px;
+.changelog-text p {
+  margin-bottom: 3px;
 }
 
 .changelog-editor textarea {
@@ -2732,4 +2760,27 @@ body {
 
 .glass-input-sm:focus {
   border-color: var(--neon-cyan);
+}
+
+.lobby-footer {
+  width: 100%;
+  padding: 30px 0 10px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.lobby-footer a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  opacity: 0.2;
+  transition: 0.3s;
+}
+
+.lobby-footer a:hover {
+  opacity: 1;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px var(--neon-cyan);
 }

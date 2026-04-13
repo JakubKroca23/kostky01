@@ -36,7 +36,7 @@ function App() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(() => localStorage.getItem('kostky-maintenance') === 'true');
   const [appVersion, setAppVersion] = useState('1.2');
-  const [changelog, setChangelog] = useState('');
+  const [changelog, setChangelog] = useState([]);
   const [doubleStatus, setDoubleStatus] = useState({ active: false, endsAt: 0 });
   const [error, setError] = useState('');
   const [winnerData, setWinnerData] = useState(null);
