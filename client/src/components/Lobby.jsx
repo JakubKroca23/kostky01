@@ -236,29 +236,28 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                   }
                 }}>
                   <div className="input-group-v2">
-                    <label>NÁZEV {feedbackType === 'bug' ? 'CHYBY' : 'FUNKCE'}</label>
                     <input 
                       type="text" 
-                      className="glass-input-v2"
+                      className="glass-input-chat"
                       value={feedbackTitle}
                       onChange={(e) => setFeedbackTitle(e.target.value)}
-                      placeholder="Stručný titulek..."
+                      placeholder="NÁZEV..."
                       required
                     />
                   </div>
                   <div className="input-group-v2">
-                    <label>POPIS</label>
                     <textarea 
-                      className="glass-textarea-v2 large"
+                      className="glass-textarea-chat"
                       value={feedbackDescription}
                       onChange={(e) => setFeedbackDescription(e.target.value)}
-                      placeholder="Detailnější popis..."
+                      placeholder="VAŠE ZPRÁVA / POPIS..."
                       required
                     />
                   </div>
-                  <div className="form-actions-v2">
-                    <button type="submit" className={`neon-button ${feedbackType === 'bug' ? 'danger' : 'info'}`}>ODESLAT</button>
-                    <button type="button" className="text-btn" onClick={() => setIsViewingHistory(true)}>ZOBRAZIT HISTORII</button>
+                  <div className="form-actions-chat">
+                    <button type="submit" className={`neon-button sm ${feedbackType === 'bug' ? 'danger' : 'info'}`}>ODESLAT</button>
+                    <button type="button" className="neon-button sm" onClick={() => setIsFeedbackOpen(false)}>ZRUŠIT</button>
+                    <button type="button" className="neon-button sm secondary" onClick={() => setIsViewingHistory(true)}>SEZNAM</button>
                   </div>
                 </form>
               ) : (
@@ -267,7 +266,7 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                   <div className="history-list">
                     {(globalChat || [])
                       .filter(m => m.type === feedbackType)
-                      .slice().reverse() // Nejnovější nahoře
+                      .slice().reverse()
                       .map((m) => (
                       <div key={m.id} className="feedback-card-v2 glass">
                         <div className="card-header-v2">
@@ -278,13 +277,13 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
                         <div className="card-body-v2">{m.text}</div>
                       </div>
                     ))}
-                    {(globalChat || []).filter(m => m.type === feedbackType).length === 0 && (
-                      <div className="feedback-empty-v2">Zatím žádné záznamy...</div>
-                    )}
                   </div>
-                  <button className="neon-button sm width-100" style={{ marginTop: '15px' }} onClick={() => setIsViewingHistory(false)}>
-                    + PŘIDAT DALŠÍ
-                  </button>
+                  <div className="form-actions-chat" style={{ marginTop: '15px' }}>
+                    <button className="neon-button sm width-100" onClick={() => setIsViewingHistory(false)}>
+                      + PŘIDAT NOVÝ
+                    </button>
+                    <button className="neon-button sm" onClick={() => setIsFeedbackOpen(false)}>ZAVŘÍT</button>
+                  </div>
                 </div>
               )}
             </div>
