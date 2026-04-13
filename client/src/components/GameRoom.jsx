@@ -277,21 +277,22 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       <div className="room-header-neon compact">
         <div className="header-top">
           <h2 className="neon-text-cyan">{room.name} <span className="room-tag-sm">({room.id})</span></h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button 
               className={`neon-button sm ${voiceChatEnabled ? 'primary' : ''}`} 
               onClick={() => setVoiceChatEnabled(!voiceChatEnabled)}
               title={voiceChatEnabled ? "Vypnout hlasový chat" : "Zapnout hlasový chat"}
               style={{
-                 padding: '5px 12px', fontSize: '1.2rem', 
+                 padding: '4px 8px', fontSize: '1rem', 
                  borderColor: voiceChatEnabled ? 'var(--neon-green)' : 'var(--glass-border)',
-                 textShadow: voiceChatEnabled ? '0 0 10px var(--neon-green)' : 'none',
-                 boxShadow: voiceChatEnabled ? '0 0 15px rgba(0, 255, 100, 0.4)' : 'none'
               }}
             >
               {voiceChatEnabled ? '🎙️' : '🔇'}
             </button>
-            <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti">Odejít</button>
+            {canStart && (
+              <button className="neon-button sm success start-btn-top" onClick={onStart} style={{ padding: '4px 10px', fontSize: '0.75rem' }}>START HRY</button>
+            )}
+            <button className="neon-button sm logout-btn" onClick={onLeave} title="Odejít z místnosti" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>Odejít</button>
           </div>
         </div>
         
@@ -479,9 +480,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               </div>
             )}
 
-            {canStart ? (
-              <button className="neon-button start-hero full-width" onClick={onStart}>🔥 START HRY 🔥 (HOST)</button>
-            ) : (
+            {!canStart && (
               <div className="wait-pill glass full-width" style={{ textAlign: 'center', padding: '15px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--neon-pink)' }}>
                 ⌛ ČEKÁ SE NA START (HOST)...
               </div>
