@@ -115,6 +115,26 @@ async function loadState() {
   } catch (err) {
     console.warn("Appwrite Changelog Load Warning:", err.message);
   }
+
+  // Load Feedback from Appwrite
+  try {
+    const list = await databases.listDocuments(DB_ID, 'feedback', [
+      Query.orderDesc('$createdAt'),
+      Query.limit(100)
+    ]);
+    if (list.total > 0) {
+      globalChat = list.documents.map(d => ({
+        id: d.$id,
+        sender: d.sender,
+        text: d.text,
+        type: d.type,
+        time: d.date
+      })).reverse();
+      console.log(`Appwrite: Loaded ${list.total} feedback entries.`);
+    }
+  } catch (err) {
+    console.warn("Appwrite Feedback Load Warning:", err.message);
+  }
 }
 
 await loadState();
@@ -768,15 +788,38 @@ io.on('connection', (socket) => {
     saveState();
   });
 
-  socket.on('send-global-chat', (text) => {
+  socket.on('send-global-chat', (data) => {
     const player = players.get(socket.id);
+    const text = typeof data === 'string' ? data : data.text;
+    const type = data.type || 'Fééédback';
+
     if (player && text && text.trim().length > 0) {
+      const timeStr = new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
       const msg = {
-        id: Date.now(), sender: player.nickname, text: text.trim().substring(0, 150),
-        time: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })
+        id: Date.now(),
+        sender: player.nickname,
+        text: text.trim().substring(0, 1000),
+        type: type,
+        time: timeStr
       };
-      globalChat = [...globalChat, msg].slice(-50);
+
+      globalChat = [...globalChat, msg].slice(-100);
       io.emit('global-chat-update', globalChat);
+      
+      // Save to Appwrite
+      (async () => {
+        try {
+          await databases.createDocument(DB_ID, 'feedback', ID.unique(), {
+            sender: player.nickname,
+            text: msg.text,
+            type: type,
+            date: timeStr
+          });
+        } catch (e) {
+          console.error("Appwrite Feedback Save Error:", e.message);
+        }
+      })();
+
       saveState();
     }
   });

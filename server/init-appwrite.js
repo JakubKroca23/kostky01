@@ -78,6 +78,26 @@ export async function initAppwrite() {
             console.log(`Appwrite: Collection '${CHANGELOG_COLL}' created with attributes.`);
         }
 
+        // 6. Check if Feedback Collection exists
+        const FEEDBACK_COLL = 'feedback';
+        try {
+            await databases.getCollection(DB_ID, FEEDBACK_COLL);
+            console.log(`Appwrite: Collection '${FEEDBACK_COLL}' exists.`);
+        } catch (e) {
+            console.log(`Appwrite: Collection '${FEEDBACK_COLL}' not found. Creating...`);
+            await databases.createCollection(
+                DB_ID,
+                FEEDBACK_COLL,
+                'Feedback and Bugs',
+                ['read("any")', 'create("any")'] // Read and create for everyone
+            );
+            await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'sender', 255, true);
+            await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'text', 2000, true);
+            await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'type', 50, true);
+            await databases.createStringAttribute(DB_ID, FEEDBACK_COLL, 'date', 50, true);
+            console.log(`Appwrite: Collection '${FEEDBACK_COLL}' created with attributes.`);
+        }
+
     } catch (err) {
         console.error('Appwrite Initialization Error:', err.message);
     }

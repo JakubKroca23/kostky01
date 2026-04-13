@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreateRoom, onJoinRoom, onSendMessage, onReaction, changelog, onUpdateChangelog, onEditChangelog, appVersion }) {
   const [chatInput, setChatInput] = useState('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState('feature'); // feature or bug
   const [isEditingChangelog, setIsEditingChangelog] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [changelogDraft, setChangelogDraft] = useState('');
@@ -260,16 +261,38 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
             <div className="feedback-messages" ref={chatRef}>
               {(globalChat || []).map((m) => (
                 <div key={m.id} className="feedback-msg">
-                  <span className="msg-sender">{m.sender}:</span>
-                  <span className="msg-text">{m.text}</span>
+                  <div className="feedback-msg-header">
+                    <span className="msg-sender">{m.sender}</span>
+                    <span className={`msg-type-badge ${m.type === 'bug' ? 'bug' : 'feature'}`}>
+                      {m.type === 'bug' ? 'CHYBA' : 'NÁVRH'}
+                    </span>
+                    <span className="msg-time">{m.time}</span>
+                  </div>
+                  <div className="msg-text">{m.text}</div>
                 </div>
               ))}
               {(globalChat || []).length === 0 && <div className="feedback-empty">Zatím žádná zpětná vazba...</div>}
             </div>
+            
+            <div className="feedback-type-selector">
+              <button 
+                className={`type-btn ${feedbackType === 'feature' ? 'active' : ''}`}
+                onClick={() => setFeedbackType('feature')}
+              >
+                💡 NOVÁ FUNKCE
+              </button>
+              <button 
+                className={`type-btn ${feedbackType === 'bug' ? 'active bug' : ''}`}
+                onClick={() => setFeedbackType('bug')}
+              >
+                🐞 OPRAVA CHYBY
+              </button>
+            </div>
+
             <form className="feedback-form" onSubmit={(e) => {
               e.preventDefault();
               if (chatInput.trim()) {
-                onSendMessage(chatInput);
+                onSendMessage({ text: chatInput, type: feedbackType });
                 setChatInput('');
               }
             }}>
