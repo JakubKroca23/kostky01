@@ -270,8 +270,9 @@ function executeBotMove(room, botId) {
 
   const botPlayer = room.players.find(p => p.id === botId);
   const strategy = botPlayer?.strategy || 'average';
+  const allowedCount = room.turnInfo.allowedIndexes?.length || 0;
   
-  const decision = getBotDecision(room.turnInfo.turnPoints, room.turnInfo.diceCount, room.turnInfo.rollCount, strategy);
+  const decision = getBotDecision(room.turnInfo.turnPoints, room.turnInfo.diceCount, room.turnInfo.rollCount, strategy, allowedCount);
   
   if (decision === 'roll' || room.turnInfo.rollCount === 0) {
     // Bot Simulates Roll
