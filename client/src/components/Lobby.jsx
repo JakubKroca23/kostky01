@@ -104,15 +104,6 @@ function Lobby({ rooms, nickname, onlineStats, globalChat, leaderboard, onCreate
               🐞 NAHLÁSIT CHYBU
             </button>
           </div>
-          {onlineStats.onlineCount === 1 && (
-            <button
-              className="neon-button info pulse"
-              style={{ marginBottom: '10px' }}
-              onClick={() => onCreateRoom({ withBot: true })}
-            >
-              VYZVAT BOTA 🤖
-            </button>
-          )}
           <button
             className="neon-button create-btn-standard"
             onClick={() => onCreateRoom({ name: null, config: { doubleScoreEnabled: false, doubleInterval: 10, doubleDuration: 30 } })}

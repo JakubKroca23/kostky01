@@ -34,6 +34,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
   const [showStealPrompt, setShowStealPrompt] = useState(false);
   const [showStoveAnim, setShowStoveAnim] = useState(false);
   const [myEmoji, setMyEmoji] = useState(localStorage.getItem('kostky-my-emoji') || '🔥');
+  const [showBotModal, setShowBotModal] = useState(false);
   const chatRef = useRef(null);
   const arenaRef = useRef(null);
 
@@ -373,7 +374,20 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               {room.players.length < 2 ? 'POČKEJ NA HRÁČE' : '🔥 START HRY 🔥'}
             </button>
           )}
-          <h3 className="section-title">PŘIPOJENÍ HRÁČI ({room.players.length}/6)</h3>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h3 className="section-title" style={{ margin: 0 }}>PŘIPOJENÍ HRÁČI ({room.players.length}/6)</h3>
+            {canStart && room.players.length < 6 && (
+                <button 
+                  className="neon-button sm info" 
+                  onClick={() => setShowBotModal(true)}
+                  style={{ fontSize: '0.7rem', padding: '5px 10px' }}
+                >
+                  + PŘIDAT BOTA 🤖
+                </button>
+            )}
+          </div>
+
           <div className="online-list-horizontal" style={{ marginBottom: '15px', padding: '10px 0' }}>
           {room.players.map((p, i) => (
             <div key={p.id} className="online-user-pill fade-in" style={{ 
@@ -724,6 +738,38 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
             <RemoteAudioPlayer key={peerId} stream={stream} />
          ))}
       </div>
+      {/* Bot Selection Modal */}
+      {showBotModal && (
+        <div className="fullscreen-modal-overlay">
+          <div className="modal-chat-style glass neon-card-cyan" style={{ maxWidth: '400px', height: 'auto', minHeight: 'unset' }}>
+            <header className="modal-chat-header">
+               <span className="modal-chat-title">VYBER POVAHU BOTA 🤖</span>
+               <button className="chat-close-btn" onClick={() => setShowBotModal(false)}>✕</button>
+            </header>
+            
+            <div className="modal-chat-body" style={{ padding: '20px' }}>
+               <div className="bot-option-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <button className="neon-button info" onClick={() => { socket.emit('add-bot', 'cautious'); setShowBotModal(false); }}>
+                    <strong>OPATRNÝ</strong>
+                    <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.8 }}>Hraje na jistotu, bankuje brzy.</span>
+                  </button>
+                  <button className="neon-button success" onClick={() => { socket.emit('add-bot', 'average'); setShowBotModal(false); }}>
+                    <strong>PRŮMĚRNÝ</strong>
+                    <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.8 }}>Zlatá střední cesta.</span>
+                  </button>
+                  <button className="neon-button danger" onClick={() => { socket.emit('add-bot', 'gambler'); setShowBotModal(false); }}>
+                    <strong>GAMBLER</strong>
+                    <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.8 }}>Miluje risk, hraje o všechno.</span>
+                  </button>
+               </div>
+            </div>
+            
+            <div className="modal-chat-footer">
+               <button className="neon-button" onClick={() => setShowBotModal(false)} style={{ width: '100%' }}>ZRUŠIT</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

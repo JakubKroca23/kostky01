@@ -1,24 +1,26 @@
 /**
- * Logika pro bota ve hře Kostky 10000
- * Rozhoduje se na základě bodů v tahu a počtu zbývajících kostek.
+ * Rozšířená logika pro různé typy botů
  */
-export function getBotDecision(turnPoints, diceCount, rollCount) {
-    // Pokud má bot 1000 a víc, bankuje vždy
-    if (turnPoints >= 1000) return 'stop';
-    
-    // Pokud má bot málo bodů (pod 350 po 3. hodu), musí házet dál (vynuceno pravidly)
+export function getBotDecision(turnPoints, diceCount, rollCount, strategy = 'average') {
+    // Pravidlo 7: Pokud má bot málo bodů (pod 350 po 3. hodu), musí házet dál
     if (rollCount < 4 && turnPoints < 350) return 'roll';
 
-    // Strategie:
-    // Pokud má 3 a více kostek, hází dál dokud nemá 500 bodů
-    if (diceCount >= 3) {
-        return turnPoints < 500 ? 'roll' : 'stop';
-    }
+    switch (strategy) {
+        case 'cautious': // OPATRNÝ - hraje na jistotu
+            if (turnPoints >= 400) return 'stop';
+            if (diceCount <= 2 && turnPoints >= 350) return 'stop';
+            return (diceCount >= 3) ? 'roll' : 'stop';
 
-    // Pokud má jen 1-2 kostky, bankuje už při 350+ bodech
-    if (diceCount < 3) {
-        return turnPoints >= 350 ? 'stop' : 'roll';
-    }
+        case 'gambler': // GAMBLER - riskuje pro slávu
+            if (turnPoints >= 1500) return 'stop';
+            if (diceCount >= 2) return 'roll';
+            // S jednou kostkou hází dál, dokud nemá aspoň 1000
+            return (turnPoints < 1000) ? 'roll' : 'stop';
 
-    return 'stop';
+        case 'average': // PRŮMĚRNÝ - zlatá střední cesta
+        default:
+            if (turnPoints >= 600) return 'stop';
+            if (diceCount <= 2 && turnPoints >= 450) return 'stop';
+            return (diceCount >= 3) ? 'roll' : 'stop';
+    }
 }

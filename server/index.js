@@ -268,7 +268,10 @@ function nextTurn(room, bust = false) {
 function executeBotMove(room, botId) {
   if (room.turnInfo.currentTurnId !== botId || !room.gameStarted) return;
 
-  const decision = getBotDecision(room.turnInfo.turnPoints, room.turnInfo.diceCount, room.turnInfo.rollCount);
+  const botPlayer = room.players.find(p => p.id === botId);
+  const strategy = botPlayer?.strategy || 'average';
+  
+  const decision = getBotDecision(room.turnInfo.turnPoints, room.turnInfo.diceCount, room.turnInfo.rollCount, strategy);
   
   if (decision === 'roll' || room.turnInfo.rollCount === 0) {
     // Bot Simulates Roll
@@ -605,15 +608,18 @@ io.on('connection', (socket) => {
     io.emit('room-list-update', getRoomList());
   });
 
-  socket.on('add-bot', () => {
+  socket.on('add-bot', (strategy) => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);
     if (room && room.players[0].id === socket.id && room.players.length < 6) {
+      const type = strategy || 'average';
       const botId = `bot_${Math.random().toString(36).substring(2, 7)}`;
+      const typeLabel = { cautious: 'Opatrný', average: 'Průměrný', gambler: 'Gambler' }[type];
       const bot = { 
         id: botId, 
-        nickname: `BOT ${['Radovan', 'Hrbatý', 'Štístko', 'Smolař'][Math.floor(Math.random()*4)]} 🤖`, 
+        nickname: `BOT ${typeLabel} 🤖`, 
         isBot: true,
+        strategy: type,
         maxTurnScore: 0 
       };
       room.players.push(bot);
