@@ -57,7 +57,6 @@ export async function initAppwrite() {
             
             // 4. Create Indexes
             await databases.createIndex(DB_ID, COLL_ID, 'idx_wins', 'key', ['wins'], ['desc']);
-            await databases.createIndex(DB_ID, COLL_ID, 'idx_highScore', 'key', ['highScore'], ['desc']);
             console.log('Appwrite: Index created.');
         }
 

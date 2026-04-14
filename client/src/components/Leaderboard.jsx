@@ -16,14 +16,13 @@ function Leaderboard({ list, onClose }) {
                 <th>Pořadí</th>
                 <th>Hráč</th>
                 <th>Výhry</th>
-                <th>Průměr/Hod</th>
-                <th>Max v tahu</th>
+                <th>Průměr na hod</th>
                 <th className="hide-mobile">Hry</th>
               </tr>
             </thead>
             <tbody>
               {list.map((player, index) => {
-                const avgRoll = player.total_rolls > 0 
+                const avg = player.total_rolls > 0 
                   ? (player.total_points / player.total_rolls).toFixed(1) 
                   : '0.0';
                 
@@ -34,8 +33,7 @@ function Leaderboard({ list, onClose }) {
                     </td>
                     <td className="nickname-col">{player.nickname}</td>
                     <td className="wins-col">{player.wins}</td>
-                    <td className="points-col">{avgRoll}</td>
-                    <td className="pts-col">{player.highScore?.toLocaleString() || 0}</td>
+                    <td className="points-col">{avg} pts</td>
                     <td className="hide-mobile">{player.games_played}</td>
                   </tr>
                 );

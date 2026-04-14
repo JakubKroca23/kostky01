@@ -201,37 +201,56 @@ function App() {
     }
 
     function onTurnUpdated(data) {
-      setCurrentRoom(prev => ({
-        ...prev,
-        turnInfo: data.turnInfo
-      }));
+      setCurrentRoom(prev => {
+        if (!prev) return prev;
+        // Play robotic sound if next player is a bot
+        const nextPlayer = prev.players.find(p => p.id === data.turnInfo.currentTurnId);
+        if (nextPlayer && nextPlayer.isBot) {
+          audio.playBotMove();
+        }
+        return {
+          ...prev,
+          turnInfo: data.turnInfo
+        };
+      });
     }
 
     function onDiceRolled(data) {
-      setCurrentRoom(prev => ({
-        ...prev,
-        turnInfo: {
-          ...prev.turnInfo,
-          lastRoll: data.roll,
-          turnPoints: data.turnPoints || prev.turnInfo.turnPoints,
-          rollCount: data.rollCount,
-          diceCount: data.diceCount,
-          storedDice: data.storedDice,
-          allowedIndexes: data.allowedIndexes || [],
-          isStraight: data.isStraight || false,
-          // Bust timestamp pro reaktivní detekci v GameRoom
-          bustAt: data.isBust ? Date.now() : null
+      setCurrentRoom(prev => {
+        if (!prev) return prev;
+        
+        // Play bot move sound again if bot is re-rolling
+        const currentPlayer = prev.players.find(p => p.id === prev.turnInfo.currentTurnId);
+        if (currentPlayer && currentPlayer.isBot && !data.isBust) {
+            audio.playBotMove();
         }
-      }));
+
+        return {
+          ...prev,
+          turnInfo: {
+            ...prev.turnInfo,
+            lastRoll: data.roll,
+            turnPoints: data.turnPoints || prev.turnInfo.turnPoints,
+            rollCount: data.rollCount,
+            diceCount: data.diceCount,
+            storedDice: data.storedDice,
+            allowedIndexes: data.allowedIndexes || [],
+            isStraight: data.isStraight || false,
+            bustAt: data.isBust ? Date.now() : null
+          }
+        };
+      });
+
       if (data.isStraight) {
         audio.playStraight();
-      } else {
+      } else if (!data.isBust) {
         audio.playRoll();
       }
 
       if (data.isBust) {
+        audio.playBust(); // Play the new depressing sound immediately
         setTimeout(() => {
-          audio.playStrike();
+          audio.playStrike(); // Follow up with the strike sound
         }, 1200);
       }
     }

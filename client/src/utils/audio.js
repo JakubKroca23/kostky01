@@ -43,45 +43,43 @@ class AudioManager {
     const now = this.context.currentTime;
     const duration = 1.0;
     
-    // Low rumble noise
-    const bufferSize = this.context.sampleRate * duration;
-    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    
-    const noise = this.context.createBufferSource();
-    noise.buffer = buffer;
+    // Deeper rumble
     const filter = this.context.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(400, now);
-    filter.frequency.exponentialRampToValueAtTime(100, now + duration);
+    filter.frequency.exponentialRampToValueAtTime(120, now + duration);
     
     const gain = this.context.createGain();
     gain.gain.setValueAtTime(0.06, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     
+    const noise = this.context.createBufferSource();
+    const buffer = this.context.createBuffer(1, this.context.sampleRate * duration, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    noise.buffer = buffer;
+    
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(this.context.destination);
     noise.start();
-    noise.stop(now + duration);
 
-    // Add random clacks (more of them for density)
-    for (let i = 0; i < 12; i++) {
-       const delay = Math.random() * 0.7;
+    // More realistic multiple clacks
+    for (let i = 0; i < 8; i++) {
+       const delay = i * 0.12;
        const osc = this.context.createOscillator();
        const cGain = this.context.createGain();
-       osc.type = Math.random() > 0.5 ? 'triangle' : 'square';
-       osc.frequency.setValueAtTime(200 + Math.random() * 300, now + delay);
-       osc.frequency.exponentialRampToValueAtTime(40, now + delay + 0.08);
+       osc.type = 'square'; // Sharper sound
+       osc.frequency.setValueAtTime(200 + Math.random() * 400, now + delay);
+       osc.frequency.exponentialRampToValueAtTime(50, now + delay + 0.04);
        
-       cGain.gain.setValueAtTime(0.08, now + delay);
-       cGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.08);
+       cGain.gain.setValueAtTime(0.04, now + delay);
+       cGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.04);
        
        osc.connect(cGain);
        cGain.connect(this.context.destination);
        osc.start(now + delay);
-       osc.stop(now + delay + 0.08);
+       osc.stop(now + delay + 0.04);
     }
   }
 
@@ -89,32 +87,49 @@ class AudioManager {
     if (!this.enabled) return;
     this.init();
     const now = this.context.currentTime;
-    const duration = 1.2;
     
-    // Aggressive buzzing failure sound with more harmonics
-    [110, 82, 55].forEach((freq, idx) => {
-      const osc = this.context.createOscillator();
-      const gain = this.context.createGain();
-      
-      osc.type = idx === 0 ? 'sawtooth' : 'square';
-      osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.linearRampToValueAtTime(freq * 0.8, now + duration);
-      
-      gain.gain.setValueAtTime(0.15 - (idx * 0.04), now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      
-      const filter = this.context.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(2000, now);
-      filter.frequency.exponentialRampToValueAtTime(100, now + duration);
-      filter.Q.value = 15;
-      
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.context.destination);
-      
-      osc.start();
-      osc.stop(now + duration);
+    // Low, depressing downward slide
+    const osc = this.context.createOscillator();
+    const gain = this.context.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.linearRampToValueAtTime(40, now + 1.2);
+    
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.linearRampToValueAtTime(0, now + 1.2);
+    
+    osc.connect(gain);
+    gain.connect(this.context.destination);
+    osc.start();
+    osc.stop(now + 1.2);
+
+    // Complementary "honk" noise
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(70, now);
+    osc2.connect(gain);
+    osc2.start();
+    osc2.stop(now + 1.2);
+  }
+
+  playBotMove() {
+    if (!this.enabled) return;
+    this.init();
+    const now = this.context.currentTime;
+    
+    // High-pitched "UI processing" bleep bloop
+    const notes = [1200, 1600, 1000];
+    notes.forEach((freq, i) => {
+        const osc = this.context.createOscillator();
+        const gain = this.context.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now + i * 0.08);
+        gain.gain.setValueAtTime(0.015, now + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.05);
+        osc.connect(gain);
+        gain.connect(this.context.destination);
+        osc.start(now + i * 0.08);
+        osc.stop(now + i * 0.08 + 0.05);
     });
   }
 

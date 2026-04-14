@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { Client, Databases, Query, ID } from 'node-appwrite';
 import { calculateScore } from '../shared/scoring.js';
 import { initAppwrite } from './init-appwrite.js';
+import { getBotDecision } from './bot-logic.js';
 
 dotenv.config();
 
@@ -168,6 +169,7 @@ function broadcastLeaderboard(targetSocket = null) {
           wins: d.wins || 0,
           total_points: d.total_points || 0,
           games_played: d.games_played || 0,
+          total_rolls: d.total_rolls || 0,
           highScore: d.highScore || 0
         }))
         .filter(p => p.nickname.toLowerCase() !== 'admin'); // Neobrazovat admina v leaderboardu
@@ -231,6 +233,7 @@ function nextTurn(room, bust = false) {
   }
 
   const currentIndex = room.players.findIndex(p => p.id === room.turnInfo.currentTurnId);
+  
   if (room.players.length > 0) {
     if (currentIndex === -1) {
       room.turnInfo.currentTurnId = room.players[0].id;
@@ -252,74 +255,49 @@ function nextTurn(room, bust = false) {
   room.turnInfo.storedDice = [];
   room.turnInfo.diceCount = 6;
   room.turnInfo.allowedIndexes = [];
-  room.turnInfo.isStraight = false;
   
-  saveState();
   io.to(room.id).emit('turn-updated', { turnInfo: room.turnInfo });
 
-  // Trigger bot turn if next player is bot
+  // Bot Logic Integration
   const nextPlayer = room.players.find(p => p.id === room.turnInfo.currentTurnId);
   if (nextPlayer && nextPlayer.isBot) {
-    setTimeout(() => runBotTurn(room, nextPlayer.id), 1500);
+    setTimeout(() => executeBotMove(room, nextPlayer.id), 1500);
   }
 }
 
-function runBotTurn(room, botId) {
-  if (!room || room.turnInfo.currentTurnId !== botId || !room.gameStarted) return;
-  const player = room.players.find(p => p.id === botId);
-  if (!player) return;
+function executeBotMove(room, botId) {
+  if (room.turnInfo.currentTurnId !== botId || !room.gameStarted) return;
 
-  const strategy = player.botStrategy || 'balanced';
-  const turnPoints = room.turnInfo.turnPoints || 0;
-  const hasEntered = room.turnInfo.enteredBoard[botId];
-
-  const shouldBank = () => {
-    if (turnPoints === 0) return false;
-    const canBank = hasEntered ? true : (turnPoints >= 350);
-    if (!canBank) return false;
-    if (room.turnInfo.diceCount === 0) return false; 
-    
-    if (strategy === 'cautious') return turnPoints >= 300;
-    if (strategy === 'balanced') return turnPoints >= 500;
-    if (strategy === 'gambler') return turnPoints >= 800;
-    return turnPoints >= 450;
-  };
-
-  if (shouldBank()) {
-    room.turnInfo.scores[botId] = (room.turnInfo.scores[botId] || 0) + turnPoints;
-    room.turnInfo.enteredBoard[botId] = true;
-    io.to(room.id).emit('turn-stopped', { playerId: botId, score: room.turnInfo.scores[botId], turnPoints });
-    checkVictory(room, botId);
-    return;
-  }
-
-  // Bot Rolls
-  processDoubleScoreLogic(room);
-  room.turnInfo.rollCount++;
-  room.status.playerRolls[botId] = (room.status.playerRolls[botId] || 0) + 1;
-  const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
-  room.turnInfo.lastRoll = roll;
+  const decision = getBotDecision(room.turnInfo.turnPoints, room.turnInfo.diceCount, room.turnInfo.rollCount);
   
-  let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
-  if (checkDoubleScore(room)) score *= 2;
-  room.turnInfo.allowedIndexes = usedIndexes;
-  
-  const isBust = (score === 0);
-  if (isBust || (room.turnInfo.rollCount === 3 && (room.turnInfo.turnPoints + score) < 350)) {
-    io.to(room.id).emit('dice-rolled', { roll, isBust: true, msg: "SMŮLA!", rollCount: room.turnInfo.rollCount });
-    room.turnInfo.bustAt = Date.now();
-    saveState();
-    setTimeout(() => nextTurn(room, true), 2000);
+  if (decision === 'roll' || room.turnInfo.rollCount === 0) {
+    // Bot Simulates Roll
+    botTriggerRoll(room, botId);
   } else {
-    room.turnInfo.turnPoints += score;
-    room.turnInfo.storedDice = [...room.turnInfo.storedDice, ...usedIndexes.map(i => roll[i])];
-    room.turnInfo.diceCount -= usedIndexes.length;
-    if (room.turnInfo.diceCount === 0) room.turnInfo.diceCount = 6;
-    room.turnInfo.isStraight = isStraight;
-    io.to(room.id).emit('dice-rolled', { roll, turnPoints: room.turnInfo.turnPoints, rollCount: room.turnInfo.rollCount, diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice, allowedIndexes: usedIndexes, isStraight });
-    saveState();
-    setTimeout(() => runBotTurn(room, botId), 1500);
+    // Bot Simulates Stop
+    botTriggerStop(room, botId);
   }
+}
+
+function botTriggerRoll(room, botId) {
+    // Common roll logic abstracted for bot
+    const socketMock = { id: botId, to: (id) => ({ emit: () => {} }), emit: () => {} };
+    
+    // Logic for bot to select ALL allowed dice if it was a selection phase
+    // In our current simplified bot, it just rolls again immediately with all dice
+    // or chooses all valid ones.
+    
+    if (room.turnInfo.rollCount > 0 && room.turnInfo.allowedIndexes.length > 0) {
+        // Bot automatically selects ALL valid dice
+        const selectedIndexes = room.turnInfo.allowedIndexes;
+        handleRollAgain(room, botId, selectedIndexes);
+    } else {
+        handleDiceRoll(room, botId);
+    }
+}
+
+function botTriggerStop(room, botId) {
+    handleStopTurn(room, botId, room.turnInfo.allowedIndexes || []);
 }
 
 function processDoubleScoreLogic(room) {
@@ -539,9 +517,10 @@ io.on('connection', (socket) => {
 
     const name = typeof data === 'string' ? data : data.name;
     const config = typeof data === 'object' ? data.config : { doubleScoreEnabled: false };
+    const withBot = typeof data === 'object' ? data.withBot : false;
 
     const roomId = generateRoomId();
-    const roomName = name || `Hra – ${p.nickname}`;
+    const roomName = name || (withBot ? `Zápas s Botem` : `Hra – ${p.nickname}`);
     globalChat = []; // Vymazáno na žádost
     const room = {
       id: roomId,
@@ -560,8 +539,7 @@ io.on('connection', (socket) => {
         doubleEndsAt: 0,
         roundCount: 0,
         turnsInRound: 0,
-        totalRolls: 0,
-        playerRolls: {} 
+        totalRolls: 0
       },
       turnInfo: {
         currentTurnId: socket.id,
@@ -575,9 +553,21 @@ io.on('connection', (socket) => {
         diceCount: 6,
         allowedIndexes: [],
         chat: [],
-        isStraight: false
+        isStraight: false,
+        playerRolls: { [socket.id]: 0 }
       }
     };
+
+    if (withBot) {
+      const botId = `bot_${Math.random().toString(36).substring(2, 7)}`;
+      const botNick = `BOT ${['Radovan', 'Hrbatý', 'Štístko', 'Smolař'][Math.floor(Math.random()*4)]} 🤖`;
+      room.players.push({ id: botId, nickname: botNick, isBot: true, maxTurnScore: 0 });
+      room.turnInfo.scores[botId] = 0;
+      room.turnInfo.strikes[botId] = 0;
+      room.turnInfo.enteredBoard[botId] = false;
+      room.turnInfo.playerRolls[botId] = 0;
+    }
+
     rooms.set(roomId, room);
     p.roomId = roomId;
     socket.join(roomId);
@@ -606,6 +596,7 @@ io.on('connection', (socket) => {
     room.turnInfo.scores[socket.id] = 0;
     room.turnInfo.strikes[socket.id] = 0;
     room.turnInfo.enteredBoard[socket.id] = false;
+    room.turnInfo.playerRolls[socket.id] = 0;
     player.roomId = roomId;
     socket.join(roomId);
     saveState();
@@ -614,89 +605,34 @@ io.on('connection', (socket) => {
     io.emit('room-list-update', getRoomList());
   });
 
-  socket.on('start-game', () => {
+  socket.on('add-bot', () => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);
-    if (room && room.players[0].id === socket.id) {
-      room.gameStarted = true;
-      saveState();
-      io.to(room.id).emit('game-started', { room });
+    if (room && room.players[0].id === socket.id && room.players.length < 6) {
+      const botId = `bot_${Math.random().toString(36).substring(2, 7)}`;
+      const bot = { 
+        id: botId, 
+        nickname: `BOT ${['Radovan', 'Hrbatý', 'Štístko', 'Smolař'][Math.floor(Math.random()*4)]} 🤖`, 
+        isBot: true,
+        maxTurnScore: 0 
+      };
+      room.players.push(bot);
+      room.turnInfo.scores[botId] = 0;
+      room.turnInfo.strikes[botId] = 0;
+      room.turnInfo.enteredBoard[botId] = false;
+      room.turnInfo.playerRolls[botId] = 0;
+      
+      io.to(room.id).emit('player-joined', { players: room.players });
       io.emit('room-list-update', getRoomList());
     }
   });
 
-  socket.on('dohodit', () => {
-    const room = rooms.get(players.get(socket.id)?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
-
-    processDoubleScoreLogic(room);
-
-    room.turnInfo.rollCount++;
-    room.status.playerRolls[socket.id] = (room.status.playerRolls[socket.id] || 0) + 1;
-    const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
-    room.turnInfo.lastRoll = roll;
-    
-    let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
-    if (checkDoubleScore(room)) score *= 2;
-    room.turnInfo.allowedIndexes = usedIndexes;
-    room.turnInfo.isStraight = isStraight || false;
-
-    const isBust = (score === 0);
-    const totalPotential = room.turnInfo.turnPoints + score;
-    const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
-
-    if (isBust || isTooLowAfter3) {
-      const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
-      io.to(room.id).emit('dice-rolled', { 
-        roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice, isStraight: false
-      });
-      setTimeout(() => nextTurn(room, true), 4000);
-    } else {
-      saveState();
-      io.to(room.id).emit('dice-rolled', { 
-        roll, turnPoints: room.turnInfo.turnPoints, rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes, isStraight: room.turnInfo.isStraight
-      });
-    }
+  socket.on('roll-dice', () => {
+    handleDiceRoll(rooms.get(players.get(socket.id)?.roomId), socket.id);
   });
 
-  socket.on('roll-dice', () => {
-    const room = rooms.get(players.get(socket.id)?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
-    
-    processDoubleScoreLogic(room);
-
-    room.turnInfo.rollCount++;
-    room.status.playerRolls[socket.id] = (room.status.playerRolls[socket.id] || 0) + 1;
-    const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
-    room.turnInfo.lastRoll = roll;
-    
-    let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
-    if (checkDoubleScore(room)) score *= 2;
-    room.turnInfo.allowedIndexes = usedIndexes;
-    room.turnInfo.isStraight = isStraight || false;
-
-    const isBust = (score === 0);
-    const totalPotential = room.turnInfo.turnPoints + score;
-    const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
-
-    if (isBust || isTooLowAfter3) {
-      const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
-      io.to(room.id).emit('dice-rolled', { 
-        roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice, isStraight: false
-      });
-      setTimeout(() => nextTurn(room, true), 4000);
-    } else {
-      saveState();
-      io.to(room.id).emit('dice-rolled', { 
-        roll, turnPoints: room.turnInfo.turnPoints, rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes, isStraight: room.turnInfo.isStraight
-      });
-    }
+  socket.on('dohodit', () => {
+    handleDiceRoll(rooms.get(players.get(socket.id)?.roomId), socket.id);
   });
 
   socket.on('force-straight', () => {
@@ -772,100 +708,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('roll-again', (selectedIndexes) => {
-    const room = rooms.get(players.get(socket.id)?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
-    if (!selectedIndexes || selectedIndexes.length === 0) return;
-    processDoubleScoreLogic(room);
-    const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
-    const isFirstRoll = (room.turnInfo.rollCount === 1);
-    let { score } = calculateScore(selectedDice, isFirstRoll);
-    if (checkDoubleScore(room)) score *= 2;
-    if (score === 0) {
-      socket.emit('nickname-error', 'Vybrané kostky nemají body. Vyber platné kostky.');
-      return;
-    }
-    room.turnInfo.turnPoints += score;
-    const selectedDiceValues = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
-    room.turnInfo.storedDice = [...(room.turnInfo.storedDice || []), ...selectedDiceValues];
-    const rem = room.turnInfo.diceCount - selectedIndexes.length;
-    room.turnInfo.diceCount = rem === 0 ? 6 : rem;
-    if (rem === 0) room.turnInfo.storedDice = []; 
-    room.turnInfo.rollCount++;
-    const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
-    room.turnInfo.lastRoll = roll;
-    let { score: nextScore, usedIndexes, isStraight: nextIsStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
-    if (checkDoubleScore(room)) nextScore *= 2;
-    room.turnInfo.allowedIndexes = usedIndexes;
-    room.turnInfo.isStraight = nextIsStraight || false;
-    const totalPotential = room.turnInfo.turnPoints + nextScore;
-    const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
-    if (nextScore === 0 || isTooLowAfter3) {
-      const msg = nextScore === 0 ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
-      io.to(room.id).emit('dice-rolled', { 
-        roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice
-      });
-      setTimeout(() => nextTurn(room, true), 4000);
-    } else {
-      saveState();
-      io.to(room.id).emit('dice-rolled', { 
-        roll, turnPoints: room.turnInfo.turnPoints, rollCount: room.turnInfo.rollCount,
-        diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice,
-        allowedIndexes: usedIndexes, isStraight: room.turnInfo.isStraight
-      });
-    }
+    handleRollAgain(rooms.get(players.get(socket.id)?.roomId), socket.id, selectedIndexes, (err) => {
+        socket.emit('nickname-error', err);
+    });
   });
 
   socket.on('stop-turn', (selectedIndexes) => {
-    const room = rooms.get(players.get(socket.id)?.roomId);
-    if (!room || room.turnInfo.currentTurnId !== socket.id) return;
-    const rem = room.turnInfo.diceCount - (selectedIndexes?.length || 0);
-    if (rem === 0) {
-      socket.emit('nickname-error', 'Máš odložené všechny kostky! Musíš hodit další hod (přesně podle pravidla 7).');
-      return;
-    }
-    if (selectedIndexes.length > 0) {
-      const isFirstRoll = (room.turnInfo.rollCount === 1);
-      let selectedPoints = (selectedIndexes.length > 0 && room.turnInfo.lastRoll.length >= selectedIndexes.length)
-        ? calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]).filter(v => v !== undefined), isFirstRoll).score 
-        : 0;
-      if (checkDoubleScore(room)) selectedPoints *= 2;
-      room.turnInfo.turnPoints += selectedPoints;
-    }
-    const pObj = room.players.find(p => p.id === socket.id);
-    if (pObj) pObj.maxTurnScore = Math.max(pObj.maxTurnScore || 0, room.turnInfo.turnPoints);
-    room.turnInfo.scores[socket.id] += room.turnInfo.turnPoints;
-    
-    if (room.turnInfo.scores[socket.id] >= 10000) {
-      const winnerId = socket.id;
-      const winnerName = players.get(winnerId).nickname;
-      io.to(room.id).emit('game-over', { winner: winnerName, scores: room.turnInfo.scores });
-      (async () => {
-        try {
-          for (const p of room.players) {
-            const pList = await databases.listDocuments(DB_ID, COLL_ID, [Query.equal('nickname', p.nickname)]);
-            if (pList.total > 0) {
-              const doc = pList.documents[0];
-              const isWinner = (p.id === winnerId);
-              await databases.updateDocument(DB_ID, COLL_ID, doc.$id, {
-                wins: (doc.wins || 0) + (isWinner ? 1 : 0),
-                total_points: (doc.total_points || 0) + room.turnInfo.scores[p.id],
-                games_played: (doc.games_played || 0) + 1,
-                total_rolls: (doc.total_rolls || 0) + (room.status.playerRolls[p.id] || 0),
-                highScore: Math.max(doc.highScore || 0, p.maxTurnScore || 0)
-              });
-            }
-          }
-        } catch (e) { console.error("Appwrite Game Over Error:", e.message); }
-        finally { broadcastLeaderboard(); }
-      })();
-      rooms.delete(room.id);
-      io.emit('room-list-update', getRoomList());
-    } else {
-      io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
-      nextTurn(room);
-    }
-    saveState();
+    handleStopTurn(rooms.get(players.get(socket.id)?.roomId), socket.id, selectedIndexes, (err) => {
+        socket.emit('nickname-error', err);
+    });
   });
 
   socket.on('send-global-chat', (data) => {
@@ -971,46 +822,14 @@ io.on('connection', (socket) => {
           socket.emit('error', 'Hra vyžaduje alespoň 2 hráče.');
           return;
         }
+        room.gameStarted = true;
+        // Reset scores and turn info
+        room.turnInfo = { ...room.turnInfo, scores: {}, strikes: {}, enteredBoard: {}, currentTurnId: room.players[0].id, diceCount: 6, lastRoll: [], rollCount: 0, turnPoints: 0, chat: room.turnInfo.chat || [] };
+        room.players.forEach(p => room.turnInfo.scores[p.id] = 0);
         io.to(player.roomId).emit('game-started', room);
         saveState();
-
-        // Check if first player is bot
-        if (room.players[0].isBot) {
-          setTimeout(() => runBotTurn(room, room.players[0].id), 2000);
-        }
       }
     }
-  });
-
-  socket.on('add-bot', (strategy = 'balanced') => {
-    const player = players.get(socket.id);
-    const room = rooms.get(player?.roomId);
-    if (!room || room.gameStarted || room.players[0].id !== socket.id) return;
-    if (room.players.length >= 6) return;
-
-    const botId = `bot_${Math.random().toString(36).substr(2, 6)}`;
-    const botNicknames = {
-      cautious: 'Opatrný Pepa (BOT)',
-      balanced: 'Vyvážený Karel (BOT)',
-      gambler: 'Hazardní Ruda (BOT)'
-    };
-
-    const newBot = {
-      id: botId,
-      nickname: botNicknames[strategy] || 'Botík',
-      isBot: true,
-      botStrategy: strategy,
-      maxTurnScore: 0
-    };
-
-    room.players.push(newBot);
-    room.turnInfo.scores[botId] = 0;
-    room.turnInfo.strikes[botId] = 0;
-    room.turnInfo.enteredBoard[botId] = false;
-    
-    saveState();
-    io.to(room.id).emit('player-joined', { players: room.players });
-    io.emit('room-list-update', getRoomList());
   });
 
   socket.on('update-room-config', (config) => {
@@ -1205,3 +1024,20 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   broadcastLeaderboard();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$code
