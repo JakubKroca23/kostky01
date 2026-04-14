@@ -56,6 +56,18 @@ function App() {
   }, [appVersion]);
 
   useEffect(() => {
+    // Wake up audio on first interaction
+    const wakeUpAudio = () => {
+      audio.init();
+      // Remove listeners once awakened
+      window.removeEventListener('mousedown', wakeUpAudio);
+      window.removeEventListener('keydown', wakeUpAudio);
+      window.removeEventListener('touchstart', wakeUpAudio);
+    };
+    window.addEventListener('mousedown', wakeUpAudio);
+    window.addEventListener('keydown', wakeUpAudio);
+    window.addEventListener('touchstart', wakeUpAudio);
+
     // Zakázat skrolování pouze pokud hra skutečně běží
     if (screen === 'room' && currentRoom?.gameStarted) {
       document.body.classList.add('game-active');

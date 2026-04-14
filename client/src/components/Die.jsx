@@ -29,7 +29,7 @@ function Die({ value, isSelected, onClick, isRolling, canSelect, style, showValu
       onClick={onClick}
       style={divStyle}
     >
-      {isBust ? (
+      {(isRolling) ? null : isBust ? (
         // Bust: zobrazíme fakáče místo teček
         <div className="bust-skull">
           <img src="/bust.png" alt="Bust!" className="bust-facepalm-img" />
