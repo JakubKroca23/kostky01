@@ -830,8 +830,25 @@ io.on('connection', (socket) => {
         }
         room.gameStarted = true;
         // Reset scores and turn info
-        room.turnInfo = { ...room.turnInfo, scores: {}, strikes: {}, enteredBoard: {}, currentTurnId: room.players[0].id, diceCount: 6, lastRoll: [], rollCount: 0, turnPoints: 0, chat: room.turnInfo.chat || [] };
-        room.players.forEach(p => room.turnInfo.scores[p.id] = 0);
+        room.turnInfo = { 
+          ...room.turnInfo, 
+          scores: {}, 
+          strikes: {}, 
+          enteredBoard: {}, 
+          playerRolls: {},
+          currentTurnId: room.players[0].id, 
+          diceCount: 6, 
+          lastRoll: [], 
+          rollCount: 0, 
+          turnPoints: 0, 
+          chat: room.turnInfo.chat || [] 
+        };
+        room.players.forEach(p => {
+          room.turnInfo.scores[p.id] = 0;
+          room.turnInfo.strikes[p.id] = 0;
+          room.turnInfo.playerRolls[p.id] = 0;
+          room.turnInfo.enteredBoard[p.id] = false;
+        });
         io.to(player.roomId).emit('game-started', room);
         saveState();
       }
