@@ -849,7 +849,7 @@ io.on('connection', (socket) => {
           room.turnInfo.playerRolls[p.id] = 0;
           room.turnInfo.enteredBoard[p.id] = false;
         });
-        io.to(player.roomId).emit('game-started', room);
+        io.to(player.roomId).emit('game-started', { room });
         saveState();
       }
     }
