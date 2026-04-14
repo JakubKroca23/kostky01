@@ -61,7 +61,6 @@ function App() {
       audio.init();
       // Test play a tiny click to confirm
       if (audio.unlocked) {
-        audio.playClick();
         window.removeEventListener('mousedown', wakeUpAudio);
         window.removeEventListener('keydown', wakeUpAudio);
         window.removeEventListener('touchstart', wakeUpAudio);
@@ -260,7 +259,7 @@ function App() {
 
       if (data.isStraight) {
         audio.playStraight();
-      } else if (!data.isBust) {
+      } else {
         audio.playRoll();
       }
     }
