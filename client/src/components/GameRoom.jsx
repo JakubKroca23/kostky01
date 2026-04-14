@@ -213,62 +213,93 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
       </div>
 
       <div className="room-main-content">
-        <Scoreboard players={room.players} room={room} currentTurnId={room.turnInfo.currentTurnId} />
-
-        <div className="game-arena-column">
-          <div className="points-display-row">
-            <div className={`pts-main neon-card ${doubleStatus?.active && timeLeft > 0 ? 'pulse-fast double-glow' : ''}`}>
-               {room.turnInfo.rollCount > 0 ? (
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span className="pts-label">HOD {room.turnInfo.rollCount}/3</span>
-                      <span className="pts-bank">{currentTurnPoints}</span>
-                    </div>
-                    <span className="pts-selection">+{selectedPoints}</span>
-                 </div>
-               ) : (
-                 <span className="pts-label pulse-slow">NA TAHU: {room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
-               )}
-            </div>
-          </div>
-
-          <div className="game-main-horizontal-layout">
-            <DiceArena ref={arenaRef} bustMsg={isBust ? "ZKUS TO PŘÍŠTĚ!" : null} showConfetti={false}>
-              <div className="dice-content-overlay" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
-                 {room.turnInfo.lastRoll.map((value, index) => {
-                    if (selectedDice.includes(index)) return null;
-                    const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
-                    return <Die key={index} value={value} isRolling={isRolling} style={{'--tx': `${pos.x}px`, '--ty': `${pos.y}px`, '--tr': `${pos.angle}rad`}} onClick={() => handleDieClick(index)} showValue={valuesVisible} />;
-                 })}
+        {!room.gameStarted ? (
+          <div className="waiting-lobby-view fade-in" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="lobby-info-card glass neon-card" style={{ padding: '30px', textAlign: 'center' }}>
+              <h1 className="neon-text-cyan pulse-slow" style={{ fontSize: '2rem', marginBottom: '20px' }}>ČEKÁME NA OSTATNÍ...</h1>
+              <p style={{ opacity: 0.7, marginBottom: '30px' }}>Až budete připraveni, hostitel může spustit hru.</p>
+              
+              <Scoreboard players={room.players} room={room} currentTurnId={room.turnInfo.currentTurnId} />
+              
+              <div style={{ marginTop: '30px', maxWidth: '500px', margin: '30px auto 0' }}>
+                <GameControls 
+                  isMyTurn={isMyTurn} canRoll={!isRolling} 
+                  canBank={false} 
+                  canEnterBoard={false}
+                  turnPoints={0}
+                  storedDiceCount={0}
+                  onRoll={onRoll}
+                  onBank={handleStop}
+                  onStartGame={onStart}
+                  onAddBot={(strategy) => socket.emit('add-bot', strategy)}
+                  gameStarted={room.gameStarted}
+                  isHost={myId === room.players[0].id}
+                  playerCount={room.players.length}
+                />
               </div>
-            </DiceArena>
-
-            <aside className="aside-storage glass">
-               <span className="storage-label">ODLOŽENO</span>
-               <div className="storage-grid">
-                 {(room.turnInfo.storedDice || []).map((val, i) => <div key={i} className="die-stored locked">{val}</div>)}
-                 {selectedDice.map((idx, i) => <div key={i} className="die-stored" onClick={() => handleUnselect(i)}>{room.turnInfo.lastRoll[idx]}</div>)}
-               </div>
-            </aside>
+            </div>
+            <RoomChat chat={room.turnInfo.chat} chatInput={chatInput} setChatInput={setChatInput} onSendChat={(e) => { e.preventDefault(); if (chatInput.trim()) { onSendMessage(chatInput); setChatInput(''); } }} />
           </div>
+        ) : (
+          <>
+            <Scoreboard players={room.players} room={room} currentTurnId={room.turnInfo.currentTurnId} />
 
-          <GameControls 
-            isMyTurn={isMyTurn} canRoll={!isRolling} 
-            canBank={!isRolling && (currentTurnPoints + selectedPoints >= 350)} 
-            canEnterBoard={room.turnInfo.enteredBoard[myId]}
-            turnPoints={currentTurnPoints + selectedPoints}
-            storedDiceCount={room.turnInfo.storedDice?.length + selectedDice.length}
-            onRoll={room.turnInfo.rollCount === 0 ? onRoll : handleRollAgain}
-            onBank={handleStop}
-            onStartGame={onStart}
-            onAddBot={(strategy) => socket.emit('add-bot', strategy)}
-            gameStarted={room.gameStarted}
-            isHost={myId === room.players[0].id}
-            playerCount={room.players.length}
-          />
-        </div>
+            <div className="game-arena-column">
+              <div className="points-display-row">
+                <div className={`pts-main neon-card ${doubleStatus?.active && timeLeft > 0 ? 'pulse-fast double-glow' : ''}`}>
+                   {room.turnInfo.rollCount > 0 ? (
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span className="pts-label">HOD {room.turnInfo.rollCount}/3</span>
+                          <span className="pts-bank">{currentTurnPoints}</span>
+                        </div>
+                        <span className="pts-selection">+{selectedPoints}</span>
+                     </div>
+                   ) : (
+                     <span className="pts-label pulse-slow">NA TAHU: {room.players.find(p => p.id === room.turnInfo.currentTurnId)?.nickname}</span>
+                   )}
+                </div>
+              </div>
 
-        <RoomChat chat={room.turnInfo.chat} chatInput={chatInput} setChatInput={setChatInput} onSendChat={(e) => { e.preventDefault(); if (chatInput.trim()) { onSendMessage(chatInput); setChatInput(''); } }} />
+              <div className="game-main-horizontal-layout">
+                <DiceArena ref={arenaRef} bustMsg={isBust ? "ZKUS TO PŘÍŠTĚ!" : null} showConfetti={false}>
+                  <div className="dice-content-overlay" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
+                     {room.turnInfo.lastRoll.map((value, index) => {
+                        if (selectedDice.includes(index)) return null;
+                        const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
+                        return <Die key={index} value={value} isRolling={isRolling} style={{'--tx': `${pos.x}px`, '--ty': `${pos.y}px`, '--tr': `${pos.angle}rad`}} onClick={() => handleDieClick(index)} showValue={valuesVisible} />;
+                     })}
+                  </div>
+                </DiceArena>
+
+                <aside className="aside-storage glass">
+                   <span className="storage-label">ODLOŽENO</span>
+                   <div className="storage-grid">
+                     {(room.turnInfo.storedDice || []).map((val, i) => <div key={i} className="die-stored locked">{val}</div>)}
+                     {selectedDice.map((idx, i) => <div key={i} className="die-stored" onClick={() => handleUnselect(i)}>{room.turnInfo.lastRoll[idx]}</div>)}
+                   </div>
+                </aside>
+              </div>
+
+              <GameControls 
+                isMyTurn={isMyTurn} canRoll={!isRolling} 
+                canBank={!isRolling && (currentTurnPoints + selectedPoints >= 350)} 
+                canEnterBoard={room.turnInfo.enteredBoard[myId]}
+                turnPoints={currentTurnPoints + selectedPoints}
+                storedDiceCount={(room.turnInfo.storedDice?.length || 0) + selectedDice.length}
+                onRoll={room.turnInfo.rollCount === 0 ? onRoll : handleRollAgain}
+                onBank={handleStop}
+                onStartGame={onStart}
+                onAddBot={(strategy) => socket.emit('add-bot', strategy)}
+                gameStarted={room.gameStarted}
+                isHost={myId === room.players[0].id}
+                playerCount={room.players.length}
+              />
+            </div>
+
+            <RoomChat chat={room.turnInfo.chat} chatInput={chatInput} setChatInput={setChatInput} onSendChat={(e) => { e.preventDefault(); if (chatInput.trim()) { onSendMessage(chatInput); setChatInput(''); } }} />
+          </>
+        )}
       </div>
 
       {showStealPrompt && (
