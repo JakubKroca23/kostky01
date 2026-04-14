@@ -270,9 +270,17 @@ function executeBotMove(room, botId) {
 
   const botPlayer = room.players.find(p => p.id === botId);
   const strategy = botPlayer?.strategy || 'average';
-  const allowedCount = room.turnInfo.allowedIndexes?.length || 0;
+  const allowedIndexes = room.turnInfo.allowedIndexes || [];
+  const allowedCount = allowedIndexes.length;
   
-  const decision = getBotDecision(room.turnInfo.turnPoints, room.turnInfo.diceCount, room.turnInfo.rollCount, strategy, allowedCount);
+  // Calculate potential points if we take all allowed dice
+  const roll = room.turnInfo.lastRoll || [];
+  let currentScoring = calculateScore(allowedIndexes.map(i => roll[i]), room.turnInfo.rollCount === 1).score;
+  if (checkDoubleScore(room)) currentScoring *= 2;
+  const potentialPoints = room.turnInfo.turnPoints + currentScoring;
+  const remainingDice = room.turnInfo.diceCount - allowedCount;
+
+  const decision = getBotDecision(potentialPoints, remainingDice, room.turnInfo.rollCount, strategy, allowedCount);
   
   if (decision === 'roll' || room.turnInfo.rollCount === 0) {
     // Bot Simulates Roll

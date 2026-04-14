@@ -12,18 +12,16 @@ export function getBotDecision(turnPoints, diceCount, rollCount, strategy = 'ave
     if (rollCount < 4 && turnPoints < 350) return 'roll';
 
     switch (strategy) {
-        case 'cautious': // OPATRNÝ - hraje na jistotu
-            if (turnPoints >= 400) return 'stop';
-            if (diceCount <= 2 && turnPoints >= 350) return 'stop';
+        case 'cautious': // OPATRNÝ - bere od 350
+            if (turnPoints >= 350) return 'stop';
             return (diceCount >= 3) ? 'roll' : 'stop';
 
-        case 'gambler': // GAMBLER - riskuje pro slávu
-            if (turnPoints >= 1500) return 'stop';
-            if (diceCount >= 2) return 'roll';
-            // S jednou kostkou hází dál, dokud nemá aspoň 1000
-            return (turnPoints < 1000) ? 'roll' : 'stop';
+        case 'gambler': // GAMBLER - pod 1000 nejde domů
+            if (turnPoints >= 1000) return 'stop';
+            if (diceCount >= 1) return 'roll';
+            return 'stop';
 
-        case 'average': // PRŮMĚRNÝ - zlatá střední cesta
+        case 'average': // PRŮMĚRNÝ - zlatá střední (600)
         default:
             if (turnPoints >= 600) return 'stop';
             if (diceCount <= 2 && turnPoints >= 450) return 'stop';
