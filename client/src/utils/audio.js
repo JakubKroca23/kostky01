@@ -11,6 +11,18 @@ class AudioManager {
     if (this.context.state === 'suspended') {
       this.context.resume();
     }
+    
+    // iOS Unlock: Play a tiny silent buffer
+    if (this.context && !this.unlocked) {
+      const buffer = this.context.createBuffer(1, 1, 22050);
+      const source = this.context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.context.destination);
+      source.start(0);
+      if (this.context.state === 'running') {
+        this.unlocked = true;
+      }
+    }
   }
 
   setEnabled(val) {

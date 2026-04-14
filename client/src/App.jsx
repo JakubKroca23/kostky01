@@ -63,10 +63,12 @@ function App() {
       window.removeEventListener('mousedown', wakeUpAudio);
       window.removeEventListener('keydown', wakeUpAudio);
       window.removeEventListener('touchstart', wakeUpAudio);
+      window.removeEventListener('touchend', wakeUpAudio);
     };
     window.addEventListener('mousedown', wakeUpAudio);
     window.addEventListener('keydown', wakeUpAudio);
     window.addEventListener('touchstart', wakeUpAudio);
+    window.addEventListener('touchend', wakeUpAudio);
 
     // Zakázat skrolování pouze pokud hra skutečně běží
     if (screen === 'room' && currentRoom?.gameStarted) {
