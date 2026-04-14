@@ -612,6 +612,30 @@ io.on('connection', (socket) => {
     io.emit('room-list-update', getRoomList());
   });
 
+  socket.on('kick-player', (targetId) => {
+    const player = players.get(socket.id);
+    const room = rooms.get(player?.roomId);
+    if (room && room.players[0].id === socket.id && targetId !== socket.id) {
+      const idx = room.players.findIndex(p => p.id === targetId);
+      if (idx > -1) {
+        const kicked = room.players[idx];
+        if (kicked.isBot) {
+          room.players.splice(idx, 1);
+        } else {
+          handlePlayerLeave(targetId, room.id);
+          const targetSocket = io.sockets.sockets.get(targetId);
+          if (targetSocket) {
+            targetSocket.leave(room.id);
+            targetSocket.emit('kicked-to-lobby', 'Byl jsi vyhozen zakladatelem místnosti.');
+          }
+        }
+        io.to(room.id).emit('player-joined', { players: room.players });
+        io.emit('room-list-update', getRoomList());
+        saveState();
+      }
+    }
+  });
+
   socket.on('add-bot', (strategy) => {
     const player = players.get(socket.id);
     const room = rooms.get(player?.roomId);

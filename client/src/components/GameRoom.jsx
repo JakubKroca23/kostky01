@@ -400,15 +400,44 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
               fontSize: '0.8rem',
               background: i === 0 ? 'rgba(255, 0, 157, 0.1)' : 'rgba(0, 255, 255, 0.1)',
               borderColor: i === 0 ? 'rgba(255, 0, 157, 0.3)' : 'rgba(0, 255, 255, 0.3)',
-              color: i === 0 ? 'var(--neon-pink)' : 'var(--neon-cyan)'
+              color: i === 0 ? '#ff009d' : '#00ffff',
+              position: 'relative',
+              paddingRight: (canStart && i !== 0) ? '30px' : '12px'
             }}>
               <span style={{ opacity: 0.6, fontSize: '0.7rem' }}>{i + 1}.</span>
               <span style={{ fontWeight: 'bold' }}>{p.nickname}</span>
+              {p.isBot && <span style={{ fontSize: '0.6rem', background: '#333', padding: '1px 4px', borderRadius: '4px' }}>BOT</span>}
               {i === 0 && <span style={{ fontSize: '0.7rem', filter: 'drop-shadow(0 0 5px var(--neon-pink))' }}>👑</span>}
               {remoteStreams[p.id] && (
                 <span title={`Stav spojení: ${connectionStates[p.id] || 'active'}`} style={{ marginLeft: '2px' }}>
                   🔊
                 </span>
+              )}
+              {canStart && i !== 0 && (
+                <button 
+                  onClick={() => socket.emit('kick-player', p.id)}
+                  style={{
+                    position: 'absolute',
+                    right: '6px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(255,0,0,0.2)',
+                    border: 'none',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '18px',
+                    height: '18px',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10
+                  }}
+                  title="Vykopnout"
+                >
+                  ✕
+                </button>
               )}
             </div>
           ))}
