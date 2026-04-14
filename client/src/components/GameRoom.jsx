@@ -189,6 +189,8 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     // Počkáme na konec roll animace (1.2s) a pak ukážeme bust
     const timer = setTimeout(() => {
       setIsBust(true);
+      audio.playBust();
+      setTimeout(() => audio.playStrike(), 100); // Mírný offset pro dramatičnost
     }, 1200);
 
     return () => clearTimeout(timer);
@@ -233,7 +235,7 @@ function GameRoom({ socket, room, nickname, remoteSelection, onRoll, onRollAgain
     return room.turnInfo.lastRoll.map((value, index) => {
       if (selectedDice.includes(index)) return null;
 
-      const canSelect = !isBust && isMyTurn && (room.turnInfo.allowedIndexes || []).includes(index);
+      const canSelect = !isBust && isMyTurn && !isRolling && (room.turnInfo.allowedIndexes || []).includes(index);
       const pos = physicsPositions[index] || { x: 0, y: 0, angle: 0 };
 
       const style = {

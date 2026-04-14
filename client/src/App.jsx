@@ -263,13 +263,6 @@ function App() {
       } else if (!data.isBust) {
         audio.playRoll();
       }
-
-      if (data.isBust) {
-        audio.playBust(); // Play the new depressing sound immediately
-        setTimeout(() => {
-          audio.playStrike(); // Follow up with the strike sound
-        }, 1200);
-      }
     }
 
     function onGameOver(data) {
