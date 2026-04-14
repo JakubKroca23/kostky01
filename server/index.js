@@ -283,17 +283,12 @@ function executeBotMove(room, botId) {
 }
 
 function botTriggerRoll(room, botId) {
-    // Common roll logic abstracted for bot
-    const socketMock = { id: botId, to: (id) => ({ emit: () => {} }), emit: () => {} };
-    
-    // Logic for bot to select ALL allowed dice if it was a selection phase
-    // In our current simplified bot, it just rolls again immediately with all dice
-    // or chooses all valid ones.
-    
     if (room.turnInfo.rollCount > 0 && room.turnInfo.allowedIndexes.length > 0) {
         // Bot automatically selects ALL valid dice
         const selectedIndexes = room.turnInfo.allowedIndexes;
-        handleRollAgain(room, botId, selectedIndexes);
+        setTimeout(() => {
+          handleRollAgain(room, botId, selectedIndexes);
+        }, 1500);
     } else {
         handleDiceRoll(room, botId);
     }
@@ -1083,6 +1078,12 @@ function handleDiceRoll(room, playerId) {
       diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice,
       allowedIndexes: usedIndexes, isStraight: room.turnInfo.isStraight
     });
+
+    // CRITICAL: If it's a bot, trigger next decision
+    const nextPlayer = room.players.find(p => p.id === room.turnInfo.currentTurnId);
+    if (nextPlayer && nextPlayer.isBot) {
+       setTimeout(() => executeBotMove(room, nextPlayer.id), 2000);
+    }
   }
 }
 
