@@ -59,11 +59,14 @@ function App() {
     // Wake up audio on first interaction
     const wakeUpAudio = () => {
       audio.init();
-      // Remove listeners once awakened
-      window.removeEventListener('mousedown', wakeUpAudio);
-      window.removeEventListener('keydown', wakeUpAudio);
-      window.removeEventListener('touchstart', wakeUpAudio);
-      window.removeEventListener('touchend', wakeUpAudio);
+      // Test play a tiny click to confirm
+      if (audio.unlocked) {
+        audio.playClick();
+        window.removeEventListener('mousedown', wakeUpAudio);
+        window.removeEventListener('keydown', wakeUpAudio);
+        window.removeEventListener('touchstart', wakeUpAudio);
+        window.removeEventListener('touchend', wakeUpAudio);
+      }
     };
     window.addEventListener('mousedown', wakeUpAudio);
     window.addEventListener('keydown', wakeUpAudio);
