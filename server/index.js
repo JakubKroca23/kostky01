@@ -1025,6 +1025,116 @@ server.listen(PORT, () => {
   broadcastLeaderboard();
 });
 
+// --- HELPER FUNCTIONS FOR GAME LOGIC ---
+
+function handleDiceRoll(room, playerId) {
+  if (!room || room.turnInfo.currentTurnId !== playerId) return;
+
+  processDoubleScoreLogic(room);
+
+  room.turnInfo.rollCount++;
+  room.turnInfo.playerRolls[playerId] = (room.turnInfo.playerRolls[playerId] || 0) + 1;
+  const roll = Array.from({ length: room.turnInfo.diceCount }, () => Math.floor(Math.random() * 6) + 1);
+  room.turnInfo.lastRoll = roll;
+  
+  let { score, usedIndexes, isStraight } = calculateScore(roll, room.turnInfo.rollCount === 1);
+  if (checkDoubleScore(room)) score *= 2;
+  room.turnInfo.allowedIndexes = usedIndexes;
+  room.turnInfo.isStraight = isStraight || false;
+
+  const isBust = (score === 0);
+  const totalPotential = room.turnInfo.turnPoints + score;
+  const isTooLowAfter3 = (room.turnInfo.rollCount === 3 && totalPotential < 350);
+
+  if (isBust || isTooLowAfter3) {
+    const msg = isBust ? "SMŮLA, ZKUS TO PŘÍŠTĚ!" : "MÁLO BODŮ (LIMIT 350)!";
+    io.to(room.id).emit('dice-rolled', { 
+      roll, isBust: true, msg, rollCount: room.turnInfo.rollCount,
+      diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice, isStraight: false
+    });
+    setTimeout(() => nextTurn(room, true), 4000);
+  } else {
+    saveState();
+    io.to(room.id).emit('dice-rolled', { 
+      roll, turnPoints: room.turnInfo.turnPoints, rollCount: room.turnInfo.rollCount,
+      diceCount: room.turnInfo.diceCount, storedDice: room.turnInfo.storedDice,
+      allowedIndexes: usedIndexes, isStraight: room.turnInfo.isStraight
+    });
+  }
+}
+
+function handleRollAgain(room, playerId, selectedIndexes, onError) {
+  if (!room || room.turnInfo.currentTurnId !== playerId) return;
+  if (!selectedIndexes || selectedIndexes.length === 0) return;
+  processDoubleScoreLogic(room);
+  const selectedDice = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
+  const isFirstRoll = (room.turnInfo.rollCount === 1);
+  let { score } = calculateScore(selectedDice, isFirstRoll);
+  if (checkDoubleScore(room)) score *= 2;
+  if (score === 0) {
+    if (onError) onError('Vybrané kostky nemají body. Vyber platné kostky.');
+    return;
+  }
+  room.turnInfo.turnPoints += score;
+  const selectedDiceValues = selectedIndexes.map(i => room.turnInfo.lastRoll[i]);
+  room.turnInfo.storedDice = [...(room.turnInfo.storedDice || []), ...selectedDiceValues];
+  const rem = room.turnInfo.diceCount - selectedIndexes.length;
+  room.turnInfo.diceCount = rem === 0 ? 6 : rem;
+  if (rem === 0) room.turnInfo.storedDice = []; 
+  
+  handleDiceRoll(room, playerId);
+}
+
+function handleStopTurn(room, playerId, selectedIndexes, onError) {
+    if (!room || room.turnInfo.currentTurnId !== playerId) return;
+    const rem = room.turnInfo.diceCount - (selectedIndexes?.length || 0);
+    if (rem === 0) {
+      if (onError) onError('Máš odložené všechny kostky! Musíš hodit další hod (přesně podle pravidla 7).');
+      return;
+    }
+    if (selectedIndexes && selectedIndexes.length > 0) {
+      const isFirstRoll = (room.turnInfo.rollCount === 1);
+      let selectedPoints = calculateScore(selectedIndexes.map(i => room.turnInfo.lastRoll[i]).filter(v => v !== undefined), isFirstRoll).score;
+      if (checkDoubleScore(room)) selectedPoints *= 2;
+      room.turnInfo.turnPoints += selectedPoints;
+    }
+    const pObj = room.players.find(p => p.id === playerId);
+    if (pObj) pObj.maxTurnScore = Math.max(pObj.maxTurnScore || 0, room.turnInfo.turnPoints);
+    room.turnInfo.scores[playerId] += room.turnInfo.turnPoints;
+    
+    if (room.turnInfo.scores[playerId] >= 10000) {
+      const winnerId = playerId;
+      const winnerName = room.players.find(p => p.id === winnerId).nickname;
+      io.to(room.id).emit('game-over', { winner: winnerName, scores: room.turnInfo.scores });
+      
+      (async () => {
+        try {
+          for (const p of room.players) {
+            if (p.isBot) continue; 
+            const pList = await databases.listDocuments(DB_ID, COLL_ID, [Query.equal('nickname', p.nickname)]);
+            if (pList.total > 0) {
+              const doc = pList.documents[0];
+              const isWinner = (p.id === winnerId);
+              await databases.updateDocument(DB_ID, COLL_ID, doc.$id, {
+                wins: (doc.wins || 0) + (isWinner ? 1 : 0),
+                total_points: (doc.total_points || 0) + room.turnInfo.scores[p.id],
+                games_played: (doc.games_played || 0) + 1,
+                total_rolls: (doc.total_rolls || 0) + (room.turnInfo.playerRolls[p.id] || 0),
+                highScore: Math.max(doc.highScore || 0, p.maxTurnScore || 0)
+              });
+            }
+          }
+        } catch (e) { console.error("Appwrite Game Over Error:", e.message); }
+        finally { broadcastLeaderboard(); }
+      })();
+      rooms.delete(room.id);
+      io.emit('room-list-update', getRoomList());
+    } else {
+      io.to(room.id).emit('score-updated', { scores: room.turnInfo.scores });
+      nextTurn(room);
+    }
+    saveState();
+}
 
 
 
@@ -1040,4 +1150,5 @@ server.listen(PORT, () => {
 
 
 
-$code
+
+

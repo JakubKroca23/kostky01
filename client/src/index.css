@@ -3201,6 +3201,104 @@ body {
     padding: 15px !important;
     font-size: 1rem !important;
   }
-}$animations
-$css
-$css
+}
+
+/* --- ANIMATIONS & ATMOSPHERE --- */
+
+/* Floating Dice Background Effect */
+.app-container::before {
+  content: '🎲';
+  position: fixed;
+  top: -100px;
+  left: 10%;
+  font-size: 40px;
+  opacity: 0.1;
+  animation: floatingDice 15s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.app-container::after {
+  content: '🎲';
+  position: fixed;
+  top: -100px;
+  left: 80%;
+  font-size: 30px;
+  opacity: 0.08;
+  animation: floatingDice 20s linear infinite reverse;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes floatingDice {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.1; }
+  90% { opacity: 0.1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* Neon Pulse for highlights */
+.neon-pulse-cyan {
+  animation: neonPulseCyan 2s infinite ease-in-out;
+}
+
+.neon-pulse-pink {
+  animation: neonPulsePink 2s infinite ease-in-out;
+}
+
+@keyframes neonPulseCyan {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); border-color: rgba(0, 243, 255, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(0, 243, 255, 0.6); border-color: rgba(0, 243, 255, 1); }
+}
+
+@keyframes neonPulsePink {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 230, 0.3); border-color: rgba(255, 0, 230, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(255, 0, 230, 0.6); border-color: rgba(255, 0, 230, 1); }
+}
+
+/* Button pulsing for the Bot challenge */
+.pulse {
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }
+}
+
+/* Ambient Decorative Cubes */
+.ambient-cube {
+  position: fixed;
+  font-size: 2.5rem;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.5));
+}
+
+.ambient-cube.one {
+  top: 15%;
+  left: 5%;
+  animation: float-around 20s infinite ease-in-out;
+}
+
+.ambient-cube.two {
+  top: 60%;
+  right: 10%;
+  animation: float-around 25s infinite ease-in-out reverse;
+}
+
+.ambient-cube.three {
+  top: 80%;
+  left: 15%;
+  animation: float-around 18s infinite ease-in-out;
+}
+
+@keyframes float-around {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(30px, -50px) rotate(120deg); }
+  66% { transform: translate(-20px, 30px) rotate(240deg); }
+}
+
+
