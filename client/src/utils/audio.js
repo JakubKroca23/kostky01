@@ -5,23 +5,34 @@ class AudioManager {
   }
 
   init() {
-    if (!this.context) {
-      this.context = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (this.context.state === 'suspended') {
-      this.context.resume();
-    }
-    
-    // iOS Unlock: Play a tiny silent buffer
-    if (this.context && !this.unlocked) {
-      const buffer = this.context.createBuffer(1, 1, 22050);
-      const source = this.context.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.context.destination);
-      source.start(0);
-      if (this.context.state === 'running') {
-        this.unlocked = true;
+    try {
+      if (!this.context) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        this.context = new AudioContextClass();
       }
+      
+      if (this.context.state === 'suspended' || this.context.state === 'interrupted') {
+        this.context.resume();
+      }
+
+      // iOS Unlock: Standard approach for mobile Safari
+      if (!this.unlocked) {
+        const buffer = this.context.createBuffer(1, 1, 22050);
+        const source = this.context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.context.destination);
+        if (source.start) {
+          source.start(0);
+        } else {
+          source.noteOn(0);
+        }
+        
+        // Mark as unlocked if we reached here
+        this.unlocked = true;
+        console.log("Audio Unlocked for iOS/Safari");
+      }
+    } catch (e) {
+      console.error("Audio Init Error:", e);
     }
   }
 
